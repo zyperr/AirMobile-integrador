@@ -13,7 +13,7 @@ class UsuarioModel{
 
     static async getbyId(id){
         const {rows} = await db.execute({
-            sql: "SELEC * FROM usuarios WHERE id = ?",
+            sql: "SELECT * FROM usuarios WHERE id = ?",
             args:[id]
         })
         return rows[0];
