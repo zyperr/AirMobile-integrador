@@ -13,13 +13,13 @@ export const verificarToken = (req, res, next) => {
         if (error) {
             return res.status(403).json({ error: "Token inválido" });
         }
-        req.user = user;
+        req.user = user; // Guardamos el ID y el email del usuario en req.user para usarlo en las rutas protegidas
         next();
     })
 }
 
 
-export const comprobarContraseña = ( password,userPassword) => {
+export const comprobarContraseña = async ( password,userPassword) => {
     // compareSync toma la contraseña plana y la compara con el hash guardado. Devuelve true o false.
-    return bcrypt.compareSync(password,userPassword)
+    return await bcrypt.compare(password,userPassword)
 }

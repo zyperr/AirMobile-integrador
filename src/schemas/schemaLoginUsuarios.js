@@ -10,5 +10,6 @@ const schemaLoginUsuario = Joi.object({
 
     password: Joi.string().required().message({
         'string.empty': 'La contraseña no puede estar vacía.', 
+        'any.required': 'La contraseña es obligatoria.'
     })
 })

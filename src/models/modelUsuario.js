@@ -40,6 +40,19 @@ class UsuarioModel{
             args: [nombre,email,password,rol]
         })
 
+        return result;
+    }
+
+    static async updateUserPassword(id,data){
+        const {password} = data;
+
+        const sqlQuery = `UPDATE usuarios SET password = ? WHERE id = ?`;
+
+        
+        const result = await db.execute({
+            sql: sqlQuery,
+            args: [password, id]
+        })
         return result
     }
 }
