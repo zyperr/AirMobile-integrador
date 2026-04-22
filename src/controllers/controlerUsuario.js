@@ -1,11 +1,14 @@
 import UsuarioModel from "../models/modelUsuario.js"
-import { comprobarContraseña } from "../middlewares/authMiddleware.js"
+import { comprobarContraseña, generarCodigo } from "../middlewares/authMiddleware.js"
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
 import schemaRegistroUsuarios from '../schemas/schemaRegistroUsuario.js';
-import schemaLoginUsuarios  from '../schemas/schemaLoginUsuarios.js';
-import schemaUpdateUsuario from "../schemas/schemaUpdateUsuario.js";
-import jwt from "jsonwebtoken";
+import schemaUpdateUsuario from "../schemas/schemaUpdateUsuario.js"
+import schemaLoginUsuarios from "../schemas/schemaLoginUsuarios.js"
+import schemaVerificar from "../schemas/schemaVerificacion.js";
+import { enviarCorreoVerificacion } from "../utils/mailer.js";
+import jwt from "jsonwebtoken"
+
 
 dotenv.config();
 
@@ -74,8 +77,8 @@ export const login = async (req, res) => {
         )
 
         const datosUsuario = {
-            id: usuario.id,
-            nombre: usuario.nombre,
+            id: usuarioEncontrado.id,
+            nombre: usuarioEncontrado.nombre,
         }
 
         res.status(200).json({
@@ -91,7 +94,45 @@ export const login = async (req, res) => {
 
 }
 
+export const verificar = async (req, res) => {
+    const { error, value } = schemaVerificar.validate(req.body, { abortEarly: false })
 
+    if (error) {
+
+        const erroresLimpios = error.details.map(detalle => detalle.message);
+
+        return res.status(400).json({
+            exito: false,
+            mensaje: "Por favor, corrige los siguientes errores:",
+            errores: erroresLimpios
+        });
+    }
+
+    try {
+        const id = req.user.id
+
+        const { codigo } = value
+
+        const usuario = await UsuarioModel.getbyId(id)
+
+        if (codigo !== usuario.codigo_verificacion) {
+            return res.status(400).json({
+                error: "El codigo de verificacion no coincide"
+            })
+        }
+
+        const result = await UsuarioModel.actualizarVerificado(id)
+
+        if (result.rowsAffected === 0) {
+            return res.status(404).json({ error: "Usuario no encontrado" })
+        }
+        return res.status(200).json({ message: "Se ha verificado la cuenta con exito" })
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({ error: "Error al verificar el usuario" })
+    }
+
+}
 
 
 export const registro = async (req, res) => {
@@ -113,7 +154,7 @@ export const registro = async (req, res) => {
 
     try {
 
-        const { nombre, email, password, rol } = value;
+        const { nombre, email, password } = value;
 
 
         const usuarioExistente = await UsuarioModel.buscarEmail(email)
@@ -127,17 +168,18 @@ export const registro = async (req, res) => {
 
         const passwordHash = await bcrypt.hash(password, 10)
 
+        const codigoVerificacion = generarCodigo();
 
-        const user = await UsuarioModel.createUser({ nombre, email, password: passwordHash, rol });
+        const user = await UsuarioModel.createUser({ nombre, email, password: passwordHash, codigo_verificacion: codigoVerificacion });
 
         const nuevoUser = {
             nombre,
             email,
-            rol
         };
 
+        enviarCorreoVerificacion(email, codigoVerificacion).catch(console.error);
 
-        res.status(201).json({ data: nuevoUser, message: "La cuenta ha sido creado con exito" })
+        res.status(201).json({ data: nuevoUser, message: "Revisa tu correo para verificar la cuenta" })
 
     } catch (err) {
         console.log(err)
@@ -145,7 +187,7 @@ export const registro = async (req, res) => {
     }
 }
 
-export const actualizarUsuario = async (req, res) => {
+export const actualizarContrasena = async (req, res) => {
 
 
     const { error, value } = schemaUpdateUsuario.validate(req.body, { abortEarly: false });
@@ -160,17 +202,15 @@ export const actualizarUsuario = async (req, res) => {
 
 
     try {
-        
-        let {password } = value;
 
+        let { password } = value;
+        const idUsuario = req.user.id
+        const usuarioActual = await UsuarioModel.getbyId(idUsuario);
         if (password) {
-
-            const usuarioActual = await UsuarioModel.getById(usuarioId);
-
             const passwordEsIgual = await comprobarContraseña(password, usuarioActual.password);
 
 
-            if(passwordEsIgual){
+            if (passwordEsIgual) {
                 return res.status(400).json({ error: "La nueva contraseña no puede ser igual a la anterior." });
             }
 
@@ -178,13 +218,15 @@ export const actualizarUsuario = async (req, res) => {
         }
 
 
-        // Si el usuario no mandó email, email será 'undefined' y tu modelo lo ignorará
-        // Si no mandó password, password será 'undefined' y tu modelo lo ignorará
-       const resultado = await usuarioModel.updateUserPassword(usuarioId, password );
+        // Si el usuario no mandó email, email será 'undefined' y el modelo lo ignorará
+        // Si no mandó password, password será 'undefined' y el modelo lo ignorará
+
+        const resultado = await UsuarioModel.updateUserPassword(idUsuario, password);
 
         if (!resultado) {
             return res.status(400).json({ error: "No se enviaron datos válidos para actualizar." });
         }
+
 
         res.status(200).json({
             exito: true,

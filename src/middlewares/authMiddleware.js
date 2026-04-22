@@ -13,7 +13,7 @@ export const verificarToken = (req, res, next) => {
     }
 
     const token = authHeader.split(' ')[1];
-
+    const SECRET_KEY = process.env.SECRET_KEY
     jwt.verify(token, SECRET_KEY, (error, user) => {
         if (error) {
             return res.status(403).json({ error: "Token inválido" });
@@ -24,7 +24,12 @@ export const verificarToken = (req, res, next) => {
 }
 
 
-export const comprobarContraseña = async ( password,userPassword) => {
+export const comprobarContraseña =  async ( password,userPassword) => {
     // compareSync toma la contraseña plana y la compara con el hash guardado. Devuelve true o false.
     return await bcrypt.compare(password,userPassword)
 }
+
+export const generarCodigo = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString()
+}
+

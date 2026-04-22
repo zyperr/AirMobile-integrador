@@ -10,6 +10,7 @@ export const schemaUpdateUsuario = Joi.object({
         
     password: Joi.string()
         .min(6)
+        .max(30)
         .optional()
         .messages({
             'string.min': 'La nueva contraseña debe tener al menos 6 caracteres.'

@@ -34,27 +34,34 @@ class UsuarioModel{
         }
     }
     static async createUser(data){
-        const {nombre,email,password,rol} = data
+        const {nombre,email,password,codigo_verificacion} = data
         const result =  await db.execute({
-            sql: "INSERT into usuarios(nombre,email,password,rol) VALUES(?,?,?,?)",
-            args: [nombre,email,password,rol]
+            sql: "INSERT into usuarios(nombre,email,password,codigo_verificacion) VALUES(?,?,?,?)",
+            args: [nombre,email,password,codigo_verificacion]
         })
 
         return result;
     }
 
-    static async updateUserPassword(id,data){
-        const {password} = data;
-
-        const sqlQuery = `UPDATE usuarios SET password = ? WHERE id = ?`;
-
-        
+    static async updateUserPassword(id,password){
         const result = await db.execute({
-            sql: sqlQuery,
+            sql: "UPDATE usuarios SET password = ? WHERE id = ?",
             args: [password, id]
         })
+        console.log(result)
         return result
     }
+
+
+    static async actualizarVerificado(id){
+        const result = await db.execute({
+            sql: "UPDATE usuarios SET verificado = ?,codigo_verificacion = ? where id = ?",
+            args: [true,"",id]
+        })
+        
+        return result;
+    }
+
 }
 
 export default UsuarioModel
