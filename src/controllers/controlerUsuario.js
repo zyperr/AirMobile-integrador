@@ -2,8 +2,8 @@ import UsuarioModel from "../models/modelUsuario.js"
 import { comprobarContraseña } from "../middlewares/authMiddleware.js"
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
-import { schemaRegistroUsuarios } from '../schemas/schemaRegistroUsuario.js';
-import { schemaLoginUsuarios } from '../schemas/schemaLoginUsuarios.js';
+import schemaRegistroUsuarios from '../schemas/schemaRegistroUsuario.js';
+import schemaLoginUsuarios  from '../schemas/schemaLoginUsuarios.js';
 import schemaUpdateUsuario from "../schemas/schemaUpdateUsuario.js";
 
 

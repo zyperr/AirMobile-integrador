@@ -1,6 +1,5 @@
-const { allow } = require("joi");
 
-const Joi = requieres("joi");
+import Joi from "joi";
 
 
 

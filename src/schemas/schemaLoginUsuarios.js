@@ -1,15 +1,20 @@
-const Joi = require("joi");
+import Joi from 'joi';
 
-
-const schemaLoginUsuario = Joi.object({
-    email: Joi.string().email().required().message({
-        'string.empty': 'El correo electrónico no puede estar vacío.',
-        'string.email': 'Por favor, ingresa un correo electrónico válido.',
-        'any.required': 'El correo electrónico es obligatorio.'
-    }),
-
-    password: Joi.string().required().message({
-        'string.empty': 'La contraseña no puede estar vacía.', 
-        'any.required': 'La contraseña es obligatoria.'
-    })
-})
+export const schemaLoginUsuario = Joi.object({
+    email: Joi.string()
+        .email()
+        .required()
+        .messages({
+            'string.empty': 'El correo no puede estar vacío.',
+            'string.email': 'Debes ingresar un correo electrónico válido.',
+            'any.required': 'El correo es obligatorio.'
+        }),
+    
+    password: Joi.string()
+        .required()
+        .messages({
+            'string.empty': 'La contraseña no puede estar vacía.',
+            'any.required': 'La contraseña es obligatoria.'
+        })
+});
+export default schemaLoginUsuario;
