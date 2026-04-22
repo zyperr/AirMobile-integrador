@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 import schemaRegistroUsuarios from '../schemas/schemaRegistroUsuario.js';
 import schemaLoginUsuarios  from '../schemas/schemaLoginUsuarios.js';
 import schemaUpdateUsuario from "../schemas/schemaUpdateUsuario.js";
-
+import jwt from "jsonwebtoken";
 
 dotenv.config();
 
