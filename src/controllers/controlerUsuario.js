@@ -2,7 +2,7 @@ import UsuarioModel from "../models/modelUsuario.js"
 import { comprobarContraseña } from "../middlewares/authMiddleware.js"
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
-
+import { schemaRegistroUsuarios } from '../schemas/schemaRegistroUsuario.js';
 
 
 dotenv.config();
@@ -61,9 +61,9 @@ export const login = async (req, res) => {
     }
 
     res.status(200).json({
-        message:"Login exitoso",
-        token:token,
-        data:datosUsuario
+        message: "Login exitoso",
+        token: token,
+        data: datosUsuario
     })
 }
 
@@ -71,26 +71,26 @@ export const login = async (req, res) => {
 
 
 export const registro = async (req, res) => {
-    try {
-        const rol = "cliente"
-        const { nombre, email, password } = req.body
 
-        if (!password) {
-            return res.status(400).json({
-                error: "La contraseña no puede ser nula"
-            })
-        } 
-        if (!email) {
-            return res.status(400).json({
-                error: "El email no puede ser nulo"
-            })
-        }
+
+    const { error, value } = schemaRegistroUsuarios.validate(req.body, { abortEarly: false })
+    
+    if (error) {
+        // Extraemos solo los mensajes de texto para enviárselos limpios al frontend
+        const erroresLimpios = error.details.map(detalle => detalle.message);
+
+        // Retornamos un estado 400 (Bad Request - Petición Incorrecta)
+        return res.status(400).json({
+            exito: false,
+            mensaje: "Por favor, corrige los siguientes errores:",
+            errores: erroresLimpios
+        });
+    }
+
+    try {
         
-        if(!nombre){
-            return res.status(400).json({
-                error: "El nombre de usuarios no puede ser nulo"
-            })
-        }
+        const { nombre, email, password ,rol} = value;
+
 
         const usuarioExistente = await UsuarioModel.buscarEmail(email)
 
@@ -100,16 +100,16 @@ export const registro = async (req, res) => {
             })
         }
 
-        //TODO : verificar esto
+        
         const passwordHash = await bcrypt.hash(password, 10)
 
 
-        const user = await UsuarioModel.createUser({ nombre, email, password:passwordHash, rol });
-        
-        const nuevoUser = { 
-            nombre, 
-            email, 
-            rol 
+        const user = await UsuarioModel.createUser({ nombre, email, password: passwordHash, rol });
+
+        const nuevoUser = {
+            nombre,
+            email,
+            rol
         };
 
 
