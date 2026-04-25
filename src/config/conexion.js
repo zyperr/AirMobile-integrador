@@ -10,6 +10,4 @@ export async function obtenerDb() {
         authToken: process.env.TURSO_TOKEN,
     })
     return turso
-}  
-
-
+} 
