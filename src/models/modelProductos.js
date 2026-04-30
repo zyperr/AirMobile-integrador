@@ -42,7 +42,7 @@ class ModelProductos {
             }
             return { success: true, message: "Se ha eliminado correctamente" }
         } catch (err) {
-            console.error("Error al eliminar producto:", error);
+            console.error("Error al eliminar producto:", err);
             return { success: false, message: "Error interno del servidor" }
         }
 

@@ -5,6 +5,8 @@ import { verificarToken } from "../middlewares/authMiddleware.js";
 
 const router = Router();
 
+// Rutas para usuarios
+//http://localhost:3000/api/usuarios/ 
 
 router.get("/usuarios",obtenerUsuarios );
 

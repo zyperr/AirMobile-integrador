@@ -10,6 +10,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { inicializarBaseDeDatos } from './config/initDB.js'; 
 
+import routesCarrito from './routes/routesCarrito.js';
 
 
 const PORT = 3000;
@@ -23,7 +24,7 @@ app.use(expreess.json())
 
 app.use("/api/usuarios", routesUsuarios);
 app.use("/api/productos",routesProductos)
-
+app.use("/api/carrito", routesCarrito);
 
 
 app.get("", (req, res) => {

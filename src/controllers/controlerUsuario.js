@@ -58,7 +58,7 @@ export const login = async (req, res) => {
             return res.status(401).json({ error: "Credenciales incorrectas" });
         }
 
-        const passwordCorrecta = await bcrypt.compare(password, usuario.password);
+        const passwordCorrecta = await bcrypt.compare(password, usuarioEncontrado.password);
 
         if (!passwordCorrecta) {
             return res.status(401).json({ error: "Credenciales incorrectas" });
@@ -78,11 +78,7 @@ export const login = async (req, res) => {
 
         const datosUsuario = {
             id: usuarioEncontrado.id,
-<<<<<<< Updated upstream
             nombre: usuarioEncontrado.nombre,
-=======
-            nombre: usuario.nombre,
->>>>>>> Stashed changes
         }
 
         res.status(200).json({
@@ -206,12 +202,6 @@ export const actualizarContrasena = async (req, res) => {
 
 
     try {
-<<<<<<< Updated upstream
-=======
-        
-        
-        let {password } = value;
->>>>>>> Stashed changes
 
         let { password } = value;
         const idUsuario = req.user.id
@@ -228,16 +218,10 @@ export const actualizarContrasena = async (req, res) => {
         }
 
 
-<<<<<<< Updated upstream
         // Si el usuario no mandó email, email será 'undefined' y el modelo lo ignorará
         // Si no mandó password, password será 'undefined' y el modelo lo ignorará
 
         const resultado = await UsuarioModel.updateUserPassword(idUsuario, password);
-=======
-        // Si el usuario no mandó email, email será 'undefined' y tu modelo lo ignorará
-        // Si no mandó password, password será 'undefined' y tu modelo lo ignorará
-       const resultado = await UsuarioModel.updateUserPassword(usuarioId, password );
->>>>>>> Stashed changes
 
         if (!resultado) {
             return res.status(400).json({ error: "No se enviaron datos válidos para actualizar." });
