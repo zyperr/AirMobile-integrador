@@ -1,6 +1,7 @@
 import { Router } from "express";
-import { obtenerUsuarios,registro,login, actualizarContrasena,verificar} from "../controllers/controlerUsuario.js";
+import { obtenerUsuarios,registro,login,verificar} from "../controllers/controlerUsuario.js";
 import { verificarToken } from "../middlewares/authMiddleware.js";
+import { actualizarContrasena } from "../controllers/controllerPassword.js";
 
 
 const router = Router();

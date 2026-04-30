@@ -19,11 +19,11 @@ class ModelProductos {
     }
 
     static async createProduct(data) {
-        const { nombre_producto, precio, categoria,condicion } = data
+        const { nombre_producto, precio, categoria, condicion } = data
         const capacidad = JSON.stringify(data.capacidad)
         const result = await db.execute({
             sql: "INSERT INTO productos(nombre_producto,precio,capacidad,descripcion,imagen_url,categoria,condicion) VALUES(?,?,?,?,?,?,?)",
-            args: [nombre_producto,precio,capacidad ? capacidad : "", data.descripcion ? data.descripcion : "",data.imagen_url ?data.imagen_url : "", categoria,condicion]
+            args: [nombre_producto, precio, capacidad ? capacidad : "", data.descripcion ? data.descripcion : "", data.imagen_url ? data.imagen_url : "", categoria, condicion]
         })
 
         return result;
@@ -46,6 +46,37 @@ class ModelProductos {
             return { success: false, message: "Error interno del servidor" }
         }
 
+    }
+
+    static async updateProduct(id, data) {
+        const keys = Object.keys(data)
+        if (keys.length === 0) {
+            return { success: false, message: "No hay datos para actualizar" };
+        }
+
+        const setDinamico = keys.map((key) => `${key} = ? `).join(', ');
+
+        const argumentosDelSet = Object.values(data);
+
+
+        argumentosDelSet.push(id)
+        const query = `UPDATE productos SET ${setDinamico} WHERE id = ?`
+        try {
+            const result = await db.execute({
+                sql: query,
+                args: argumentosDelSet
+            });
+
+            if (result.rowsAffected === 0) {
+                return { success: false, message: "No se ha encontrado el producto" }
+            }
+
+            return { success: true, message: "Producto actualizado correctamente" };
+
+        } catch (err) {
+            console.error("Erorr al actualizar el producto: ", err);
+            return { success: false, message: "Error interno del servidor" };
+        }
     }
 }
 

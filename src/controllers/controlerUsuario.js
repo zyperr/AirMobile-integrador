@@ -3,7 +3,6 @@ import { comprobarContraseña, generarCodigo } from "../middlewares/authMiddlewa
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
 import schemaRegistroUsuarios from '../schemas/schemaRegistroUsuario.js';
-import schemaUpdateUsuario from "../schemas/schemaUpdateUsuario.js"
 import schemaLoginUsuarios from "../schemas/schemaLoginUsuarios.js"
 import schemaVerificar from "../schemas/schemaVerificacion.js";
 import { enviarCorreoVerificacion } from "../utils/mailer.js";
@@ -187,59 +186,3 @@ export const registro = async (req, res) => {
     }
 }
 
-export const actualizarContrasena = async (req, res) => {
-
-
-    const { error, value } = schemaUpdateUsuario.validate(req.body, { abortEarly: false });
-
-
-    if (error) {
-        return res.status(400).json({
-            exito: false,
-            errores: error.details.map(detalle => detalle.message)
-        });
-    }
-
-
-    try {
-
-        let { password } = value;
-        const idUsuario = req.user.id
-        const usuarioActual = await UsuarioModel.getbyId(idUsuario);
-        if (password) {
-            const passwordEsIgual = await comprobarContraseña(password, usuarioActual.password);
-
-
-            if (passwordEsIgual) {
-                return res.status(400).json({ error: "La nueva contraseña no puede ser igual a la anterior." });
-            }
-
-            password = await bcrypt.hash(password, 10);
-        }
-
-
-        // Si el usuario no mandó email, email será 'undefined' y el modelo lo ignorará
-        // Si no mandó password, password será 'undefined' y el modelo lo ignorará
-
-        const resultado = await UsuarioModel.updateUserPassword(idUsuario, password);
-
-        if (!resultado) {
-            return res.status(400).json({ error: "No se enviaron datos válidos para actualizar." });
-        }
-
-
-        res.status(200).json({
-            exito: true,
-            mensaje: "Tus datos han sido actualizados correctamente."
-        });
-
-
-    } catch (err) {
-        if (err.message && err.message.includes('UNIQUE constraint failed: usuarios.email')) {
-            return res.status(400).json({ error: "Este correo ya está registrado en otra cuenta." });
-        }
-
-        console.error("Error en el servidor:", err);
-        res.status(500).json({ error: "Error interno al actualizar los datos." });
-    }
-}

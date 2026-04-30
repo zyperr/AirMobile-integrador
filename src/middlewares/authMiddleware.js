@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-
+import crypto from 'crypto';
 dotenv.config();
 
 const SECRET_KEY = process.env.SECRET_KEY;
@@ -30,6 +30,6 @@ export const comprobarContraseña =  async ( password,userPassword) => {
 }
 
 export const generarCodigo = () => {
-    return Math.floor(100000 + Math.random() * 900000).toString()
+    return crypto.randomInt(100000, 999999).toString();
 }
 

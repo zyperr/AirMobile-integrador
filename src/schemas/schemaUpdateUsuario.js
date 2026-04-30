@@ -3,7 +3,7 @@ import Joi from 'joi';
 export const schemaUpdateUsuario = Joi.object({
     email: Joi.string()
         .email()
-        .optional()
+        .required()
         .messages({
             'string.email': 'Debes ingresar un correo electrónico válido.'
         }),
