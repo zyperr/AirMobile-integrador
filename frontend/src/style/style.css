@@ -427,6 +427,44 @@
       margin-bottom: 28px;
     }
 
+    footer {
+      background: #d3d3d3;
+      padding: 35px 100px;
+    }
+
+    .footer-content {
+      
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+    }
+    .footer-section {
+      display: flex;
+      flex-direction: column;
+      width: 30%;
+      
+    }
+
+    .footer-section-links {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      
+    }
+
+    .footer-section-links ul {
+      display: flex;
+      list-style: none;
+      gap : 20px;
+    }
+    .footer-section-links a {
+      text-decoration: none;
+      color: #000000;
+      font-size: 16px;
+    }
+
+
     .btn-dark {
       display: block;
       width: 100%;
