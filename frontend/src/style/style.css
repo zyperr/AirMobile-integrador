@@ -286,23 +286,22 @@
 
     /* Product image placeholders */
     .img-iphone13 {
-      background: linear-gradient(135deg, #0d0d1a 0%, #1a1a3e 100%);
+      background: white;
     }
     .img-iphone12 {
-      background: linear-gradient(135deg, #0d0d1a 0%, #1a1a3e 100%);
+      background: white;
     }
     .img-case {
-      background: linear-gradient(135deg, #1a1a2e 0%, #2a2a3e 100%);
+      background: white;
     }
     .img-charger {
-      background: linear-gradient(135deg, #1a1a2e 0%, #2a2a3e 100%);
+      background: white;
     }
 
     .product-phone-visual {
       display: flex;
-      width: 65%;
-      height: 65%;
-      background: linear-gradient(135deg, #1a2a4a, #0d1a3a);
+      width: 75%;
+      height: 75%;
       border-radius: 16px;
       position: center;
       box-shadow: 0 0 20px rgba(26,111,232,0.3);
@@ -311,18 +310,27 @@
     }
 
     .product-phone-visual img {
-      width: 150%;
-      height: 150%;
+      
       object-fit: cover;
+    }
+    
+    .product-img-case .product-phone-visual {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #1a2a4a, #0d1a3a);
+      border-radius: 12px;
+      position: relative;
+      box-shadow: 0 0 15px rgba(26,111,232,0.3);
     }
 
     .product-charger-visual {
-      width: 55%;
-      height: 55%;
+        display: flex;
       background: linear-gradient(135deg, #2a3a5a, #1a2a4a);
       border-radius: 10px;
-      position: relative;
       box-shadow: 0 0 10px rgba(26,111,232,0.2);
+      justify-content: center;
+      align-items: center;
+      object-fit: contain;
     }
 
     .badge {
