@@ -345,7 +345,7 @@
     }
 
     .badge-energia {
-      background: #fff3e0;
+      background: rgb(255, 243, 224);
       color: #b45309;
     }
 
@@ -364,49 +364,48 @@
     }
 
     /* GUARANTEE SECTION */
+    /*Garantia */  
     .guarantee-section {
       display: flex;
       align-items: center;
-      gap: 60px;
-      padding: 64px 80px;
-      background: #f5f6f8;
+      gap: 70px;
+      justify-content: center;
+      padding: 60px 10px;
+      background: rgb(240, 237, 239, 100%);
     }
 
     .guarantee-image {
-      width: 320px;
-      height: 320px;
-      background: #111;
+      width: 350px;
+      height: 350px;
       border-radius: 20px;
       flex-shrink: 0;
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
+      box-shadow: 0 0 50px rgba(41, 41, 41, 0.3);
+      transition: box-shadow 0.3s ease-in-out;
     }
 
-    .guarantee-icon {
-      width: 140px;
-      height: 140px;
-      background: linear-gradient(135deg, #0080ff, #00c3ff);
-      border-radius: 28px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
+    .guarantee-image:hover{
+
+      box-shadow: 0 0 70px rgba(26, 26, 26, 0.5);
     }
 
-    .guarantee-icon svg {
-      width: 70px;
-      height: 70px;
-      color: #fff;
+    .guarantee-image img {
+      width: 110%;
+      height: 100%;
+      object-fit: cover;
+      padding-right: 10px;
     }
 
     .guarantee-text {
-      max-width: 400px;
+      width: 400px;
+      max-width: 600px;
     }
 
     .guarantee-text h2 {
-      font-size: 40px;
+      font-size: 35px;
       font-weight: 700;
       color: #111;
       line-height: 1.2;
