@@ -1,24 +1,49 @@
 import ModelProductos from "../models/modelProductos.js";
 import UsuarioModel from "../models/modelUsuario.js";
 import { schemaProductos } from "../schemas/schemaProductos.js";
+import { schemaFiltrosProductos } from "../schemas/schemaQueriesFiltros.js";
 import { schemaActualizarProducto } from "../schemas/schemaUpdateProducto.js";
 import { ROLES } from "../utils/roles.js";
 
 
 export const obtenerProductos = async (req, res) => {
+    const { error, value } = schemaFiltrosProductos.validate(req.query);
+    console.log(value)
+    if (error) {
+        return res.status(400).json({
+            exito: false,
+            // error.details[0].message saca el mensaje en español que armamos arriba
+            error: error.details[0].message
+        });
+    }
     try {
-        const productos = await ModelProductos.getAll();
+
+       const filtros = {
+            categoria: value.categoria,
+            precioMin: value.precioMin,
+            precioMax: value.precioMax,
+            busqueda: value.busqueda
+        };
+        const productos = await ModelProductos.getAll(filtros);
+
+
+
+
         const productosParseados = productos.map((producto) => {
             return {
                 ...producto,
                 capacidad: JSON.parse(producto.capacidad)
             }
         })
-        return res.status(200).json(productosParseados)
+        return res.status(200).json({
+            exito: true,
+            total: productosParseados.length,
+            data: productosParseados
+        });
     } catch (err) {
         console.error(err)
 
-        res.status(500).json({ error: "Error al obtener los productos" })
+        return res.status(500).json({ error: "Error interno del servidor" });
     }
 }
 
@@ -68,13 +93,13 @@ export const crearProducto = async (req, res) => {
             return res.status(401).json({ message: "Creedenciales invalidas" })
         }
         const rol = await UsuarioModel.getRol(id)
-        
+
         if (rol !== ROLES.ADMIN) {
             return res.status(403).json({ message: "El usuario no tiene permisos para esto" })
-        
+
         }
         const product = await ModelProductos.createProduct(value)
-        
+
 
         return res.status(200).json({ message: "Producto creado con exito" })
 

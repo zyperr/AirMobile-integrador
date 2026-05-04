@@ -4,9 +4,49 @@ const db = await obtenerDb()
 
 
 class ModelProductos {
-    static async getAll() {
-        const { rows } = await db.execute("SELECT * FROM productos");
-        return rows
+    static async getAll(filtros) {
+
+        try {
+            let sql = "SELECT * FROM productos WHERE 1=1"
+            let args = []
+
+            if (filtros.categoria) {
+                sql += " AND categoria LIKE ?"
+                args.push(`%${filtros.categoria}%`)
+            }
+
+            if(filtros.condicion){
+                sql += " AND condicion LIKE ?"
+                args.push(`%${filtros.condicion}%`)
+            }
+
+            if (filtros.precioMin) {
+                sql += " AND precio >= ?";
+                args.push(Number(filtros.precioMin));
+            }
+
+            // 3. Filtro por precio máximo
+            if (filtros.precioMax) {
+                sql += " AND precio <= ?";
+                args.push(Number(filtros.precioMax));
+            }
+
+            // 4. Filtro por búsqueda de nombre (Coincidencia parcial con LIKE)
+            if (filtros.busqueda) {
+                sql += " AND nombre_producto LIKE ?";
+                // Los % indican que puede haber cualquier texto antes o después de la palabra buscada
+                args.push(`%${filtros.busqueda}%`);
+            }
+
+            const result = await db.execute({
+                sql: sql,
+                args: args
+            });
+            return result.rows
+        } catch (err) {
+            console.error("Error en ProductoModel.getAll:", err);
+            throw err;
+        }
     }
 
     static async getById(id) {
