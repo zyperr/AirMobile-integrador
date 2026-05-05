@@ -31,11 +31,33 @@ export const inicializarBaseDeDatos = async () => {
         cantidad INTEGER DEFAULT 1,
         FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
         FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE
-    )`
+    )`;
+
+    const queryFacturas = `CREATE TABLE IF NOT EXISTS facturas (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        usuario_id INTEGER,
+        total REAL NOT NULL,
+        fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+        estado TEXT DEFAULT 'Completado',
+        FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
+        )`;
+
+    const queryDetallesFactura = `CREATE TABLE IF NOT EXISTS detalles_factura (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        factura_id INTEGER NOT NULL,
+        producto_id INTEGER NOT NULL,
+        cantidad INTEGER NOT NULL,
+        precio_unitario REAL NOT NULL,
+        FOREIGN KEY (factura_id) REFERENCES facturas(id) ON DELETE CASCADE,
+        FOREIGN KEY (producto_id) REFERENCES productos(id) 
+    )`;
+
     try {
         await db.execute(queryCarrito)
         await db.execute(queryUsuarios);
         await db.execute(queryProductos);
+        await db.execute(queryFacturas);
+        await db.execute(queryDetallesFactura);
         
         console.log("✅ Base de datos y tablas inicializadas correctamente.");
         return true;
