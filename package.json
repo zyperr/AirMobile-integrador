@@ -17,10 +17,13 @@
   "dependencies": {
     "@libsql/client": "^0.17.2",
     "bcryptjs": "^3.0.3",
+    "csv-parser": "^3.2.0",
     "dotenv": "^17.4.2",
+    "exceljs": "^4.4.0",
     "express": "^5.2.1",
     "joi": "^18.1.2",
     "jsonwebtoken": "^9.0.3",
+    "multer": "^2.1.1",
     "nodemailer": "^8.0.5",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { verificarToken } from "../middlewares/authMiddleware.js";
-import { obtenerProductos,obtenerProducto,crearProducto, actualizarProducto, eliminarProducto } from "../controllers/controlerProductos.js";
+import { obtenerProductos,obtenerProducto,crearProducto, actualizarProducto, bulkUpload,eliminarProducto } from "../controllers/controlerProductos.js";
+import { uploadMiddleware } from "../middlewares/multer.js";
 
 
 
@@ -16,5 +17,7 @@ router.post("/agregar-producto",verificarToken,crearProducto)
 router.put("/actualizar-producto/:id", verificarToken,actualizarProducto)
 
 router.delete("/eliminar-producto/:id", verificarToken,eliminarProducto);
+router.post("/carga-masiva",[verificarToken,uploadMiddleware],bulkUpload)
+
 
 export default router

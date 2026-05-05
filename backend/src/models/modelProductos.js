@@ -15,7 +15,7 @@ class ModelProductos {
                 args.push(`%${filtros.categoria}%`)
             }
 
-            if(filtros.condicion){
+            if (filtros.condicion) {
                 sql += " AND condicion LIKE ?"
                 args.push(`%${filtros.condicion}%`)
             }
@@ -123,6 +123,44 @@ class ModelProductos {
         } catch (err) {
             console.error("Erorr al actualizar el producto: ", err);
             return { success: false, message: "Error interno del servidor" };
+        }
+    }
+
+    static async insertMany(productosArray) {
+        try {
+            // 1. Verificamos que no nos pasen un array vacío para no hacer viajes innecesarios
+            if (!productosArray || productosArray.length === 0) {
+                return 0;
+            }
+            
+            // 2. Preparamos el lote de consultas (Batch)
+            // Transformamos cada producto validado en un objeto con la sentencia SQL y sus argumentos
+            const sentenciasBatch = productosArray.map(producto => {
+                return {
+                    sql: `INSERT INTO productos 
+                          (nombre_producto, categoria, precio,capacidad,descripcion,imagen_url,condicion,categoria) 
+                          VALUES (?, ?, ?,?,?,?,?,?)`,
+                    args: [
+                        producto.nombre_producto,
+                        producto.categoria,
+                        producto.precio,
+                        JSON.stringify(producto.capacidad),
+                        producto.descripcion,
+                        producto.imagen_url,
+                        producto.condicion,
+                        producto.categoria
+                    ]
+                };
+            });
+
+
+            const resultados = await db.batch(sentenciasBatch, "write");
+
+            return resultados.length;
+
+        } catch (error) {
+            console.error("Error en ProductoModel.insertMany:", error);
+            throw new Error("Error al insertar los productos en la base de datos.");
         }
     }
 }
