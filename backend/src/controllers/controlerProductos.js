@@ -18,7 +18,7 @@ export const obtenerProductos = async (req, res) => {
     }
     try {
 
-       const filtros = {
+        const filtros = {
             categoria: value.categoria,
             condicion: value.condicion,
             precioMin: value.precioMin,
@@ -32,7 +32,7 @@ export const obtenerProductos = async (req, res) => {
 
         // El offset se calcula restando 1 a la página actual y multiplicándola por el límite de resultados por página. Esto asegura que se salten los resultados de las páginas anteriores.
         const offset = (page - 1) * limit;
-        const productos = await ModelProductos.getAll(filtros,limit,offset);
+        const productos = await ModelProductos.getAll(filtros, limit, offset);
 
 
 
@@ -43,7 +43,7 @@ export const obtenerProductos = async (req, res) => {
                 capacidad: JSON.parse(producto.capacidad)
             }
         })
-        
+
         return res.status(200).json({
             exito: true,
             paginaActual: page,
@@ -97,7 +97,7 @@ export const crearProducto = async (req, res) => {
         });
     };
     try {
-        const idUsuario = req.user.id
+        const idUsuario = req?.user?.id
 
         if (!idUsuario) {
             return res.status(401).json({ message: "Creedenciales invalidas" })
@@ -134,7 +134,7 @@ export const actualizarProducto = async (req, res) => {
 
     try {
 
-        const idUsuario = req.user.id
+        const idUsuario = req?.user?.id
         if (!idUsuario) {
             return res.status(401).json({ message: "Creedenciales invalidas" })
         }
@@ -162,3 +162,34 @@ export const actualizarProducto = async (req, res) => {
         return res.status(500).json({ error: "Error al actualizar un producto" })
     }
 }
+
+
+export const eliminarProducto = async (req, res) => {
+    try {
+
+        const idUsuario = req?.user?.id;
+
+        if(!idUsuario){
+            return res.status(401).json({ message: "Credenciales invalidas" })
+        }
+
+        const rol = await UsuarioModel.getRol(idUsuario);
+
+        if(rol !== ROLES.ADMIN){
+            return res.status(403).json({message: "El usuario no tiene permisos para esto"});
+        }
+
+        const idProducto = req.params.id;
+        const productoAEliminar = await ModelProductos.deleteProduct(idProducto);
+
+        if(!productoAEliminar){
+            return res.status(404).json({ message: `No se ha encontrado el producto con el id: ${idProducto}` })
+        }
+
+        return res.status(200).json(productoAEliminar);
+    } catch (err) {
+        console.error(err)
+        return res.status(500).json({ error: "Error al eliminar un producto" })
+    }
+}
+
