@@ -257,12 +257,10 @@ export const obtenerDetalleFactura = async (req, res) => {
             return res.status(403).json({ message: "No tienes permiso para ver esta factura" });
         }
 
-        const detalles = await ModelDetalleFactura.getDetallesFacturaByFacturaId(idFactura);
 
         return res.status(200).json({
             exito: true,
             detalleFactura: factura,
-            detalles: detalles
         });
 
     } catch (err) {
