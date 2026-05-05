@@ -27,5 +27,11 @@ export const schemaFiltrosProductos = Joi.object({
     condicion: Joi.string().valid("nuevo", "reacondicionado", "usado","").messages({
         'string.base': 'La categoría debe ser un texto.',
         'any.only': 'La condición no es válida. Solo se permite: {#valids}.'
+    }),
+
+    page: Joi.string().min(1).optional().messages({
+        'string.base': 'La página debe ser un número entero.',
+        'string.integer': 'La página debe ser un número entero.',
+        'string.min': 'La página debe ser al menos 1.'
     })
 });

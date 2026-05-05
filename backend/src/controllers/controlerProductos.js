@@ -20,11 +20,19 @@ export const obtenerProductos = async (req, res) => {
 
        const filtros = {
             categoria: value.categoria,
+            condicion: value.condicion,
             precioMin: value.precioMin,
             precioMax: value.precioMax,
             busqueda: value.busqueda
         };
-        const productos = await ModelProductos.getAll(filtros);
+
+        const page = parseInt(req.query.page) || 1;
+        const limit = 10;
+
+
+        // El offset se calcula restando 1 a la página actual y multiplicándola por el límite de resultados por página. Esto asegura que se salten los resultados de las páginas anteriores.
+        const offset = (page - 1) * limit;
+        const productos = await ModelProductos.getAll(filtros,limit,offset);
 
 
 
@@ -35,9 +43,11 @@ export const obtenerProductos = async (req, res) => {
                 capacidad: JSON.parse(producto.capacidad)
             }
         })
+        
         return res.status(200).json({
             exito: true,
-            total: productosParseados.length,
+            paginaActual: page,
+            CantidadEnPagina: productosParseados.length,
             data: productosParseados
         });
     } catch (err) {
@@ -92,7 +102,7 @@ export const crearProducto = async (req, res) => {
         if (!idUsuario) {
             return res.status(401).json({ message: "Creedenciales invalidas" })
         }
-        const rol = await UsuarioModel.getRol(id)
+        const rol = await UsuarioModel.getRol(idUsuario)
 
         if (rol !== ROLES.ADMIN) {
             return res.status(403).json({ message: "El usuario no tiene permisos para esto" })
@@ -101,7 +111,7 @@ export const crearProducto = async (req, res) => {
         const product = await ModelProductos.createProduct(value)
 
 
-        return res.status(200).json({ message: "Producto creado con exito" })
+        return res.status(200).json({ message: "Producto creado con exito", data: product })
 
     } catch (err) {
         console.error(err)

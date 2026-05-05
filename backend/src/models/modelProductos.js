@@ -4,7 +4,7 @@ const db = await obtenerDb()
 
 
 class ModelProductos {
-    static async getAll(filtros) {
+    static async getAll(filtros,limit, offset) {
 
         try {
             let sql = "SELECT * FROM productos WHERE 1=1"
@@ -37,6 +37,13 @@ class ModelProductos {
                 // Los % indican que puede haber cualquier texto antes o después de la palabra buscada
                 args.push(`%${filtros.busqueda}%`);
             }
+
+
+            sql+= " LIMIT ? OFFSET ?";
+
+            // NOTA : Estos parametros siempre se pasan al final de la consulta de los filtros.
+            //Empujamos los ultimos parametros de paginacion 
+            args.push(limit, offset);
 
             const result = await db.execute({
                 sql: sql,
