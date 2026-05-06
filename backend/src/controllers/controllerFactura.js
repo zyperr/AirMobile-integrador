@@ -77,16 +77,16 @@ export const obtenerTodasLasFacturas = async (req, res) => {
 
         // PAGINACIÓN: Leer la página y el límite de la URL (con valores por defecto)
         // Ejemplo de URL en Postman: /api/facturas?page=2&limit=5
-        const page = parseInt(req.query.page) || 1; // Si no envían, es la pág 1
-        const limit = parseInt(req.query.limit) || 10; // Si no envían, traemos 10
-        const offset = (page - 1) * limit; // Fórmula matemática para saber cuántos saltarnos
+        const page = Math.max(1, parseInt(req.query.page) || 1);
+        const limit = Math.max(1, parseInt(req.query.limit) || 10);
+        const offset = (page - 1) * limit;
 
         // Le pasamos el límite y el offset a tu modelo
 
 
         const [facturas, totalResultados] = await Promise.all([
             ModelFactura.getFacturas(limit, offset),
-            ModelFactura.contarFacturas()
+            ModelFactura.countFacturas()
         ]);
 
 
@@ -126,12 +126,14 @@ export const obtenerFacturasDeUsuario = async (req, res) => {
         // EJECUCIÓN EN PARALELO: Pedimos los datos y el total al mismo tiempo
         const [facturas, totalResultados] = await Promise.all([
             ModelFactura.getFacturasDeUsuario(idUsuarioActual, limit, offset),
-            ModelFactura.contarFacturasDeUsuario(idUsuarioActual)
+            ModelFactura.countFacturasDeUsuario(idUsuarioActual)
         ]);
 
         // LA MATEMÁTICA: Math.ceil redondea hacia arriba. 
         // Si tienes 12 facturas y traes de a 10: 12 / 10 = 1.2 -> Redondea a 2 páginas.
         const totalPaginas = Math.ceil(totalResultados / limit);
+
+        
 
         return res.status(200).json({
             exito: true,

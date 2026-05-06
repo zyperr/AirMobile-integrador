@@ -27,15 +27,25 @@ export const obtenerProductos = async (req, res) => {
             busqueda: value.busqueda
         };
 
-        const page = parseInt(req.query.page) || 1;
-        const limit = 10;
 
 
         // El offset se calcula restando 1 a la página actual y multiplicándola por el límite de resultados por página. Esto asegura que se salten los resultados de las páginas anteriores.
+        const page = Math.max(1, parseInt(req.query.page) || 1);
+        const limit = Math.max(1, parseInt(req.query.limit) || 10);
         const offset = (page - 1) * limit;
-        const productos = await ModelProductos.getAll(filtros, limit, offset);
+
+        const [productos, totalResultados] = await Promise.all([
+            ModelProductos.getAll(filtros, limit, offset),
+            ModelProductos.countProductos(filtros)
+        ]);
 
 
+        console.log(totalResultados)
+        console.log(limit);
+
+        const totalPaginas = Math.ceil(totalResultados / limit);
+
+        
 
 
         const productosParseados = productos.map((producto) => {
@@ -45,10 +55,18 @@ export const obtenerProductos = async (req, res) => {
             }
         })
 
+
+
         return res.status(200).json({
             exito: true,
-            paginaActual: page,
-            CantidadEnPagina: productosParseados.length,
+            paginacion: { // Agrupamos todo en un objeto para que sea más ordenado para el frontend
+                paginaActual: page,
+                limitePorPagina: limit,
+                totalResultados: totalResultados,
+                totalPaginas: totalPaginas,
+                tienePaginaSiguiente: page < totalPaginas,
+                tienePaginaAnterior: page > 1
+            },
             data: productosParseados
         });
     } catch (err) {
@@ -170,20 +188,20 @@ export const eliminarProducto = async (req, res) => {
 
         const idUsuario = req?.user?.id;
 
-        if(!idUsuario){
+        if (!idUsuario) {
             return res.status(401).json({ message: "Credenciales invalidas" })
         }
 
         const rol = await UsuarioModel.getRol(idUsuario);
 
-        if(rol !== ROLES.ADMIN){
-            return res.status(403).json({message: "El usuario no tiene permisos para esto"});
+        if (rol !== ROLES.ADMIN) {
+            return res.status(403).json({ message: "El usuario no tiene permisos para esto" });
         }
 
         const idProducto = req.params.id;
         const productoAEliminar = await ModelProductos.deleteProduct(idProducto);
 
-        if(!productoAEliminar){
+        if (!productoAEliminar) {
             return res.status(404).json({ message: `No se ha encontrado el producto con el id: ${idProducto}` })
         }
 
@@ -227,7 +245,7 @@ export const bulkUpload = async (req, res) => {
 
         const productosMapeados = productosArray.map(prod => {
             return {
-                nombre_producto: prod.nombre_producto|| prod.nombre,
+                nombre_producto: prod.nombre_producto || prod.nombre,
                 categoria: prod.categoria,
                 precio: prod.precio,
                 capacidad: prod.capacidad ? [prod.capacidad] : [],

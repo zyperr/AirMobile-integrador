@@ -52,7 +52,8 @@ class ModelFactura {
     }
 
     
-    static async contarFacturas() {
+
+    static async countFacturas() {
         try {
             const query = `SELECT COUNT(*) as total FROM facturas`;
             const { rows } = await db.execute({
@@ -101,7 +102,7 @@ class ModelFactura {
         }
     }
 
-    static async contarFacturasDeUsuario(usuarioId) {
+    static async countFacturasDeUsuario(usuarioId) {
         try {
             const query = `SELECT COUNT(*) as total FROM facturas WHERE usuario_id = ?`;
             const { rows } = await db.execute({

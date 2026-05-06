@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verificarToken } from "../middlewares/authMiddleware.js";
-import { obtenerProductos,obtenerProducto,crearProducto, actualizarProducto, bulkUpload,eliminarProducto } from "../controllers/controlerProductos.js";
+import { obtenerProductos,obtenerProducto,crearProducto, actualizarProducto, bulkUpload,eliminarProducto } from "../controllers/controllerProductos.js";
 import { uploadMiddleware } from "../middlewares/multer.js";
 
 
