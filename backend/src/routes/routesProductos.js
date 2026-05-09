@@ -9,6 +9,8 @@ const router = Router();
 
 
 
+
+
 router.get("/productos",obtenerProductos)
 
 router.get("/:id",obtenerProducto)

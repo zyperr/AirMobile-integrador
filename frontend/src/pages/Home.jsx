@@ -1,9 +1,21 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import "../style/home.css";
 import Footer from "../components/Footer";
 
 export default function Home() {
+  
+  useEffect(() => {
+    const fetchProductos = async () => {
+      const respuesta = await fetch(URL_API);
+      const data = await respuesta.json();
+      setProductos(data);
+    };
+
+    fetchProductos();
+  }, []);
+  
   return (
     <div>
 

@@ -7,12 +7,24 @@ import expreess from 'express';
 import routesUsuarios from './routes/routesUsuarios.js';
 import routesProductos from "./routes/routesProductos.js"
 import { inicializarBaseDeDatos } from './config/initDB.js'; 
-
 import routesCarrito from './routes/routesCarrito.js';
 import routeResetPassword  from "./routes/routeResetPassword.js"
 import routeRecuperarPassword from "./routes/routeRecuperarPassword.js"
-
 import routeFacturas from "./routes/routesFacturas.js";
+
+
+import cors from "cors";
+
+const corsOptions = {
+  // Aquí pones la URL exacta donde corre tu React
+  origin: ['http://localhost:5173', 'https://tu-dominio-final.com'], 
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'], // Muy importante para que pasen tus JWT
+  credentials: true // Permite el envío de cookies si las llegas a usar
+};
+
+app.use(cors(corsOptions));
+
 
 const PORT = 3000;
 const app = expreess();
