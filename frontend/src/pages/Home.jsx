@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import "../style/home.css";
+import Footer from "../components/Footer";
 
 export default function Home() {
   return (
@@ -102,14 +103,8 @@ export default function Home() {
       </section>
 
       {/* FOOTER */}
-      <footer>
-        <div className="footer-content">
-          <div className="footer-section">
-            <h3>AirMobile</h3>
-            <p>© 2026</p>
-          </div>
-        </div>
-      </footer>
+
+      <Footer/>
 
     </div>
   );
