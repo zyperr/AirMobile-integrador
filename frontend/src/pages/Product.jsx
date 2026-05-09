@@ -1,270 +1,198 @@
 import { useState } from "react";
+import Navbar from "../components/Navbar.jsx";
+
+
+import "../style/home.css";
+import "../style/detalleProducto.css";
+
+
 
 export default function Product() {
-  const [condicion, setCondicion] = useState("nuevo");
-  const [capacidad, setCapacidad] = useState("128");
+  const [condicion, setCondicion] = useState("Como nuevo");
+  const [capacidad, setCapacidad] = useState("128GB");
   const [carrito, setCarrito] = useState([]);
 
   const agregarAlCarrito = () => {
     const producto = {
       nombre: "iPhone 13 Pro",
       capacidad,
-      condicion
+      condicion,
+      precio: 849
     };
     setCarrito([...carrito, producto]);
   };
 
+  const capacidades = [
+    { gb: "128GB", extra: "+$0" },
+    { gb: "256GB", extra: "+$50" },
+    { gb: "512GB", extra: "+$100" }
+  ];
+
   return (
-    <div style={{ background: "#f5f5f7", minHeight: "100vh", padding: "60px" }}>
+    <div className="page-wrapper">
 
-      {/* HERO */}
-      <div style={{
-        maxWidth: "1200px",
-        margin: "0 auto",
-        display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: "60px",
-        alignItems: "center"
-      }}>
-
-        <div style={{
-          background: "#fff",
-          borderRadius: "20px",
-          padding: "40px",
-          display: "flex",
-          justifyContent: "center"
-        }}>
-          <img
-            src="https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/iphone-13-pro-family-hero"
-            style={{ width: "320px" }}
-          />
+      {/* NAVBAR (Con efecto Cristal Esmerilado) */}
+      <Navbar carrito={carrito} />
+      {/* DETALLE DEL PRODUCTO (HERO) */}
+      <section className="product-detail-hero">
+        {/* Columna Izquierda: Imágenes */}
+        <div className="pd-gallery">
+          <div className="pd-main-image">
+            <img src="https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/iphone-13-pro-family-hero" alt="iPhone 13 Pro" />
+          </div>
+          <div className="pd-thumbnails">
+            <div className="thumb active"><img src="https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/iphone-13-pro-family-hero" alt="thumb1" /></div>
+            <div className="thumb"><img src="https://m.media-amazon.com/images/I/61jLiCovxVL._AC_SY741_.jpg" alt="thumb2" /></div>
+            <div className="thumb"><img src="https://m.media-amazon.com/images/I/617yZ8NlV6L._AC_SY741_.jpg" alt="thumb3" /></div>
+          </div>
         </div>
 
-        <div>
-          <span style={badge}>RESTAURADO CERTIFICADO</span>
-          <h1 style={title}>iPhone 13 Pro</h1>
+        {/* Columna Derecha: Información y Compra */}
+        <div className="pd-info">
+          <span className="badge badge-reacondicionado">REACONDICIONADO CERTIFICADO</span>
+          <h1 className="pd-title">iPhone 13 Pro</h1>
 
-          <div style={{ display: "flex", gap: "10px" }}>
-            <span style={price}>$849.00</span>
-            <span style={oldPrice}>$999.00</span>
+          <div className="pd-pricing">
+            <span className="pd-price">$849.00</span>
+            <span className="pd-old-price">$999.00</span>
           </div>
 
-          {/* CONDICIÓN */}
-          <p style={label}>CONDICIÓN</p>
-          <div style={row}>
-            <button
-              onClick={() => setCondicion("nuevo")}
-              style={condicion === "nuevo" ? btnSelected : btnDefault}
-            >
-              Como nuevo
-            </button>
-
-            <button
-              onClick={() => setCondicion("usado")}
-              style={condicion === "usado" ? btnSelected : btnDefault}
-            >
-              Usado
-            </button>
+          {/* Selector de Condición */}
+          <div className="pd-option-group">
+            <div className="pd-option-header">
+              <span className="pd-label">CONDICIÓN</span>
+              <a href="#" className="pd-link">Guía de condiciones</a>
+            </div>
+            <div className="pd-btn-grid-3">
+              {["Como nuevo", "Excelente", "Usado"].map(cond => (
+                <button
+                  key={cond}
+                  className={`opt-btn ${condicion === cond ? "active" : ""}`}
+                  onClick={() => setCondicion(cond)}
+                >
+                  {cond}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* CAPACIDAD */}
-          <p style={label}>CAPACIDAD</p>
-          <div style={row}>
-            {["128", "256", "512"].map(c => (
-              <button
-                key={c}
-                onClick={() => setCapacidad(c)}
-                style={capacidad === c ? btnSelected : btnDefault}
-              >
-                {c}GB
-              </button>
-            ))}
+          {/* Selector de Capacidad */}
+          <div className="pd-option-group">
+            <span className="pd-label">CAPACIDAD</span>
+            <div className="pd-btn-grid-3">
+              {capacidades.map(cap => (
+                <button
+                  key={cap.gb}
+                  className={`opt-btn ${capacidad === cap.gb ? "active" : ""}`}
+                  onClick={() => setCapacidad(cap.gb)}
+                >
+                  <strong>{cap.gb}</strong>
+                  <span className="opt-subtext">{cap.extra}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* BOTÓN */}
-          <button style={buyBtn} onClick={agregarAlCarrito}>
+          <button className="btn-dark btn-buy" onClick={agregarAlCarrito}>
             Añadir al carrito
           </button>
-
-          <p style={{ textAlign: "center", fontSize: "12px", color: "#777" }}>
-            Envío gratuito y devoluciones en 30 días.
-          </p>
+          <p className="pd-shipping-info">Envío gratuito y devoluciones en 30 días.</p>
         </div>
-      </div>
+      </section>
 
-      {/* BENEFICIOS */}
-      <div style={benefitsBox}>
-        {[
-          ["Garantía de 12 meses", "Cobertura total"],
-          ["+90% batería", "Baterías originales"],
-          ["Inspección de 40 puntos", "Pruebas completas"],
-          ["Pago seguro", "Pago cifrado"]
-        ].map((b, i) => (
-          <div key={i} style={{ textAlign: "center" }}>
-            <h4>{b[0]}</h4>
-            <p style={{ color: "#666" }}>{b[1]}</p>
-          </div>
-        ))}
-      </div>
+      {/* BENEFICIOS (Trust Bar) */}
+      <section className="pd-benefits">
+        <div className="benefit-item">
+          <span className="benefit-icon">🛡️</span>
+          <h4>Garantía de 12 meses</h4>
+          <p>Cobertura total para cualquier defecto de hardware.</p>
+        </div>
+        <div className="benefit-item">
+          <span className="benefit-icon">🔋</span>
+          <h4>+90% de salud de batería</h4>
+          <p>Baterías originales de Apple, máximo rendimiento.</p>
+        </div>
+        <div className="benefit-item">
+          <span className="benefit-icon">⚙️</span>
+          <h4>Inspección de 40 puntos</h4>
+          <p>Cada dispositivo se somete a pruebas rigurosas.</p>
+        </div>
+        <div className="benefit-item">
+          <span className="benefit-icon">🔒</span>
+          <h4>Pago seguro</h4>
+          <p>Pago 100% cifrado y protegido.</p>
+        </div>
+      </section>
 
-      {/* DESTREZA */}
-      <div style={{
-        maxWidth: "1200px",
-        margin: "80px auto",
-        display: "grid",
-        gridTemplateColumns: "2fr 1fr",
-        gap: "20px"
-      }}>
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          background: "#eee",
-          borderRadius: "20px"
-        }}>
-          <div style={{ padding: "30px" }}>
+      {/* DESTREZA TÉCNICA E INDICADOR */}
+      <section className="pd-specs-container">
+        <div className="pd-tech-box">
+          <div className="tech-info">
             <h2>Destreza técnica</h2>
-            <p>Display Super Retina XDR</p>
-            <p>Cámara Pro</p>
-            <p>Chip A15 Bionic</p>
+            <p><strong>Display:</strong> Super Retina XDR de 6.1" con ProMotion</p>
+            <p><strong>Cámara:</strong> Pro 12MP system: Telephoto, Wide, Ultra Wide</p>
+            <p><strong>Chip:</strong> Chip Bionic A15 con CPU de 6 núcleos</p>
           </div>
-
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <img
-              src="https://m.media-amazon.com/images/I/51C7hGvpgEL._AC_SX466_.jpg"
-              style={{ width: "150px", opacity: 0.6 }}
-            />
+          <div className="tech-img">
+            {/* Imagen ilustrativa de un procesador/chip */}
+            <img src="https://m.media-amazon.com/images/I/51C7hGvpgEL._AC_SX466_.jpg" alt="Chip A15" />
           </div>
         </div>
 
-        <div style={{
-          background: "#eee",
-          borderRadius: "20px",
-          padding: "30px",
-          textAlign: "center"
-        }}>
+        <div className="pd-indicator-box">
           <h3>Indicador de estado</h3>
-          <p>Este dispositivo tiene una valoración de 9.8/10</p>
+          <p>Este dispositivo tiene una valoración de 9.8/10 en el proceso de inspección de Air Mobile.</p>
+          <div className="indicator-card">
+            <h4>COMO NUEVO (PREMIUM)</h4>
+            <p>No se aprecian arañazos a 20 cm de distancia. Totalmente impecable. Procesado de estética y hardware impecable.</p>
+          </div>
         </div>
-      </div>
+      </section>
 
-      {/* PRODUCTOS */}
-      <div style={{ maxWidth: "1200px", margin: "80px auto" }}>
-        <h2>Combinaciones perfectas</h2>
+      {/* PRODUCTOS RELACIONADOS (Accesorios) */}
+      <section className="products-section">
+        <div className="products-header">
+          <h2>Combinaciones perfectas</h2>
+          <a href="#">Descubrir los accesorios</a>
+        </div>
 
-        <div style={productsGrid}>
+        <div className="products-grid">
           {[
-            { name: "MagSafe Case", img: "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/MHXH3" },
-            { name: "Cargador USB-C", img: "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/MU7V2" },
-            { name: "AirPods Pro", img: "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/MQD83" },
-            { name: "Protector Glass", img: "https://acdn-us.mitiendanube.com/stores/003/480/832/products/img_83991-bd583b1599b616e08e16920418477310-1024-1024.webp" },
+            { name: "MagSafe Clear Case", price: "$49.00", img: "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/MHXH3" },
+            { name: "20W USB-C Adaptador", price: "$19.00", img: "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/MU7V2" },
+            { name: "AirPods Pro (2nd Gen)", price: "$249.00", img: "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/MQD83" },
+            { name: "Privacy Glass Shield", price: "$29.00", img: "https://acdn-us.mitiendanube.com/stores/003/480/832/products/img_83991-bd583b1599b616e08e16920418477310-1024-1024.webp" },
           ].map((p, i) => (
-            <div key={i} style={productCard}>
-              <img src={p.img} style={{ width: "120px" }} />
-              <p style={{ margin: "10px 0" }}>{p.name}</p>
-              <button style={{ ...btnDefault, marginTop: "auto" }}>
+            <div key={i} className="product-card">
+              <div className="product-img">
+                <img src={p.img} alt={p.name} />
+              </div>
+              <p className="product-name">{p.name}</p>
+              <p className="product-price">{p.price}</p>
+              {/* Botón secundario blanco para los accesorios */}
+              <button className="btn-secondary" style={{ width: "100%", marginTop: "12px" }}>
                 Añadir al carrito
               </button>
             </div>
           ))}
         </div>
-      </div>
+      </section>
 
       {/* FOOTER */}
-      <div style={{
-        background: "#fff",
-        borderTop: "1px solid #eee",
-        padding: "20px"
-      }}>
-        <div style={{
-          maxWidth: "1200px",
-          margin: "0 auto",
-          display: "flex",
-          justifyContent: "space-between"
-        }}>
-          <h2>AirMobile</h2>
-
-          <div style={{ display: "flex", gap: "20px" }}>
-            <span style={{ color: "#2563eb" }}>iPhones</span>
-            <span>Fundas</span>
-            <span>Cargadores</span>
-            <span>Audio</span>
+      <footer>
+        <div className="footer-content">
+          <div className="footer-logo">
+            <h3>AirMobile</h3>
+            <p>© 2024 Todo los derechos reservados</p>
           </div>
-
-          <div>🛒 {carrito.length}</div>
+          <div className="footer-links">
+            <a href="#">Política de privacidad</a>
+            <a href="#">Condiciones de servicio</a>
+            <a href="#">Información de envío</a>
+            <a href="#">Devoluciones</a>
+          </div>
         </div>
-      </div>
-
+      </footer>
     </div>
   );
 }
-
-/* ESTILOS */
-
-const badge = {
-  background: "#dbeafe",
-  color: "#2563eb",
-  padding: "6px 12px",
-  borderRadius: "20px"
-};
-
-const title = { fontSize: "40px" };
-const price = { fontSize: "24px" };
-const oldPrice = { textDecoration: "line-through" };
-
-const label = { marginTop: "20px" };
-const row = { display: "flex", gap: "10px" };
-
-const btnDefault = {
-  padding: "10px 16px",
-  background: "#fff",
-  border: "1px solid #ddd",
-  borderRadius: "10px",
-  cursor: "pointer"
-};
-
-const btnSelected = {
-  padding: "10px 16px",
-  background: "#fff",
-  border: "2px solid #2563eb",
-  borderRadius: "10px",
-  cursor: "pointer"
-};
-
-const buyBtn = {
-  marginTop: "30px",
-  width: "100%",
-  padding: "16px",
-  background: "#2563eb",
-  color: "#fff",
-  border: "none",
-  borderRadius: "12px",
-  cursor: "pointer"
-};
-
-const benefitsBox = {
-  margin: "80px auto",
-  maxWidth: "1200px",
-  display: "grid",
-  gridTemplateColumns: "repeat(4,1fr)",
-  gap: "20px",
-  background: "#eee",
-  padding: "40px",
-  borderRadius: "20px"
-};
-
-const productsGrid = {
-  display: "grid",
-  gridTemplateColumns: "repeat(4,1fr)",
-  gap: "20px"
-};
-
-const productCard = {
-  background: "#fff",
-  padding: "20px",
-  borderRadius: "20px",
-  textAlign: "center",
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  height: "100%"
-};

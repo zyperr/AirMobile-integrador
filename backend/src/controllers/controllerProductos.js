@@ -39,10 +39,6 @@ export const obtenerProductos = async (req, res) => {
             ModelProductos.countProductos(filtros)
         ]);
 
-
-        console.log(totalResultados)
-        console.log(limit);
-
         const totalPaginas = Math.ceil(totalResultados / limit);
 
         

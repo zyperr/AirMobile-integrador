@@ -1,0 +1,304 @@
+/* =========================================
+   ESTILOS DE LA PÁGINA DE DETALLE (PRODUCT.JSX)
+   ========================================= */
+@import url('../index.css');
+/* Hero del producto */
+.product-detail-hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  max-width: 1200px;
+  margin: 60px auto;
+  padding: 0 5%;
+  align-items: flex-start;
+}
+
+/* Galería de imágenes (Izquierda) */
+.pd-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.pd-main-image {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 500px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.pd-main-image img {
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.pd-thumbnails {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.thumb {
+  width: 70px;
+  height: 70px;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 8px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: 0.2s;
+}
+
+.thumb.active {
+  border-color: var(--primary-color);
+}
+
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Info del producto (Derecha) */
+.pd-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.pd-title {
+  font-size: 42px;
+  font-weight: 700;
+  margin: 16px 0;
+  letter-spacing: -1px;
+}
+
+.pd-pricing {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.pd-price {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.pd-old-price {
+  font-size: 20px;
+  color: #a1a1a6;
+  text-decoration: line-through;
+}
+
+/* Opciones y Botones */
+.pd-option-group {
+  margin-bottom: 24px;
+}
+
+.pd-option-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.pd-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-gray);
+  letter-spacing: 1px;
+}
+
+.pd-link {
+  font-size: 13px;
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.pd-btn-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.opt-btn {
+  background: #ffffff;
+  border: 1px solid #d2d2d7;
+  border-radius: 12px;
+  padding: 16px 10px;
+  font-size: 14px;
+  color: var(--text-dark);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+}
+
+.opt-btn.active {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: #ffffff;
+}
+
+.opt-btn.active .opt-subtext {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.opt-subtext {
+  font-size: 12px;
+  color: var(--text-gray);
+}
+
+.btn-buy {
+  margin-top: 20px;
+  padding: 20px;
+  font-size: 18px;
+  border-radius: 14px;
+}
+
+.pd-shipping-info {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-gray);
+  margin-top: 16px;
+}
+
+/* Beneficios (Iconos) */
+.pd-benefits {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  max-width: 1200px;
+  margin: 60px auto;
+  padding: 40px 5%;
+  border-top: 1px dashed #d2d2d7; /* Separador sutil */
+  border-bottom: 1px dashed #d2d2d7;
+}
+
+.benefit-item {
+  text-align: center;
+}
+
+.benefit-icon {
+  font-size: 28px;
+  margin-bottom: 16px;
+  display: inline-block;
+}
+
+.benefit-item h4 {
+  font-size: 14px;
+  margin-bottom: 8px;
+  color: var(--text-dark);
+}
+
+.benefit-item p {
+  font-size: 13px;
+  color: var(--text-gray);
+  line-height: 1.5;
+}
+
+/* Sección de Destreza y Estado */
+.pd-specs-container {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 24px;
+  max-width: 1200px;
+  margin: 60px auto;
+  padding: 0 5%;
+}
+
+.pd-tech-box, .pd-indicator-box {
+  background: #f5f5f7;
+  border-radius: 24px;
+  padding: 40px;
+}
+
+.pd-tech-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tech-info h2, .pd-indicator-box h3 {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.tech-info p {
+  font-size: 14px;
+  margin-bottom: 12px;
+  color: var(--text-gray);
+}
+
+.tech-info strong {
+  color: var(--primary-color);
+}
+
+.tech-img img {
+  width: 160px;
+  opacity: 0.2; /* Efecto marca de agua genial para el chip */
+  mix-blend-mode: multiply;
+}
+
+.pd-indicator-box p {
+  font-size: 14px;
+  color: var(--text-gray);
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.indicator-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+
+.indicator-card h4 {
+  color: var(--primary-color);
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.indicator-card p {
+  font-size: 12px;
+  margin: 0;
+}
+
+/* =========================================
+   MEDIA QUERIES PARA CELULARES
+   ========================================= */
+@media (max-width: 900px) {
+  .product-detail-hero, .pd-specs-container {
+    grid-template-columns: 1fr; /* Todo a una columna */
+  }
+  
+  .pd-main-image {
+    height: 350px;
+  }
+
+  .pd-benefits {
+    grid-template-columns: repeat(2, 1fr); /* 2x2 en tablets */
+  }
+}
+
+@media (max-width: 500px) {
+  .pd-benefits {
+    grid-template-columns: 1fr; /* 1x1 en celulares */
+  }
+  .pd-btn-grid-3 {
+    grid-template-columns: 1fr; /* Botones apilados */
+  }
+  .pd-tech-box {
+    flex-direction: column;
+    text-align: center;
+  }
+}

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import Navbar from "../components/Navbar";
 import "../style/home.css";
 
 export default function Home() {
@@ -6,22 +7,8 @@ export default function Home() {
     <div>
 
       {/* NAV */}
-      <nav>
-        <a className="nav-logo">AirMobile</a>
+      <Navbar />
 
-        <ul className="nav-links">
-          <li><a className="active">iPhones</a></li>
-          <li><a>Fundas</a></li>
-          <li><a>Cargadores</a></li>
-          <li><a>Audio</a></li>
-        </ul>
-
-        <div className="nav-icons">
-          <div className="cart-wrapper">
-            🛒 <span className="cart-badge">0</span>
-          </div>
-        </div>
-      </nav>
 
       {/* HERO */}
       <section className="hero">
