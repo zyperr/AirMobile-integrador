@@ -19,10 +19,6 @@ export default function Home() {
   return (
     <div>
 
-      {/* NAV */}
-      <Navbar />
-
-
       {/* HERO */}
       <section className="hero">
         <div className="hero-text">
@@ -34,7 +30,9 @@ export default function Home() {
           </p>
 
           <div className="hero-buttons">
-            <button className="btn-primary">Ver Catálogo</button>
+            <Link to="/catalogo">
+              <button className="btn-primary">Ver Catálogo</button>
+            </Link>
             <button className="btn-secondary">Conocer más</button>
           </div>
         </div>
@@ -113,10 +111,6 @@ export default function Home() {
           <button className="btn-dark">Ver Productos</button>
         </div>
       </section>
-
-      {/* FOOTER */}
-
-      <Footer/>
 
     </div>
   );

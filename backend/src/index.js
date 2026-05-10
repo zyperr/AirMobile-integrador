@@ -23,13 +23,13 @@ const corsOptions = {
   credentials: true // Permite el envío de cookies si las llegas a usar
 };
 
-app.use(cors(corsOptions));
+
 
 
 const PORT = 3000;
 const app = expreess();
 
-
+app.use(cors(corsOptions));
 
 
 
