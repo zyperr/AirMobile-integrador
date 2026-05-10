@@ -1,4 +1,5 @@
 import { useState } from "react";
+import "../style/Registro.css";
 
 const Registro = () => {
 const [form, setForm] = useState({
@@ -68,7 +69,7 @@ const handleSubmit = (e) => {
 
 if (submitted) {
     return (
-    <div className="registro-wrapper d-flex align-items-center justify-content-center min-vh-100">
+    <div className="registro-wrapper d-flex align-items-center justify-content-center py-5">
         <div className="registro-card text-center p-5">
             <div className="success-icon mb-4">
             <svg
@@ -114,11 +115,12 @@ if (submitted) {
 }
 
 return (
-    <div className="registro-wrapper d-flex align-items-center justify-content-center min-vh-100 py-4">
+    <div className="registro-wrapper">
+
         <div className="registro-card p-4 p-md-5">
         {/* --HEADER-- */}
             <div className="text-center mb-4">
-                <h1 className="registro-title mb-2">Crea tu cuenta.</h1>
+                <h1 className="registro-title mb-2">Crea tu cuenta</h1>
                 <p className="registro-subtitle">Únete a nuestra comunidad para disfrutar de acceso exclusivo a los{" "}
                 <span className="fw-semibold" style={{ color: "#1a3a6b" }}>
                 mejores iPhone de segunda mano certificados.
@@ -339,7 +341,6 @@ return (
             </div>
         </div>
         </div>
-        <style>{styles}</style>
     </div>
 );
 };
@@ -361,192 +362,6 @@ const getPasswordStrength = (password) => {
     return { pct: 100, color: "#198754", label: "Muy fuerte" };
 };
 
-const styles = `
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');
-
-.registro-wrapper {
-    background: linear-gradient(135deg, #e8edf5 0%, #f0f4fb 50%, #e4ecf7 100%);
-    font-family: 'DM Sans', sans-serif;
-    min-height: 100vh;
-}
-
-.registro-card {
-    background: #ffffff;
-    border-radius: 20px;
-    box-shadow: 0 8px 40px rgba(26, 58, 107, 0.12);
-    width: 100%;
-    max-width: 500px;
-    animation: fadeInUp 0.5s ease forwards;
-}
-
-@keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(24px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-
-.registro-title {
-    font-size: clamp(1.6rem, 4vw, 2rem);
-    font-weight: 700;
-    color: #1a1a2e;
-    letter-spacing: -0.5px;
-}
-
-.registro-subtitle {
-    color: #6b7280;
-    font-size: 0.92rem;
-    line-height: 1.6;
-    max-width: 340px;
-    margin: 0 auto;
-}
-
-.registro-label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #374151;
-    margin-bottom: 6px;
-}
-
-.registro-input {
-    border: 1.5px solid #e5e7eb;
-    border-radius: 10px;
-    padding: 12px 14px;
-    font-size: 0.95rem;
-    color: #1a1a2e;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    background-color: #fafafa;
-}
-
-.registro-input:focus {
-    border-color: #1a3a6b;
-    box-shadow: 0 0 0 3px rgba(26, 58, 107, 0.12);
-    background-color: #fff;
-}
-
-.registro-input.is-valid {
-    border-color: #198754;
-    background-image: none;
-}
-
-.registro-input.is-invalid {
-    border-color: #dc3545;
-}
-
-  /* Input con botón ojo */
-.input-group .registro-input {
-    border-right: none;
-    border-top-right-radius: 0 !important;
-    border-bottom-right-radius: 0 !important;
-}
-
-.toggle-password {
-    border: 1.5px solid #e5e7eb;
-    border-left: none;
-    border-radius: 0 10px 10px 0 !important;
-    background: #fafafa;
-    color: #9ca3af;
-    padding: 0 12px;
-    transition: color 0.2s;
-}
-
-.toggle-password:hover {
-    color: #1a3a6b;
-    background: #f0f4fb;
-}
-
-/*--Cuando el input tiene is-valid o is-invalid, el botón también--*/
-
-.input-group:has(.is-valid) .toggle-password {
-    border-color: #198754;
-}
-
-.input-group:has(.is-invalid) .toggle-password {
-    border-color: #dc3545;
-}
-
-.btn-registro {
-    background: #1a3a6b;
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    padding: 13px;
-    font-size: 1rem;
-    font-weight: 600;
-    font-family: 'DM Sans', sans-serif;
-    cursor: pointer;
-    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
-    letter-spacing: 0.3px;
-}
-
-.btn-registro:hover {
-    background: #142d54;
-    box-shadow: 0 4px 16px rgba(26, 58, 107, 0.28);
-    transform: translateY(-1px);
-}
-
-.btn-registro:active {
-    transform: translateY(0);
-}
-
-.registro-link {
-    color: #1a3a6b;
-    text-decoration: none;
-    font-weight: 600;
-    transition: color 0.2s;
-}
-
-.registro-link:hover {
-    color: #142d54;
-    text-decoration: underline;
-}
-
-.badge-seguro {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: #2d8a4e;
-    letter-spacing: 1px;
-    background: #f0faf4;
-    padding: 6px 12px;
-    border-radius: 20px;
-    border: 1px solid #c3e6cb;
-}
-
-  /* --Barra de fuerza de contraseña-- */
-.password-strength-bar {
-    height: 4px;
-    background: #e5e7eb;
-    border-radius: 99px;
-    overflow: hidden;
-    margin-bottom: 4px;
-}
-
-.password-strength-fill {
-    height: 100%;
-    border-radius: 99px;
-    transition: width 0.3s ease, background-color 0.3s ease;
-}
-
-  /* --Icono de éxito-- */
-.success-icon svg {
-    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
-
-@keyframes popIn {
-    from { transform: scale(0.5); opacity: 0; }
-    to   { transform: scale(1); opacity: 1; }
-}
-
-  /* --Responsive-- */
-@media (max-width: 576px) {
-
-.registro-card {
-    border-radius: 16px;
-    margin: 0 16px;
-    }
-}
-`;
 
 export default Registro;
 
