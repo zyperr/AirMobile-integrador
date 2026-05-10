@@ -5,6 +5,7 @@ import { schemaFiltrosProductos } from "../schemas/schemaQueriesFiltros.js";
 import { schemaActualizarProducto } from "../schemas/schemaUpdateProducto.js";
 import { procesarArchivo } from "../utils/leerArchivos.js";
 import { ROLES } from "../utils/roles.js";
+import { eliminarDeCloudinary, subirACloudinary } from "../utils/manejarImagenes.js";
 import Joi from "joi";
 
 export const obtenerProductos = async (req, res) => {
@@ -41,12 +42,13 @@ export const obtenerProductos = async (req, res) => {
 
         const totalPaginas = Math.ceil(totalResultados / limit);
 
-        
+
 
 
         const productosParseados = productos.map((producto) => {
             return {
                 ...producto,
+                imagen_url:JSON.parse(producto.imagen_url),
                 capacidad: JSON.parse(producto.capacidad)
             }
         })
@@ -89,6 +91,7 @@ export const obtenerProducto = async (req, res) => {
 
         const parsedProducto = {
             ...producto,
+            imagen_url:JSON.parse(producto.imagen_url),
             capacidad: JSON.parse(producto.capacidad)
         }
         return res.status(200).json(parsedProducto)
@@ -101,16 +104,7 @@ export const obtenerProducto = async (req, res) => {
 
 export const crearProducto = async (req, res) => {
 
-    const { error, value } = schemaProductos.validate(req.body, { abortEarly: false });
 
-    if (error) {
-        const erroresLimpios = error.details.map(detalle => detalle.message);
-        return res.status(400).json({
-            exito: false,
-            mensaje: "Por favor, corrige los siguientes errores:",
-            errores: erroresLimpios
-        });
-    };
     try {
         const idUsuario = req?.user?.id
 
@@ -123,6 +117,56 @@ export const crearProducto = async (req, res) => {
             return res.status(403).json({ message: "El usuario no tiene permisos para esto" })
 
         }
+
+
+        let urlsImagenes = [];
+        // req.files existe si en la ruta usaste multer.array('imagenes', 5)
+        if (req.files && req.files.length > 0) {
+            // Subimos todas las imágenes en paralelo y guardamos las URLs resultantes
+            urlsImagenes = await Promise.all(
+                req.files.map(file => subirACloudinary(file.buffer, req.body.categoria, req.body.nombre_producto))
+            );
+        }
+        let capacidadArreglo = [];
+        
+        if (req.body.capacidad) {
+            try {
+                // Intentamos leerlo como un JSON '["64GB", "128GB"]'
+                capacidadArreglo = JSON.parse(req.body.capacidad);
+            } catch (error) {
+                // Si falla el parseo (ej: mandaron "128GB" sin corchetes), 
+                // lo convertimos nosotros en un arreglo manualmente o lo separamos por comas.
+                if (typeof req.body.capacidad === 'string' && req.body.capacidad.includes(',')) {
+                    capacidadArreglo = req.body.capacidad.split(',').map(item => item.trim());
+                } else {
+                    capacidadArreglo = [req.body.capacidad];
+                }
+            }
+        }
+
+
+        const datosAValidar = {
+            ...req.body,
+            capacidad: capacidadArreglo,
+            imagen_url: urlsImagenes.length > 0 ? urlsImagenes : []
+        };
+
+
+        const { error, value } = schemaProductos.validate(datosAValidar, { abortEarly: false });
+        console.log(urlsImagenes)
+        if (error) {
+
+            if (urlsImagenes.length > 0) {
+                await Promise.all(urlsImagenes.map(url => eliminarDeCloudinary(url)))
+            }
+            const erroresLimpios = error.details.map(detalle => detalle.message);
+            return res.status(400).json({
+                exito: false,
+                mensaje: "Por favor, corrige los siguientes errores:",
+                errores: erroresLimpios
+            });
+        };
+
         const product = await ModelProductos.createProduct(value)
 
 

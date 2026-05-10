@@ -4,10 +4,10 @@ const db = await obtenerDb()
 
 
 class ModelProductos {
-    static async getAll(filtros,limit, offset) {
+    static async getAll(filtros, limit, offset) {
 
         try {
-            let sql = "SELECT * FROM productos WHERE 1=1"
+            let sql = "SELECT * FROM productos WHERE 1=1 AND activo = 1"
             let args = []
 
             if (filtros.categoria) {
@@ -39,7 +39,7 @@ class ModelProductos {
             }
 
 
-            sql+= " LIMIT ? OFFSET ?";
+            sql += " LIMIT ? OFFSET ?";
 
             // NOTA : Estos parametros siempre se pasan al final de la consulta de los filtros.
             //Empujamos los ultimos parametros de paginacion 
@@ -58,10 +58,10 @@ class ModelProductos {
 
     static async countProductos(filtros) {
         try {
-            let sql = "SELECT COUNT(*) as total FROM productos WHERE 1=1"
+            let sql = "SELECT COUNT(*) as total FROM productos WHERE 1=1 AND activo = 1"
             let args = []
 
-            
+
             if (filtros.categoria) {
                 sql += " AND categoria LIKE ?"
                 args.push(`%${filtros.categoria}%`)
@@ -97,7 +97,7 @@ class ModelProductos {
             return result.rows[0].total;
 
 
-        }catch (err) {
+        } catch (err) {
             console.error("Error en ProductoModel.countProductos:", err);
             throw err;
         }
@@ -105,7 +105,7 @@ class ModelProductos {
 
     static async getById(id) {
         const { rows } = await db.execute({
-            sql: "SELECT * FROM productos WHERE id = ?",
+            sql: "SELECT * FROM productos WHERE id = ? AND activo = 1",
             args: [id]
         })
 
@@ -113,11 +113,13 @@ class ModelProductos {
     }
 
     static async createProduct(data) {
-        const { nombre_producto, precio, categoria, condicion } = data
-        const capacidad = JSON.stringify(data.capacidad)
+        const { nombre_producto, precio, categoria, condicion, descripcion } = data
+        const capacidad = JSON.stringify(data.capacidad) || [];
+        const imagen_url = JSON.stringify(data.imagen_url) || [];
+
         const result = await db.execute({
             sql: "INSERT INTO productos(nombre_producto,precio,capacidad,descripcion,imagen_url,categoria,condicion) VALUES(?,?,?,?,?,?,?)",
-            args: [nombre_producto, precio, capacidad ? capacidad : "", data.descripcion ? data.descripcion : "", data.imagen_url ? data.imagen_url : "", categoria, condicion]
+            args: [nombre_producto, precio, capacidad, descripcion ? descripcion : "", imagen_url, categoria, condicion]
         })
 
         return result;
@@ -125,11 +127,16 @@ class ModelProductos {
 
     static async deleteProduct(id) {
         try {
+
             const result = await db.execute({
-                sql: "DELETE FROM productos WHERE id = ?",
+                sql: "UPDATE productos SET activo = 0 WHERE id = ? ",
                 args: [id]
             })
 
+            await db.execute({
+                sql: "DELETE FROM carrito WHERE producto_id = ?",
+                args: [id]
+            });
 
             if (result.rowsAffected === 0) {
                 return { success: false, message: "No se ha encontrado el producto" }
@@ -179,7 +186,7 @@ class ModelProductos {
             if (!productosArray || productosArray.length === 0) {
                 return 0;
             }
-            
+
             // 2. Preparamos el lote de consultas (Batch)
             // Transformamos cada producto validado en un objeto con la sentencia SQL y sus argumentos
             const sentenciasBatch = productosArray.map(producto => {
@@ -193,7 +200,7 @@ class ModelProductos {
                         producto.precio,
                         JSON.stringify(producto.capacidad),
                         producto.descripcion,
-                        producto.imagen_url,
+                        JSON.stringify(producto.imagen_url),
                         producto.condicion,
                         producto.categoria
                     ]

@@ -22,7 +22,8 @@ export const inicializarBaseDeDatos = async () => {
         descripcion TEXT, 
         imagen_url TEXT,
         categoria TEXT NOT NULL,
-        condicion TEXT NOT NULL CHECK (condicion IN ('nuevo', 'reacondicionado', 'usado'))
+        condicion TEXT NOT NULL CHECK (condicion IN ('nuevo', 'reacondicionado', 'usado')),
+        activo INTEGER DEFAULT 1
     )`;
     const queryCarrito =  `CREATE TABLE IF NOT EXISTS carrito(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
