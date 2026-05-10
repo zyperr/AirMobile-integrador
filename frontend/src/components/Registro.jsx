@@ -69,7 +69,7 @@ const handleSubmit = (e) => {
 
 if (submitted) {
     return (
-    <div className="registro-wrapper d-flex align-items-center justify-content-center py-5">
+    <div className="registro-wrapper d-flex align-items-center justify-content-center ">
         <div className="registro-card text-center p-5">
             <div className="success-icon mb-4">
             <svg
@@ -109,7 +109,7 @@ if (submitted) {
             Volver al registro
             </button>
         </div>
-        <style>{styles}</style>
+        
     </div>
     );
 }
