@@ -7,14 +7,14 @@ export const schemaProductos = Joi.object({
     //.positive() o .min(0) para evitar precios negativos
     precio: Joi.number().positive().required(),
 
-    capacidad: Joi.array().optional(),
+    capacidad: Joi.array().items(Joi.string()).optional(),
 
 
     // Una descripción para detallar el modelo, etc.
     descripcion: Joi.string().max(500).optional(),
 
-    // URL de la foto del iPhone. Joi.uri() verifica que sea un link real
-    imagen_url: Joi.string().uri().optional(),
+    // URL de la foto del producto. Joi.uri() verifica que sea un link real
+    imagen_url: Joi.array().items(Joi.string().uri()).optional(),
 
     //(Appless, accesorios)
     categoria: Joi.string().min(3).max(30).required(),

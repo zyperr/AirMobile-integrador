@@ -13,7 +13,7 @@ export const schemaActualizarProducto = Joi.object({
     
     descripcion: Joi.string().max(500).optional(),
     
-    imagen_url: Joi.string().uri().optional(),
+    imagen_url: Joi.array().items(Joi.string().uri()).optional(),
     
     categoria: Joi.string().min(3).max(30).optional(),
 
