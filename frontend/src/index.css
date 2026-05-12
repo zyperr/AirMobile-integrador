@@ -1,6 +1,10 @@
 @import 'bootstrap/dist/css/bootstrap.min.css';
 @import "bootstrap-icons/font/bootstrap-icons";
 
+* {
+  font-family: "Inter", sans-serif;
+}
+
 :root {
   --text: #6b6375;
   --text-h: #08060d;
@@ -91,20 +95,24 @@ h1 {
   font-size: 56px;
   letter-spacing: -1.68px;
   margin: 32px 0;
+
   @media (max-width: 1024px) {
     font-size: 36px;
     margin: 20px 0;
   }
 }
+
 h2 {
   font-size: 24px;
   line-height: 118%;
   letter-spacing: -0.24px;
   margin: 0 0 8px;
+
   @media (max-width: 1024px) {
     font-size: 20px;
   }
 }
+
 p {
   margin: 0;
 }
@@ -125,12 +133,12 @@ code {
 }
 
 
-.container{
+.container {
   font-family: "Inter", sans-serif;
 
 }
-    
 
-.formulario{
-    background-color: #F6F3F5;
+
+.formulario {
+  background-color: #F6F3F5;
 }

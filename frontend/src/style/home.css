@@ -121,6 +121,7 @@ nav {
 
 .hero-text {
   max-width: 500px;
+  text-align: left;
 }
 
 .hero-text h1 {
@@ -227,7 +228,7 @@ nav {
 
 .trust-item {
   display: flex;
-  flex-direction: column; /* Apila el icono y el texto */
+  flex-direction: row; /* Apila el icono y el texto */
   align-items: center;
   gap: 12px;
   font-size: 11px;

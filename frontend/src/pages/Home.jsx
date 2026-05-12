@@ -44,10 +44,10 @@ export default function Home() {
 
       {/* TRUST BAR */}
       <div className="trust-bar">
-        <div className="trust-item">ENVIO GRATIS</div>
-        <div className="trust-item">GARANTIA</div>
-        <div className="trust-item">EQUIPO PROBADO</div>
-        <div className="trust-item">PAGO SEGURO</div>
+        <div className="trust-item"><i class="bi bi-truck fs-6"></i>ENVIO GRATIS</div>
+        <div className="trust-item"><i class="bi bi-shield-check fs-6"></i>GARANTIA</div>
+        <div className="trust-item"><i class="bi bi-tools  fs-6"></i>EQUIPO PROBADO</div>
+        <div className="trust-item"><i class="bi bi-shield-lock fs-6"></i>PAGO SEGURO</div>
       </div>
 
       {/* PRODUCTOS */}
