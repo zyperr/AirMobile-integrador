@@ -83,7 +83,7 @@ const InicioSesion = () => {
 
                 <div className="d-flex justify-content-center mt-3 mb-3">
                     <div className="d-inline-flex pe-2 ps-2 fs-6 gap-1 rounded-pill text-primary-emphasis bg-secondary bg-opacity-25">
-                        <i className="bi bi-lock"></i>
+                        <i class="bi bi-shield-lock"></i>
                         <p className="mb-0 text-uppercase" style={{fontSize: '12px', alignSelf: 'center'}}>inicio de sesión seguro</p>
                     </div>
                 </div>

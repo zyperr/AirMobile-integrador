@@ -71,25 +71,10 @@ if (submitted) {
     return (
     <div className="registro-wrapper d-flex align-items-center justify-content-center ">
         <div className="registro-card text-center p-5">
-            <div className="success-icon mb-4">
-            <svg
-                width="64"
-                height="64"
-                viewBox="0 0 64 64"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-            >
-            <circle cx="32" cy="32" r="32" fill="#1a3a6b" />
-            <path
-                d="M20 32l9 9 15-18"
-                stroke="white"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            />
-            </svg>
+            <div className="success-icon mb-4 ">
+                <i class="bi bi-check-circle-fill fs-1 text-success-emphasis"></i>
             </div>
-            <h3 className="fw-bold mb-2" style={{ color: "#1a3a6b" }}>
+            <h3 className="fw-bold mb-2">
             ¡Cuenta creada!
             </h3>
             <p className="text-muted mb-4">
@@ -280,20 +265,8 @@ return (
 
             {/* BADGE SEGURO */}
             <div className="text-center">
-                <span className="badge-seguro">
-                    <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="#2d8a4e"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                    >
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                        <path d="M7 11V7a5 5 0 0110 0v4" />
-                    </svg>
+                <span className="badge-seguro fs-6">
+                    <i class="bi bi-shield-lock "></i>
                     REGISTRO SEGURO
                 </span>
             </div>
