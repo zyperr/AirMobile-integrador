@@ -1,4 +1,5 @@
 import Joi from 'joi'; // Asumiendo que usás Joi, si usás Yup es casi idéntico
+const ordenValidos = ["asc", "desc"]
 
 export const schemaFiltrosProductos = Joi.object({
     // La categoría debe ser texto, opcional, y le quitamos espacios extra
@@ -24,7 +25,7 @@ export const schemaFiltrosProductos = Joi.object({
         'string.base': 'El término de búsqueda debe ser un texto.',
         'string.max': 'La búsqueda es demasiado larga (máximo 100 caracteres).'
     }),
-    condicion: Joi.string().valid("nuevo", "reacondicionado", "usado","").messages({
+    condicion: Joi.string().valid("nuevo", "reacondicionado", "usado", "").messages({
         'string.base': 'La categoría debe ser un texto.',
         'any.only': 'La condición no es válida. Solo se permite: {#valids}.'
     }),
@@ -33,5 +34,10 @@ export const schemaFiltrosProductos = Joi.object({
         'string.base': 'La página debe ser un número entero.',
         'string.integer': 'La página debe ser un número entero.',
         'string.min': 'La página debe ser al menos 1.'
+    }),
+
+    orden: Joi.string().valid(...ordenValidos).default("asc").optional().messages({
+        'string.base': 'El orden debe ser un texto.',
+        'any.only': 'El orden no es valido. Solo se permite: {#valids}.'
     })
 });

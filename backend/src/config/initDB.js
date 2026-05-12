@@ -13,7 +13,7 @@ export const inicializarBaseDeDatos = async () => {
         codigo_verificacion TEXT
     )`;
 
-    
+
     const queryProductos = `CREATE TABLE IF NOT EXISTS productos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nombre_producto TEXT NOT NULL,
@@ -23,9 +23,11 @@ export const inicializarBaseDeDatos = async () => {
         imagen_url TEXT,
         categoria TEXT NOT NULL,
         condicion TEXT NOT NULL CHECK (condicion IN ('nuevo', 'reacondicionado', 'usado')),
-        activo INTEGER DEFAULT 1
+        activo INTEGER DEFAULT 1,
+        fecha_creacion DEFAULT CURRENT_TIMESTAMP,
+        bateria INTEGER DEFAULT NULL
     )`;
-    const queryCarrito =  `CREATE TABLE IF NOT EXISTS carrito(
+    const queryCarrito = `CREATE TABLE IF NOT EXISTS carrito(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         usuario_id INTEGER NOT NULL,
         producto_id INTEGER NOT NULL,
@@ -54,11 +56,12 @@ export const inicializarBaseDeDatos = async () => {
     )`;
 
     try {
-        await db.execute(queryCarrito)
         await db.execute(queryUsuarios);
         await db.execute(queryProductos);
+        await db.execute(queryCarrito);
         await db.execute(queryFacturas);
         await db.execute(queryDetallesFactura);
+
         
         console.log("✅ Base de datos y tablas inicializadas correctamente.");
         return true;

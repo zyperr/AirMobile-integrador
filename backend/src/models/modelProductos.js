@@ -9,7 +9,11 @@ class ModelProductos {
         try {
             let sql = "SELECT * FROM productos WHERE 1=1 AND activo = 1"
             let args = []
+            let sqlOrderBy = "ORDER BY fecha_creacion DESC"; // mas recientes primeros
 
+            if(filtros.orden === "asc"){ // mas viejos primeros
+                sqlOrderBy = "ORDER BY fecha_creacion asc";
+            }
             if (filtros.categoria) {
                 sql += " AND categoria LIKE ?"
                 args.push(`%${filtros.categoria}%`)
@@ -39,7 +43,7 @@ class ModelProductos {
             }
 
 
-            sql += " LIMIT ? OFFSET ?";
+            sql += ` ${sqlOrderBy} LIMIT ? OFFSET ?`;
 
             // NOTA : Estos parametros siempre se pasan al final de la consulta de los filtros.
             //Empujamos los ultimos parametros de paginacion 
@@ -113,13 +117,13 @@ class ModelProductos {
     }
 
     static async createProduct(data) {
-        const { nombre_producto, precio, categoria, condicion, descripcion } = data
+        const { nombre_producto, precio, categoria, condicion, descripcion, } = data
         const capacidad = JSON.stringify(data.capacidad) || [];
         const imagen_url = JSON.stringify(data.imagen_url) || [];
-
+        const bateria = data.bateria ? data.bateria : null
         const result = await db.execute({
-            sql: "INSERT INTO productos(nombre_producto,precio,capacidad,descripcion,imagen_url,categoria,condicion) VALUES(?,?,?,?,?,?,?)",
-            args: [nombre_producto, precio, capacidad, descripcion ? descripcion : "", imagen_url, categoria, condicion]
+            sql: "INSERT INTO productos(nombre_producto,precio,capacidad,descripcion,imagen_url,categoria,condicion,bateria) VALUES(?,?,?,?,?,?,?,?)",
+            args: [nombre_producto, precio, capacidad, descripcion ? descripcion : "", imagen_url, categoria.toLowerCase(), condicion,bateria]
         })
 
         return result;

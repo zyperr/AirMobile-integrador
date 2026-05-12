@@ -17,7 +17,12 @@ export const schemaActualizarProducto = Joi.object({
     
     categoria: Joi.string().min(3).max(30).optional(),
 
-    condicion: Joi.string().valid("nuevo", "reacondicionado", "usado").optional()
-
+    condicion: Joi.string().valid("nuevo", "reacondicionado", "usado").optional(),
+    
+    bateria: Joi.any().when("categoria", {
+        is: Joi.string().valid("iphone","iphones","smartphones","ipad","tablets"),
+        then: Joi.number().integer().min(1).max(100).optional(),
+        otherwise: Joi.any().strip()
+    }),
 }).min(1);
 
