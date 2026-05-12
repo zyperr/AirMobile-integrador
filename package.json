@@ -18,6 +18,7 @@
     "@libsql/client": "^0.17.2",
     "bcryptjs": "^3.0.3",
     "bootstrap": "^5.3.8",
+    "bootstrap-icons": "^1.13.1",
     "cloudinary": "^2.10.0",
     "cors": "^2.8.6",
     "csv-parser": "^3.2.0",

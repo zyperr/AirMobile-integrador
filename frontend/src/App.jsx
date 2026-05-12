@@ -4,7 +4,7 @@ import Product from "./pages/Product";
 import CatalogoDeProductos from "./pages/CatalogoDeProductos";
 import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
-import Registro from "./components/Registro";
+import Registro from "./pages/Registro";
 
 
 function App() {
