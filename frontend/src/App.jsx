@@ -5,6 +5,8 @@ import CatalogoDeProductos from "./pages/CatalogoDeProductos";
 import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
 import InicioSesion from "./pages/InicioSesion";
+import Registro from "./pages/Registro";
+
 
 function App() {
   return (
@@ -15,6 +17,7 @@ function App() {
         <Route path="/product" element={<Product />} />
         <Route path="/catalogo" element={<CatalogoDeProductos />} />
         <Route path="/inicio-sesion" element={<InicioSesion />} /> 
+        <Route path="/registro" element={<Registro />} />
       </Routes>
           <Footer />
     </BrowserRouter>
