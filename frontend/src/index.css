@@ -1,3 +1,6 @@
+@import 'bootstrap/dist/css/bootstrap.min.css';
+@import "bootstrap-icons/font/bootstrap-icons";
+
 :root {
   --text: #6b6375;
   --text-h: #08060d;
@@ -119,4 +122,15 @@ code {
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
+}
+
+.container{
+  font-family: "Inter", sans-serif;
+
+}
+    
+
+
+.formulario{
+    background-color: #F6F3F5;
 }
