@@ -21,7 +21,7 @@ export default function Home() {
                 <Link
                   to="/catalogo"
                   className="btn btn-primary px-4 py-3 fw-semibold rounded-3 d-flex align-items-center justify-content-center"
-                  style={{ minWidth: "180px" }}
+                  style={{ minWidth: "200px" }}
                 >
                   Ver Catálogo
                 </Link>
