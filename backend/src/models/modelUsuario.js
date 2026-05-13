@@ -42,18 +42,22 @@ class UsuarioModel {
 
         return result;
     }
-
-    static async updatePasswordAndClearCode(id, nuevaPassword) {
+    static async updatePasswordClearCodeVerificate(email, nuevaPassword, codigoIngresado) {
+        const queryActualizar = `
+            UPDATE usuarios 
+            SET 
+                password = ?, 
+                verificado = 'verdadero', 
+                codigo_verificacion = NULL 
+            WHERE email = ? AND codigo_verificacion = ?
+        `;
         try {
             const result = await db.execute({
-                // Actualizamos las DOS columnas separadas por una coma
-                sql: "UPDATE usuarios SET password = ?, codigo_verificacion = NULL WHERE id = ?",
-                args: [nuevaPassword, id]
-            });
+                sql: queryActualizar,
+                args: [nuevaPassword, email, codigoIngresado]
+            })
 
-            // Si rowsAffected es mayor a 0, significa que lo encontró y lo actualizó
             return result.rowsAffected > 0;
-
         } catch (error) {
             console.error("Error al actualizar contraseña y limpiar código:", error);
             throw error;

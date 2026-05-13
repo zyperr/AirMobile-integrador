@@ -26,10 +26,10 @@ export const obtenerUsuarios = async (req, res) => {
             }
         })
 
-        return res.json(mapUsers)
+        return res.json({mapUsers,exito:true,message: "Lista de los usuarios"})
 
     } catch (err) {
-        res.status(500).json({ error: "Error al obtener los usuarios" })
+        res.status(500).json({ exito:false,message: "Error al obtener los usuarios" })
     }
 }
 
@@ -52,13 +52,13 @@ export const login = async (req, res) => {
 
         const usuarioEncontrado = await UsuarioModel.buscarEmail(email);
         if (!usuarioEncontrado) {
-            return res.status(401).json({ error: "Credenciales incorrectas" });
+            return res.status(401).json({ exito:false,message: "Credenciales incorrectas" });
         }
 
         const passwordCorrecta = await bcrypt.compare(password, usuarioEncontrado.password);
 
         if (!passwordCorrecta) {
-            return res.status(401).json({ error: "Credenciales incorrectas" });
+            return res.status(401).json({ exito:false,message: "Credenciales incorrectas" });
         }
 
 
@@ -85,7 +85,7 @@ export const login = async (req, res) => {
         })
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: "Error interno al iniciar sesión" });
+        res.status(500).json({ exito:false,message: "Error interno al iniciar sesión" });
     }
 
 
@@ -114,19 +114,20 @@ export const verificar = async (req, res) => {
 
         if (codigo !== usuario.codigo_verificacion) {
             return res.status(400).json({
-                error: "El codigo de verificacion no coincide"
+                exito:false,
+                message: "El codigo de verificacion no coincide"
             })
         }
 
         const result = await UsuarioModel.actualizarVerificado(id)
 
         if (result.rowsAffected === 0) {
-            return res.status(404).json({ error: "Usuario no encontrado" })
+            return res.status(404).json({ exito:false,message: "Usuario no encontrado" })
         }
-        return res.status(200).json({ message: "Se ha verificado la cuenta con exito" })
+        return res.status(200).json({ exito:false,message: "Se ha verificado la cuenta con exito" })
     } catch (err) {
         console.log(err)
-        res.status(500).json({ error: "Error al verificar el usuario" })
+        res.status(500).json({ exito:false,message: "Error al verificar el usuario" })
     }
 
 }
@@ -144,7 +145,7 @@ export const registro = async (req, res) => {
         // Retornamos un estado 400 (Bad Request - Petición Incorrecta)
         return res.status(400).json({
             exito: false,
-            mensaje: "Por favor, corrige los siguientes errores:",
+            message: "Por favor, corrige los siguientes errores:",
             errores: erroresLimpios
         });
     }
@@ -158,7 +159,8 @@ export const registro = async (req, res) => {
 
         if (usuarioExistente) {
             return res.status(400).json({
-                error: "El usuario ya existe"
+                exito:false,
+                message: "El usuario ya existe"
             })
         }
 
@@ -176,11 +178,11 @@ export const registro = async (req, res) => {
 
         enviarCorreoVerificacion(email, codigoVerificacion).catch(console.error);
 
-        res.status(201).json({ data: nuevoUser, message: "Revisa tu correo para verificar la cuenta" })
+        res.status(201).json({ exito:false,data: nuevoUser, message: "Revisa tu correo para verificar la cuenta" })
 
     } catch (err) {
         console.log(err)
-        res.status(500).json({ error: "Error al crear la cuenta" })
+        res.status(500).json({ exito:false,message: "Error al crear la cuenta" })
     }
 }
 

@@ -15,14 +15,14 @@ export const crearFactura = async (req, res) => {
         const idUsuario = req?.user?.id;
 
         if (!idUsuario) {
-            return res.status(401).json({ message: "Credenciales invalidas" });
+            return res.status(401).json({exito:false, message: "Credenciales invalidas" });
         }
 
         const carrito = await ModelCarrito.getCarrito(idUsuario);
 
         if (!carrito || carrito.length === 0
         ) {
-            return res.status(400).json({ message: "El carrito está vacío, no se puede crear una factura." });
+            return res.status(400).json({ exito:false,message: "El carrito está vacío, no se puede crear una factura." });
         }
 
         let totalCalculado = 0;
@@ -55,7 +55,7 @@ export const crearFactura = async (req, res) => {
 
     } catch (err) {
         console.log(err);
-        return res.status(500).json({ message: "Error al crear la factura" });
+        return res.status(500).json({ exito:false,message: "Error al crear la factura" });
     }
 
 }
@@ -66,13 +66,13 @@ export const obtenerTodasLasFacturas = async (req, res) => {
         const idUsuarioActual = req?.user?.id;
 
         if (!idUsuarioActual) {
-            return res.status(401).json({ message: "Credenciales inválidas" });
+            return res.status(401).json({exito:false, message: "Credenciales inválidas" });
         }
 
         // SEGURIDAD: Esta ruta es exclusiva para Administradores
         const rolUsuario = await UsuarioModel.getRol(idUsuarioActual);
         if (rolUsuario !== ROLES.ADMIN) {
-            return res.status(403).json({ message: "Solo los administradores pueden ver todas las facturas del sistema" });
+            return res.status(403).json({ exito:false,message: "Solo los administradores pueden ver todas las facturas del sistema" });
         }
 
         // PAGINACIÓN: Leer la página y el límite de la URL (con valores por defecto)
@@ -106,7 +106,7 @@ export const obtenerTodasLasFacturas = async (req, res) => {
 
     } catch (err) {
         console.error("Error al obtener las facturas:", err);
-        return res.status(500).json({ message: "Error interno al obtener las facturas" });
+        return res.status(500).json({exito:false, message: "Error interno al obtener las facturas" });
     }
 };
 
@@ -116,7 +116,7 @@ export const obtenerFacturasDeUsuario = async (req, res) => {
         const idUsuarioActual = req?.user?.id;
 
         if (!idUsuarioActual) {
-            return res.status(401).json({ message: "Credenciales inválidas" });
+            return res.status(401).json({ exito:false,message: "Credenciales inválidas" });
         }
 
         const page = Math.max(1, parseInt(req.query.page) || 1);
@@ -150,7 +150,7 @@ export const obtenerFacturasDeUsuario = async (req, res) => {
 
     } catch (err) {
         console.error("Error al obtener las facturas del usuario:", err);
-        return res.status(500).json({ message: "Error interno al obtener las facturas del usuario" });
+        return res.status(500).json({ exito:false,message: "Error interno al obtener las facturas del usuario" });
     }
 };
 
@@ -160,17 +160,17 @@ export const obtenerFactura = async (req, res) => {
         const idUsuarioActual = req?.user?.id;
 
         if (!idUsuarioActual) {
-            return res.status(401).json({ message: "Credenciales inválidas" });
+            return res.status(401).json({ exito:false,message: "Credenciales inválidas" });
         }
         const idFactura = req?.params?.id;
         if (!idFactura) {
-            return res.status(400).json({ message: "ID de factura no proporcionado" });
+            return res.status(400).json({exito:false, message: "ID de factura no proporcionado" });
         }
 
         const factura = await ModelFactura.getFacturaById(idFactura);
 
         if (!factura) {
-            return res.status(404).json({ message: "No se ha encontrado la factura" });
+            return res.status(404).json({exito:false, message: "No se ha encontrado la factura" });
         }
 
 
@@ -178,17 +178,18 @@ export const obtenerFactura = async (req, res) => {
 
         // Si el que pide la factura no es el dueño, y tampoco es Admin, lo rebotamos.
         if (factura.usuario_id !== idUsuarioActual && rolUsuario !== ROLES.ADMIN) {
-            return res.status(403).json({ message: "No tienes permiso para ver esta factura" });
+            return res.status(403).json({ exito:false,message: "No tienes permiso para ver esta factura" });
         }
 
         return res.status(200).json({
             exito: true,
-            factura: factura
+            factura: factura,
+            message: "Se obtuvo la factura"
         });
 
 
     } catch (err) {
-        console.log(err); return res.status(500).json({ message: "Error al obtener la factura" });
+        console.log(err); return res.status(500).json({ exito:false,message: "Error al obtener la factura" });
     }
 }
 
@@ -197,12 +198,12 @@ export const actualizarEstadoFactura = async (req, res) => {
     try {
         const idUsuario = req?.user?.id;
         if (!idUsuario) {
-            return res.status(401).json({ message: "Credenciales inválidas" });
+            return res.status(401).json({exito:false, message: "Credenciales inválidas" });
         }
 
         const rol = await UsuarioModel.getRol(idUsuario);
         if (rol !== ROLES.ADMIN) {
-            return res.status(403).json({ message: "No tienes permisos para alterar facturas" });
+            return res.status(403).json({ exito:false,message: "No tienes permisos para alterar facturas" });
         }
 
 
@@ -211,6 +212,7 @@ export const actualizarEstadoFactura = async (req, res) => {
 
         if (!estado || !Object.values(ESTADOS).includes(estado)) {
             return res.status(400).json({
+                exito:false,
                 message: `Estado no válido. Debe ser uno de: ${Object.values(ESTADOS).join(', ')}`
             });
         }
@@ -218,7 +220,7 @@ export const actualizarEstadoFactura = async (req, res) => {
 
         const factura = await ModelFactura.getFacturaById(idFactura);
         if (!factura) {
-            return res.status(404).json({ message: "No se ha encontrado la factura" });
+            return res.status(404).json({exito:false, message: "No se ha encontrado la factura" });
         }
 
         await ModelFactura.updateEstadoFactura(idFactura, estado);
@@ -228,11 +230,12 @@ export const actualizarEstadoFactura = async (req, res) => {
             factura: {
                 ...factura,
                 estado: estado
-            }
+            },
+            message: "Se actualizo la factura con exito"
         });
 
     } catch (err) {
-        console.log(err); return res.status(500).json({ message: "Error al actualizar el estado de la factura" });
+        console.log(err); return res.status(500).json({ exito:false,message: "Error al actualizar el estado de la factura" });
     }
 }
 
@@ -241,14 +244,14 @@ export const obtenerDetalleFactura = async (req, res) => {
         const idUsuarioActual = req?.user?.id;
 
         if (!idUsuarioActual) {
-            return res.status(401).json({ message: "Credenciales inválidas" });
+            return res.status(401).json({ exito:false,message: "Credenciales inválidas" });
         }
 
         const idFactura = req.params.id;
         const factura = await ModelDetalleFactura.getDetallesFacturaByFacturaId(idFactura);
 
         if (!factura) {
-            return res.status(404).json({ message: "No se ha encontrado el detalle de la factura" });
+            return res.status(404).json({ exito:false,message: "No se ha encontrado el detalle de la factura" });
         }
 
 
@@ -256,16 +259,17 @@ export const obtenerDetalleFactura = async (req, res) => {
 
         // Si el usuario no es el dueño de la factura y TAMPOCO es admin... ¡lo bloqueamos!
         if (factura.usuario_id !== idUsuarioActual && rolUsuario !== ROLES.ADMIN) {
-            return res.status(403).json({ message: "No tienes permiso para ver esta factura" });
+            return res.status(403).json({ exito:false,message: "No tienes permiso para ver esta factura" });
         }
 
 
         return res.status(200).json({
             exito: true,
             detalleFactura: factura,
+            message: "Se obtuvo los detalles de la factura"
         });
 
     } catch (err) {
-        console.log(err); return res.status(500).json({ message: "Error al obtener el detalle de la factura" });
+        console.log(err); return res.status(500).json({ exito:false,message: "Error al obtener el detalle de la factura" });
     }
 }

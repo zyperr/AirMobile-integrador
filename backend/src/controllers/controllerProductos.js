@@ -74,7 +74,7 @@ export const obtenerProductos = async (req, res) => {
     } catch (err) {
         console.error(err)
 
-        return res.status(500).json({ error: "Error interno del servidor" });
+        return res.status(500).json({ message: "Error interno del servidor" });
     }
 }
 
@@ -84,13 +84,13 @@ export const obtenerProducto = async (req, res) => {
         const id = req.params.id
 
         if (!id) {
-            return res.status(400).json({ message: "No se ha proporcionado un id" })
+            return res.status(400).json({ exito: false, message: "No se ha proporcionado un id" })
         }
 
         const producto = await ModelProductos.getById(id);
 
         if (!producto) {
-            return res.status(404).json({ message: `No se ha encontrado el producto con el id: ${id}` })
+            return res.status(404).json({ exito: false, message: `No se ha encontrado el producto con el id: ${id}` })
         }
 
         const parsedProducto = {
@@ -98,11 +98,11 @@ export const obtenerProducto = async (req, res) => {
             imagen_url: JSON.parse(producto.imagen_url),
             capacidad: JSON.parse(producto.capacidad)
         }
-        return res.status(200).json(parsedProducto)
+        return res.status(200).json({ parsedProducto, exito: true })
 
     } catch (err) {
         console.error(err)
-        res.status(500).json({ error: "Error al obtener el producto" })
+        res.status(500).json({ exito: false, message: "Error al obtener el producto" })
     }
 }
 
@@ -113,12 +113,12 @@ export const crearProducto = async (req, res) => {
         const idUsuario = req?.user?.id
 
         if (!idUsuario) {
-            return res.status(401).json({ message: "Creedenciales invalidas" })
+            return res.status(401).json({ exito: false, message: "Creedenciales invalidas" })
         }
         const rol = await UsuarioModel.getRol(idUsuario)
 
         if (rol !== ROLES.ADMIN) {
-            return res.status(403).json({ message: "El usuario no tiene permisos para esto" })
+            return res.status(403).json({ exito: false, message: "El usuario no tiene permisos para esto" })
 
         }
 
@@ -166,7 +166,7 @@ export const crearProducto = async (req, res) => {
             const erroresLimpios = error.details.map(detalle => detalle.message);
             return res.status(400).json({
                 exito: false,
-                mensaje: "Por favor, corrige los siguientes errores:",
+                message: "Por favor, corrige los siguientes errores:",
                 errores: erroresLimpios
             });
         };
@@ -174,12 +174,12 @@ export const crearProducto = async (req, res) => {
         const product = await ModelProductos.createProduct(value)
 
 
-        return res.status(200).json({ message: "Producto creado con exito", data: product })
+        return res.status(200).json({ exito: true, message: "Producto creado con exito", data: product })
 
     } catch (err) {
         console.error(err)
 
-        return res.status(500).json({ error: "Error al crear el producto" })
+        return res.status(500).json({ exito: false, message: "Error al crear el producto" })
     }
 }
 
@@ -190,7 +190,7 @@ export const actualizarProducto = async (req, res) => {
         const erroresLimpios = error.details.map(detalle => detalle.message);
         return res.status(400).json({
             exito: false,
-            mensaje: "Por favor, corrige los siguientes errores:",
+            message: "Por favor, corrige los siguientes errores:",
             errores: erroresLimpios
         });
     };
@@ -199,12 +199,12 @@ export const actualizarProducto = async (req, res) => {
 
         const idUsuario = req?.user?.id
         if (!idUsuario) {
-            return res.status(401).json({ message: "Creedenciales invalidas" })
+            return res.status(401).json({ exito: false, message: "Creedenciales invalidas" })
         }
         const rol = await UsuarioModel.getRol(idUsuario)
         console.log(rol)
         if (rol !== ROLES.ADMIN) {
-            return res.status(403).json({ message: "El usuario no tiene permisos para esto" })
+            return res.status(403).json({ exito: false, message: "El usuario no tiene permisos para esto" })
         }
 
         let dataParaActualizar = { ...value };
@@ -219,10 +219,10 @@ export const actualizarProducto = async (req, res) => {
         const productoActualizado = await ModelProductos.updateProduct(idProducto, dataParaActualizar);
 
 
-        return res.status(200).json(productoActualizado)
+        return res.status(200).json({ productoActualizado, exito: false, message: "El producto se actualizo con exito" })
     } catch (err) {
         console.error(err)
-        return res.status(500).json({ error: "Error al actualizar un producto" })
+        return res.status(500).json({ exito: false, message: "Error al actualizar un producto" })
     }
 }
 
@@ -233,26 +233,26 @@ export const eliminarProducto = async (req, res) => {
         const idUsuario = req?.user?.id;
 
         if (!idUsuario) {
-            return res.status(401).json({ message: "Credenciales invalidas" })
+            return res.status(401).json({ exito: false, message: "Credenciales invalidas" })
         }
 
         const rol = await UsuarioModel.getRol(idUsuario);
 
         if (rol !== ROLES.ADMIN) {
-            return res.status(403).json({ message: "El usuario no tiene permisos para esto" });
+            return res.status(403).json({ exito: false, message: "El usuario no tiene permisos para esto" });
         }
 
         const idProducto = req.params.id;
         const productoAEliminar = await ModelProductos.deleteProduct(idProducto);
 
         if (!productoAEliminar) {
-            return res.status(404).json({ message: `No se ha encontrado el producto con el id: ${idProducto}` })
+            return res.status(404).json({ exito: false, message: `No se ha encontrado el producto con el id: ${idProducto}` })
         }
 
-        return res.status(200).json(productoAEliminar);
+        return res.status(200).json({ productoAEliminar, exito: false, message: "Se elimino con exito el producto" });
     } catch (err) {
         console.error(err)
-        return res.status(500).json({ error: "Error al eliminar un producto" })
+        return res.status(500).json({ exito: false, message: "Error al eliminar un producto" })
     }
 }
 
@@ -263,18 +263,18 @@ export const bulkUpload = async (req, res) => {
         console.log(idUsuario);
 
         if (!idUsuario) {
-            return res.status(401).json({ message: "Creedenciales invalidas" })
+            return res.status(401).json({ exito: false, message: "Creedenciales invalidas" })
 
         }
 
         const rol = await UsuarioModel.getRol(idUsuario);
         console.log(rol)
         if (rol !== ROLES.ADMIN) {
-            return res.status(403).json({ message: "El usuario no tiene permisos para esto" })
+            return res.status(403).json({ exito: false, message: "El usuario no tiene permisos para esto" })
         }
 
         if (!req.file) {
-            return res.status(400).json({ error: "Por favor, subí un archivo." });
+            return res.status(400).json({ exito: false, message: "Por favor, subí un archivo." });
         }
 
         const nombreArchivo = req.file.originalname;
@@ -291,10 +291,12 @@ export const bulkUpload = async (req, res) => {
             return {
                 nombre_producto: prod.nombre_producto || prod.nombre,
                 categoria: prod.categoria,
-                precio: prod.precio,
-                capacidad: prod.capacidad ? [prod.capacidad] : [],
+                precio: Number(prod.precio), 
+                capacidad: Array.isArray(prod.capacidad)
+                    ? prod.capacidad.map(String)
+                    : prod.capacidad ? [String(prod.capacidad)] : [],
                 descripcion: prod.descripcion,
-                imagen_url: prod.imagen || prod.imagen_url,
+                imagen_url: prod.imagen || prod.imagen_url || [],
                 condicion: prod.condicion || prod.estado,
                 categoria: prod.categoria
             }
@@ -307,7 +309,8 @@ export const bulkUpload = async (req, res) => {
 
         if (error) {
             return res.status(400).json({
-                error: "Hay un error en los datos del archivo.",
+                exito: false,
+                message: "Hay un error en los datos del archivo.",
                 detalle: error.details[0].message
             });
         }
@@ -319,12 +322,12 @@ export const bulkUpload = async (req, res) => {
 
         return res.status(200).json({
             exito: true,
-            mensaje: `¡Éxito! Se cargaron ${cantidadInsertada} productos a la base de datos.`,
+            message: `Se cargaron ${cantidadInsertada} productos a la base de datos.`,
         });
 
     } catch (error) {
         console.error("Error en la carga masiva:", error);
-        return res.status(500).json({ error: "Error procesando el archivo" });
+        return res.status(500).json({ exito: false, message: "Error procesando el archivo" });
     }
 
 }
