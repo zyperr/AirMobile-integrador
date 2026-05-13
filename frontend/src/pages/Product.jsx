@@ -32,8 +32,7 @@ export default function Product() {
   return (
     <div className="page-wrapper">
 
-      {/* NAVBAR (Con efecto Cristal Esmerilado) */}
-      <Navbar carrito={carrito} />
+
       {/* DETALLE DEL PRODUCTO (HERO) */}
       <section className="product-detail-hero">
         {/* Columna Izquierda: Imágenes */}
