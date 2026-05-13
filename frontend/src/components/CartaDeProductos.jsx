@@ -1,7 +1,7 @@
 import '../style/CartaDeProductos.css';
 import phoneImage from '../../public/img/iPhone 12 Pro.png'; 
 
-const ProductCard = ({ nombreDeProducto, condicion, precio, capacidad = [] }) => {
+const ProductCard = ({ nombreDeProducto, condicion, precio, capacidad = [],imagen_url }) => {
   // Validación por si capacidad viene como texto (string) desde la base de datos
   const capacidadFormateada = Array.isArray(capacidad) ? capacidad.join(', ') : capacidad;
 
@@ -12,7 +12,7 @@ const ProductCard = ({ nombreDeProducto, condicion, precio, capacidad = [] }) =>
       {/* Contenedor de imagen */}
       <div className="custom-img-container position-relative">
         <img 
-          src={phoneImage} 
+          src={imagen_url[0]} 
           alt={`Imagen de ${nombreDeProducto}`} 
           className="custom-product-img" 
         />
@@ -20,7 +20,6 @@ const ProductCard = ({ nombreDeProducto, condicion, precio, capacidad = [] }) =>
 
       {/* Contenedor de detalles (card-body) */}
       <div className="card-body p-1 d-flex flex-column flex-grow-1">
-        
         {/* Título y Badge */}
         <div className="d-flex justify-content-between align-items-center mb-1">
           <h2 className="card-title m-0 fw-bold text-dark fs-5">{nombreDeProducto}</h2>

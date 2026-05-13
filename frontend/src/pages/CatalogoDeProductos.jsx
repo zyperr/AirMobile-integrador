@@ -290,6 +290,7 @@ export default function CatalogoDeProductos() {
                                                 condicion={item.condicion}
                                                 precio={item.precio}
                                                 capacidad={item.capacidad}
+                                                imagen_url={item.imagen_url}
                                             />
                                         </div>
                                     ))
