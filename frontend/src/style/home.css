@@ -1,526 +1,126 @@
-/* =========================================
-   VARIABLES GLOBALES (Colores y estilos)
-   ========================================= */
 :root {
   --primary-color: #005ce6;
-  --text-dark: #1d1d1f;
-  --text-gray: #6e6e73;
-  --bg-light: #fbfbfd;
-  --bg-card: #ffffff;
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
 }
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  color: var(--text-dark);
-  background: var(--bg-light);
-  overflow-x: hidden; /* Evita scroll horizontal indeseado */
-}
-
-a {
-  text-decoration: none;
-  color: inherit;
+  overflow-x: hidden;
+  background-color: #fbfbfd;
 }
 
 /* =========================================
-   NAVBAR
+   NAVBAR (Complemento a Bootstrap)
    ========================================= */
-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 5%;
-  
-  /* 1. Posición recomendada para que acompañe el scroll */
-  position: sticky;
-  top: 0;
-  z-index: 1000; /* Asegura que siempre esté por encima de las fotos */
 
-  /* 2. Borde inferior sutil restaurado */
-  border-bottom: 1px solid #e5e5ea;
-
-  /* 3. Efecto "Cristal" estilo Apple (Fondo semitransparente + Desenfoque) */
-  background: rgba(251, 251, 253, 0.85); /* Color de fondo con 85% de opacidad */
-  backdrop-filter: blur(12px); /* Hace borroso lo que pasa por detrás */
-  -webkit-backdrop-filter: blur(12px); /* Soporte para Safari */
-}
-.nav-logo {
-  font-size: 20px;
-  font-weight: 700;
-  cursor: pointer;
-  text-decoration: none;
+.custom-navbar {
+  /* Efecto "Cristal" estilo Apple */
+  background: rgba(251, 251, 253, 0.85) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
-.nav-links {
-  display: flex;
-  gap: 32px;
-  list-style: none;
-}
-
-.nav-links a {
-  color: var(--text-dark);
-  font-size: 14px;
-  text-decoration: none;
-  font-weight: 500;
+.custom-nav-logo {
+  color: var(--text-dark) !important;
   transition: color 0.2s;
 }
 
-.nav-links a.active, .nav-links a:hover {
-  color: var(--primary-color);
-}
-
-.nav-icons {
-  display: flex;
-  gap: 20px;
-  align-items: center;
-}
-
-.nav-icons svg, .nav-icons i {
-  font-size: 18px;
-  cursor: pointer;
-}
-
-.cart-wrapper {
-  position: relative;
-  cursor: pointer;
-}
-
-.cart-badge {
-  position: absolute;
-  top: -8px;
-  right: -10px;
-  background: var(--primary-color);
-  color: #fff;
-  font-size: 10px;
-  font-weight: bold;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* =========================================
-   HERO SECTION
-   ========================================= */
-.hero {
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  padding: 60px 5%;
-  background: var(--bg-light);
-  gap: 40px;
-  position: relative;
-}
-
-.hero-text {
-  max-width: 500px;
-  text-align: left;
-}
-
-.hero-text h1 {
-  font-size: 56px; /* Letra más grande y gruesa */
-  font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-  margin-bottom: 24px;
-  color: var(--text-dark);
-
-
-}
-
-.hero-text p {
-  font-size: 16px;
-  color: var(--text-gray); /* Color gris azulado */
-  line-height: 1.5;
-  margin-bottom: 32px;
-  max-width: 400px;
-}
-
-.hero-buttons {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.btn-primary {
-  background: var(--primary-color);
-  color: #fff;
-  border: none;
-  padding: 14px 28px;
-  border-radius: 8px;
+/* Estilos específicos para los textos de los enlaces */
+.custom-nav-link {
+  color: var(--text-dark) !important;
   font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.3s;
+  font-weight: 500 !important;
+  transition: color 0.2s;
 }
 
-.btn-primary:hover {
-  background: #004bbd;
+/* El enlace activo o sobre el que pasas el mouse se vuelve azul */
+.custom-nav-link:hover,
+.custom-nav-link.active {
+  color: var(--primary-color) !important;
 }
 
-.btn-secondary {
-  background: #e8e8ed; /* Gris claro en vez de blanco con borde */
-  color: var(--text-dark);
-  border: none;
-  padding: 14px 28px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.3s;
+/* Botón secundario personalizado */
+.custom-btn-secondary {
+  background-color: #e8e8ed;
+  color: #1d1d1f;
+  border: none !important;
 }
 
-.btn-secondary:hover {
-  background: #d1d1d6;
+.custom-btn-secondary:hover {
+  background-color: #d1d1d6;
 }
 
-.hero-image {
-  flex: 1;
+/* Limita el tamaño de la imagen del hero en pantallas grandes */
+.hero-img-max {
   max-width: 400px;
-  height: 400px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
-.hero-image img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 20px;
 }
 
-/* Botón flotante azul en la imagen */
-.hero-floating-btn {
-  position: absolute;
-  bottom: -20px;
-  right: -20px;
-  background: var(--primary-color);
-  color: white;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 92, 230, 0.3);
-  cursor: pointer;
-}
-
-/* =========================================
-   TRUST BAR (Iconos debajo del hero)
-   ========================================= */
-.trust-bar {
-  display: flex;
-  justify-content: center;
-  gap: 80px;
-  padding: 40px 5%;
-}
-
-.trust-item {
-  display: flex;
-  flex-direction: row; /* Apila el icono y el texto */
-  align-items: center;
-  gap: 12px;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--primary-color); /* Texto en azul */
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* =========================================
-   PRODUCTS SECTION
-   ========================================= */
-.products-section {
-
-
-  padding: 60px 5%;
-
-
-}
-
-.products-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 32px;
-}
-
-.products-header h2 {
-  font-size: 28px;
-  font-weight: 700;
-}
-
-.products-header a {
-  color: var(--primary-color);
-  font-size: 14px;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.products-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
-
-}
-
-.product-card {
-  background: var(--bg-card);
-  border: 1px solid var(--text-gray);
-  border-radius: 10px;
-  padding: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04); /* Sombra suave estilo Apple */
+/* Efecto hover elegante para las tarjetas */
+.custom-card-hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.product-card:hover {
+.custom-card-hover:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08) !important;
 }
 
-.product-img {
-  width: 100%;
+/* Caja de fondo gris para las fotos de los productos */
+.product-img-box {
   height: 220px;
-  background: #f5f5f7; /* Gris muy clarito de fondo */
-  border-radius: 14px;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
 }
 
-.product-img img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
+/* Colores específicos para las pastillas (badges) */
+
+
+/* ---------- SECTION PRODUCTOS -----------*/
+/* =========================================
+   FONDOS DE IMAGEN Y ETIQUETAS (Mejora de Contraste)
+   ========================================= */
+
+/* Caja de fondo para las fotos de los productos */
+.product-img-box {
+  height: 220px;
+  /* Usamos un gris un poco más oscuro y el !important para ganarle a Bootstrap */
+  background-color: #ebebec !important; 
+  border: 1px solid #e5e5ea; /* Un bordecito súper sutil ayuda a delimitar */
 }
 
-.badge {
-  display: inline-block;
-  font-size: 11px;
+/* Colores sólidos y legibles para las pastillas (badges) */
+.badge-reacondicionado { 
+  background-color: var(--primary-color) !important; /* Azul de tu marca */
+  color: #ffffff !important; 
   font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 20px; /* Bordes de píldora */
-  margin-bottom: 12px;
+  padding: 6px 12px !important; /* Un poquito más gorditas para que resalten */
 }
 
-.badge-reacondicionado { background: #e8f0fe; color: var(--primary-color); }
-.badge-accesorio { background: #f2f2f2; color: var(--text-gray); }
-
-.product-name {
-  font-size: 15px;
+.badge-accesorio { 
+  background-color: #4b4b4f !important; /* Gris carbón elegante */
+  color: #ffffff !important; 
   font-weight: 600;
-  margin-bottom: 8px;
-  color: var(--text-dark);
+  padding: 6px 12px !important;
 }
 
-.product-price {
-  font-size: 18px;
-  font-weight: 400;
-  color: var(--text-gray);
+.badge-energia { 
+  background-color: #f59e0b !important; /* Naranja/Ámbar para dar idea de carga */
+  color: #ffffff !important; 
+  font-weight: 600;
+  padding: 6px 12px !important;
 }
+
+
 
 /* =========================================
-   GARANTÍA SECTION
+   FOOTER (Complemento a Bootstrap)
    ========================================= */
-.guarantee-section {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 60px;
-  padding: 80px 5%;
-  background: #f5f5f7;
-  border-radius: 30px;
-  margin: 0 5% 60px 5%; /* Margen lateral para que no toque los bordes */
-}
 
-.guarantee-image {
-  width: 380px;
-  height: 380px;
-  border-radius: 24px;
-  overflow: hidden;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-}
-
-.guarantee-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.guarantee-text {
-  max-width: 400px;
-}
-
-.guarantee-text h2 {
-  color: var(--text-dark);
-  font-size: 32px;
-  margin-bottom: 16px;
-  line-height: 1.2;
-}
-
-.guarantee-text p {
-  font-size: 15px;
-  color: var(--text-gray);
-  margin-bottom: 32px;
-  line-height: 1.6;
-}
-
-.btn-dark {
-  background: var(--primary-color);
-  color: #fff;
-  padding: 16px;
-  border: none;
-  border-radius: 8px;
-  width: 100%;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.btn-dark:hover {
-  background: #004bbd;
-}
-
-/* =========================================
-   FOOTER
-   ========================================= */
-footer {
-  background: #f5f5f7;
-  padding: 40px 5%;
-  border-top: 1px solid #e5e5ea;
-}
-
-.footer-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 20px;
-}
-
-.footer-logo h3 {
-  font-size: 16px;
-  margin-bottom: 4px;
-}
-
-.footer-logo p {
+.custom-footer-link {
   font-size: 12px;
-  color: var(--text-gray);
+  transition: color 0.2s ease-in-out;
 }
 
-.footer-links {
-  display: flex;
-  gap: 24px;
-}
-
-.footer-links a {
-  font-size: 12px;
-  color: var(--text-gray);
-  text-decoration: none;
-}
-
-
-/* =========================================
-   🔥 MEDIA QUERIES (RESPONSIVE DESIGN) 🔥
-   ========================================= */
-
-/* Tablets (hasta 1024px) */
-@media (max-width: 1024px) {
-  .hero {
-    padding: 40px 5%;
-  }
-  .hero-text h1 {
-    font-size: 42px;
-  }
-  .products-grid {
-    grid-template-columns: repeat(2, 1fr); /* 2 columnas en productos */
-  }
-  .guarantee-section {
-    flex-direction: column; /* Apila imagen y texto */
-    text-align: center;
-    padding: 60px 5%;
-  }
-  .trust-bar {
-    gap: 40px;
-  }
-}
-
-/* Celulares (hasta 768px) */
-@media (max-width: 768px) {
-  .nav-links {
-    display: none; /* Oculta links en celular (aquí pondrías un menú hamburguesa en React) */
-  }
-  
-  .hero {
-    flex-direction: column-reverse; /* Texto abajo, imagen arriba */
-    text-align: center;
-    padding: 20px 5% 60px 5%;
-  }
-
-  .hero-text {
-    max-width: 100%;
-  }
-
-  .hero-text h1 {
-    font-size: 36px;
-  }
-
-  .hero-text p {
-    margin: 0 auto 24px auto;
-  }
-
-  .hero-buttons {
-    justify-content: center;
-    flex-direction: column; /* Botones apilados en celular */
-  }
-
-  .hero-image {
-    width: 100%;
-    height: auto;
-  }
-
-  .trust-bar {
-    flex-wrap: wrap; /* Permite que los items bajen de línea */
-    gap: 20px;
-  }
-
-  .trust-item {
-    width: 45%; /* 2x2 en celular */
-  }
-
-  .guarantee-section {
-    margin: 0 0 40px 0; /* Quita margen lateral en móvil */
-    border-radius: 0;
-  }
-
-  .guarantee-image {
-    width: 100%;
-    height: auto;
-  }
-
-  .footer-content {
-    flex-direction: column;
-    text-align: center;
-  }
-}
-
-/* Celulares pequeños (hasta 480px) */
-@media (max-width: 480px) {
-  .products-grid {
-    grid-template-columns: 1fr; /* 1 sola columna de productos */
-  }
+/* Efecto hover: los enlaces se pintan del azul primario al pasar el mouse */
+.custom-footer-link:hover {
+  color: var(--primary-color) !important;
 }
