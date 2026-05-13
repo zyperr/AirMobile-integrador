@@ -1,110 +1,64 @@
-/* ProductCard.css */
+/* =========================================
+   CARTA DE PRODUCTOS (Complemento a Bootstrap)
+   ========================================= */
 
-/* Contenedor principal de la tarjeta con bordes redondeados y fondo blanco/crema claro */
-/* Modificá solo esta clase en ProductCard.css */
-.product-card {
-  width: 100%; /* <-- CAMBIAR ACÁ: antes decía 320px */
-  background-color: #fcfafc; 
-  border-radius: 30px; 
+/* Contenedor principal de la tarjeta */
+.custom-product-card {
+  background-color: #fcfafc !important; 
+  border-radius: 30px !important; 
   padding: 16px; 
-  box-sizing: border-box; 
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); 
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Contenedor de la imagen con fondo gris claro y bordes menos redondeados */
-.image-container {
-  background-color: #f3eff2; /* Color de fondo gris muy claro */
-  border-radius: 20px; /* Bordes redondeados para el contenedor de la imagen */
-  width: 100%;
-  height: 250px; /* Altura fija para la imagen */
+/* Efecto opcional al pasar el mouse sobre la tarjeta */
+.custom-product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Contenedor de la imagen */
+.custom-img-container {
+  background-color: #f3eff2; 
+  border-radius: 20px; 
+  height: 250px; 
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 20px; /* Espacio debajo de la imagen */
-  overflow: hidden; /* Asegura que la imagen no se salga si es grande */
+  margin-bottom: 16px;
+  overflow: hidden; 
 }
 
-/* Imagen del teléfono */
-.product-image {
-  max-width: 90%; /* Ajusta el ancho para que quepa dentro del contenedor */
-  max-height: 90%; /* Ajusta el alto para que quepa dentro del contenedor */
-  object-fit: contain; /* Mantiene la relación de aspecto sin recortar */
+.custom-product-img {
+  max-width: 90%; 
+  max-height: 90%; 
+  object-fit: contain; 
 }
 
-/* Contenedor de información de texto */
-.details-container {
-  padding: 0 8px; /* Un poco de margen interno para el texto */
-}
-
-/* Fila de título y la etiqueta (badge) */
-.title-row {
-  display: flex;
-  justify-content: space-between; /* Separa el título de la etiqueta */
-  align-items: center; /* Alinea verticalmente */
-  margin-bottom: 6px; /* Espacio debajo del título */
-}
-
-/* Estilos para el título "iPhone 15 Pro" */
-.product-title {
-  margin: 0;
-  font-size: 22px; /* Tamaño de fuente estimado */
-  font-weight: 700; /* Negrita */
-  color: #1a1a1a; /* Texto oscuro */
-}
-
-/* Estilos para la etiqueta "MINT" */
-.status-badge {
-  background-color: #005bb5; /* Azul oscuro */
-  color: #ffffff; /* Texto blanco */
-  font-size: 11px; /* Fuente pequeña */
-  font-weight: 800; /* Super negrita */
-  padding: 4px 10px; /* Relleno interno */
-  border-radius: 20px; /* Bordes totalmente redondeados */
-  letter-spacing: 0.5px; /* Ligero espaciado de letras */
-}
-
-/* Estilos para la descripción (Natural Titanium • 256GB) */
-.product-description {
-  font-size: 15px;
-  color: #6a718c; /* Color gris medio para el subtítulo */
-  margin-bottom: 24px; /* Espacio antes del precio */
+/* Etiqueta azul oscuro */
+.custom-status-badge {
+  background-color: #005bb5 !important; 
+  font-size: 11px !important; 
+  font-weight: 800 !important; 
+  padding: 6px 12px !important; 
+  letter-spacing: 0.5px; 
 }
 
 /* Separador de punto medio */
-.bullet-separator {
-  color: #a0a6b5; /* Un gris un poco más claro para el punto */
-  margin: 0 4px; /* Espacio lateral al punto */
+.custom-bullet {
+  color: #a0a6b5; 
+  margin: 0 4px; 
 }
 
-/* Fila de precio y botón de acción */
-.action-row {
-  display: flex;
-  justify-content: space-between; /* Precio a la izquierda, botón a la derecha */
-  align-items: center; /* Alinea verticalmente */
+/* Botón de acción azul brillante */
+.custom-view-btn {
+  background-color: #0066cc !important; 
+  border: none !important; 
+  border-radius: 8px !important; 
+  padding: 10px 22px !important; 
+  font-size: 14px !important; 
+  transition: background-color 0.2s ease; 
 }
 
-/* Estilos para el precio "$899" */
-.product-price {
-  font-size: 24px; /* Tamaño grande */
-  font-weight: 700; /* Negrita */
-  color: #1a1a1a; /* Texto oscuro */
-}
-
-/* Estilos para el botón azul "View Details" */
-.view-details-button {
-  background-color: #0066cc; /* Color de fondo azul brillante */
-  color: #ffffff; /* Texto blanco */
-  border: none; /* Sin borde */
-  border-radius: 8px; /* Bordes redondeados del botón */
-  padding: 10px 22px; /* Relleno interno */
-  font-size: 14px; /* Tamaño de fuente */
-  font-weight: 600; /* Peso de fuente medio-alto */
-  cursor: pointer; /* Cambia el cursor al pasar por encima */
-  transition: background-color 0.2s ease; /* Transición suave para el estado hover */
-}
-
-/* Efecto hover opcional para el botón */
-.view-details-button:hover {
-  background-color: #0052a3; /* Azul ligeramente más oscuro al pasar el ratón */
+.custom-view-btn:hover {
+  background-color: #0052a3 !important; 
 }

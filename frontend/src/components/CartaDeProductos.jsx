@@ -1,38 +1,47 @@
-import '../style/CartaDeProductos.css'; // Importa el archivo CSS con los estilos
+import '../style/CartaDeProductos.css';
+import phoneImage from '../../public/img/iPhone 12 Pro.png'; 
 
-// Puedes reemplazar esta URL con la ruta a tu propia imagen del iPhone 15 Pro
-import phoneImage from '../../public/img/iPhone 12 Pro.png'; // Asegúrate de tener una imagen similar en tu carpeta
+const ProductCard = ({ nombreDeProducto, condicion, precio, capacidad = [] }) => {
+  // Validación por si capacidad viene como texto (string) desde la base de datos
+  const capacidadFormateada = Array.isArray(capacidad) ? capacidad.join(', ') : capacidad;
 
-const ProductCard = ({nombreDeProducto, condicion, precio, capacidad = []}) => {
   return (
-    <div className="product-card">
-      {/* Sección de la imagen con el contenedor gris claro */}
-      <div className="image-container">
+    
+    <div className="card border-0 h-100 custom-product-card shadow-sm d-flex flex-column">
+      {/* card de Bootstrap con flex-column para empujar el botón hacia abajo */}
+      {/* Contenedor de imagen */}
+      <div className="custom-img-container position-relative">
         <img 
           src={phoneImage} 
-          alt="iPhone 15 Pro en color Natural Titanium" 
-          className="product-image" 
+          alt={`Imagen de ${nombreDeProducto}`} 
+          className="custom-product-img" 
         />
       </div>
 
-      {/* Sección de detalles del producto */}
-      <div className="details-container">
-        {/* Fila del título y la etiqueta de estado */}
-        <div className="title-row">
-          <h2 className="product-title">{nombreDeProducto}</h2>
-          <span className="status-badge">{condicion.toUpperCase()}</span>
+      {/* Contenedor de detalles (card-body) */}
+      <div className="card-body p-1 d-flex flex-column flex-grow-1">
+        
+        {/* Título y Badge */}
+        <div className="d-flex justify-content-between align-items-center mb-1">
+          <h2 className="card-title m-0 fw-bold text-dark fs-5">{nombreDeProducto}</h2>
+          <span className="badge rounded-pill custom-status-badge">
+            {condicion?.toUpperCase()}
+          </span>
         </div>
 
-        {/* Fila de descripción */}
-        <div className="product-description">
-          Natural Titanium <span className="bullet-separator">•</span> {capacidad.join(', ')}
+        {/* Descripción */}
+        <div className="text-secondary mb-4" style={{ fontSize: "15px" }}>
+          Natural Titanium <span className="custom-bullet">•</span> {capacidadFormateada}
         </div>
 
-        {/* Fila de precio y botón de acción */}
-        <div className="action-row">
-          <span className="product-price">${precio}</span>
-          <button className="view-details-button">View Details</button>
+        {/* Precio y Botón (mt-auto los empuja al final siempre) */}
+        <div className="d-flex justify-content-between align-items-center mt-auto pt-2">
+          <span className="fw-bold text-dark fs-4">${precio}</span>
+          <button className="btn btn-primary fw-semibold custom-view-btn">
+            View Details
+          </button>
         </div>
+        
       </div>
     </div>
   );

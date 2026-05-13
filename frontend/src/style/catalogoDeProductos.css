@@ -1,116 +1,31 @@
-/* ProductList.css */
+/* =========================================
+   CATÁLOGO DE PRODUCTOS (Complemento)
+   ========================================= */
 
-/* Contenedor principal que agrupa filtros y grilla. 
-   Diseñado para estar entre tu Navbar y Footer. */
-/* Modificá estas dos clases en tu ProductList.css */
-
-.product-list-container {
-  display: flex;
-  max-width: 1400px; /* <-- CAMBIAR ACÁ: Usá max-width y un valor más alto para que ocupe más pantalla */
-  width: 100%;       /* <-- AGREGAR ESTO: Para asegurar que sea responsivo */
-  margin: 0 auto; 
-  padding: 40px 20px;
-  gap: 40px; 
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  min-height: calc(100vh - 200px); 
+/*Altura mínima para que el footer no se suba si hay 0 o 1 producto */
+.custom-catalog-min-height {
+  min-height: calc(100vh - 200px);
 }
 
-
-/* --- ESTILOS DEL SIDEBAR DE FILTROS --- */
+/* Comportamiento del sidebar: 100% en celular, 240px fijo en PC */
 .sidebar-filters {
-  width: 240px;
-  flex-shrink: 0; /* Evita que el sidebar se aplaste */
+  width: 100%;
 }
 
-.filters-title {
-  font-size: 20px;
-  color: #1a1a1a;
-  margin-top: 0;
-  margin-bottom: 24px;
-}
-
-.filter-section {
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #e5e5e5; /* Línea separadora sutil */
-}
-
-.filter-section h4 {
-  font-size: 13px;
-  color: #6a718c;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 12px;
-  margin-top: 0;
-}
-
-.filter-section label {
-  display: flex;
-  align-items: center;
-  margin-bottom: 12px;
-  color: #1a1a1a;
-  font-size: 15px;
-  cursor: pointer;
-}
-
-.filter-section input[type="checkbox"] {
-  margin-right: 10px;
-  width: 18px;
-  height: 18px;
-  accent-color: #0066cc; /* Mismo azul que el botón "View Details" */
-  cursor: pointer;
-}
-
-/* --- ESTILOS DEL CATÁLOGO --- */
-.catalog-section {
-  flex-grow: 1; /* Toma todo el espacio sobrante a la derecha */
-}
-
-.catalog-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 30px;
-}
-
-.catalog-header h2 {
-  margin: 0;
-  font-size: 28px;
-  color: #1a1a1a;
-  font-weight: 700;
-}
-
-.results-count {
-  font-size: 15px;
-  color: #6a718c;
-  padding-bottom: 4px;
-}
-
-/* --- LA GRILLA DE PRODUCTOS --- */
-.products-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px; /* <-- ACÁ ESTÁ LA SEPARACIÓN EXACTA ENTRE PRODUCTOS. Podés bajarlo a 15px o 10px si los querés más pegados */
-}
-
-/* --- ADAPTACIÓN PARA MÓVILES (RESPONSIVE) --- */
-@media (max-width: 768px) {
-  .product-list-container {
-    flex-direction: column; /* Apila los filtros arriba y los productos abajo */
-    padding: 20px 15px;
-  }
-  
+@media (min-width: 768px) {
   .sidebar-filters {
-    width: 100%; /* El sidebar toma el 100% en celulares */
+    width: 240px;
   }
+}
 
-  .catalog-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
+/*Personalizar el color de los checkboxes al azul estilo Apple/AirMobile */
+.custom-checkbox:checked {
+  background-color: var(--primary-color, #005ce6) !important;
+  border-color: var(--primary-color, #005ce6) !important;
+}
 
-  .products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Tarjetas un poco más chicas en móvil */
-  }
+/* Quita el borde azul feo por defecto al hacer click (focus) en el checkbox */
+.custom-checkbox:focus {
+  box-shadow: 0 0 0 0.25rem rgba(0, 92, 230, 0.25) !important;
+  border-color: var(--primary-color, #005ce6) !important;
 }
