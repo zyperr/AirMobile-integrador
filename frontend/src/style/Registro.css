@@ -116,7 +116,7 @@
     letter-spacing: 0.3px;
 }
 
-.btn-registro:hover {
+.btn-registro:hover{
     background: #142d54;
     box-shadow: 0 4px 16px rgba(26, 58, 107, 0.28);
     transform: translateY(-1px);
