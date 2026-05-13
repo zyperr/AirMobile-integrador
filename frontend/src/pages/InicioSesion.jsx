@@ -37,6 +37,7 @@ const InicioSesion = () => {
             }
         } catch (error) {
             setErrorServidor("Error de conexión con el servidor.");
+            console.log("Error:", error);
         }
     };
 
