@@ -1,99 +1,122 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useState } from 'react'; // Importamos useState
 import { useForm } from 'react-hook-form';
 import "../style/Registro.css";
 
-
 const InicioSesion = () => {
+    // Estado para manejar el mensaje de error del servidor
+    const [errorServidor, setErrorServidor] = useState(null);
     
-    const { register, handleSubmit, formState: { errors } } = useForm();
+    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm();
 
-    const onSubmit = (data) => {
-        console.log("Datos enviados:", data);
+    const url = "http://localhost:3000/api/usuarios/login";
+
+    const onSubmit = async (data) => {
+        setErrorServidor(null); // Limpiamos errores previos al intentar de nuevo
+        await enviarDatos(data);
+    };
+
+    const enviarDatos = async (data) => {
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                console.log("Éxito:", result);
+                // Redirección o lógica de éxito aquí
+            } else {
+                // Seteamos el error que viene del backend
+                setErrorServidor(result.message || "Correo o contraseña incorrectos.");
+            }
+        } catch (error) {
+            setErrorServidor("Error de conexión con el servidor.");
+        }
     };
 
     return (
         <Fragment>
-            <div className=" registro-wrapper d-flex flex-column align-items-center justify-content-center p-3 ">
+            <div className="registro-wrapper d-flex flex-column align-items-center justify-content-center p-3">
                 
-
-                <div className=" registro-card p-4 p-md-5 m-4">
-
+                <div className="registro-card p-4 p-md-5 m-4">
                     <div className="text-bienvenida d-flex flex-column align-items-center justify-content-center m-4 gap-3">
-                        <h3 className=" registro-title text-center fs-3 text-dark fw-semibold">Bienvenido de nuevo</h3>
-                        <p className="text-center registro-subtitle fs-6">Inicio sesión para gestionar tus pedidos y la garantía.</p>
+                        <h3 className="registro-title text-center fs-3 text-dark fw-semibold">Bienvenido de nuevo</h3>
+                        <p className="text-center registro-subtitle fs-6">Inicia sesión para gestionar tus pedidos.</p>
                     </div>
+
+                    {/* --- CARTEL DE ERROR ESTÉTICO --- */}
+                    {errorServidor && (
+                        <div className="alert alert-danger d-flex align-items-center border-0 shadow-sm mb-4" role="alert" style={{ borderRadius: '10px', fontSize: '0.9rem' }}>
+                            <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                            <div>
+                                {errorServidor}
+                            </div>
+                        </div>
+                    )}
 
                     <form onSubmit={handleSubmit(onSubmit)}>
                         
-                        {/* Email Field */}
                         <div className="mb-3 text-start">
-                            <label htmlFor="email" className=" form-label  registro-label">Dirección de correo electrónico</label>
+                            <label htmlFor="email" className="form-label registro-label">Correo electrónico</label>
                             <input
                                 type="email"
                                 className={`form-control ${errors.email ? 'is-invalid' : ''}`}
                                 id="email"
-                                placeholder="name@example.com"
-                                // 2. Nueva forma de registrar el input
-                                {...register("email", 
-                                    {
-                                    required: "El correo electrónico es requerido",
+                                placeholder="nombre@ejemplo.com"
+                                {...register("email", {
+                                    required: "El correo es requerido",
                                     pattern: {
-                                        value: true,
-                                        message: "Dirección de correo no válida"
+                                        value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                                        message: "Formato no válido"
                                     }
                                 })}
                             />
-                            {errors.email && (
-                                <span className="text-danger text-small d-block mt-1">
-                                    {errors.email.message}
-                                </span>
-                            )}
+                            {errors.email && <span className="text-danger text-small d-block mt-1">{errors.email.message}</span>}
                         </div>
 
-                        {/* Password Field */}
                         <div className="mb-3">
                             <div className="row">
                                 <div className="col-4 text-start">
-                                    <label htmlFor="password" className="form-label  registro-label ">Contraseña</label>
+                                    <label htmlFor="password" className="form-label registro-label">Contraseña</label>
                                 </div>
                                 <div className="col-8 text-end">
-                                    <a href="#" className="fw-light registro-link text-decoration-none ">¿Olvidaste tu contraseña?</a>
+                                    <a href="#" className="fw-light registro-link text-decoration-none">¿Olvidaste tu contraseña?</a>
                                 </div>
                             </div>
-
                             <input
                                 type="password"
                                 className={`form-control ${errors.password ? 'is-invalid' : ''}`} 
                                 id="password"
-                                placeholder="Introduce tu contraseña"
+                                placeholder="Tu contraseña"
                                 {...register("password", {
                                     required: "La contraseña es requerida",
                                     minLength: { value: 6, message: "Mínimo 6 caracteres" }
                                 })}
                             />
-                            {errors.password && (
-                                <span className="text-danger text-small d-block mt-1 text-start">
-                                    {errors.password.message}
-                                </span>
-                            )}
+                            {errors.password && <span className="text-danger text-small d-block mt-1 text-start">{errors.password.message}</span>}
                         </div>
 
                         <div className="d-grid gap-2">
-                            <button type="submit" className="btn-registro w-100 mb-3">Iniciar sesión</button>
+                            <button 
+                                type="submit" 
+                                className="btn-registro w-100 mb-3"
+                                disabled={isSubmitting}
+                            >
+                                {isSubmitting ? (
+                                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                ) : "Iniciar sesión"}
+                            </button>
                         </div>
                     </form>
                 </div>
 
                 <div className="text-center mt-3">
                     <span className="badge-seguro fs-6">
-                        <i class="bi bi-shield-lock "></i>
-                        INICIO SESION SEGURO
+                        <i className="bi bi-shield-lock"></i> INICIO SESIÓN SEGURO
                     </span>
-                </div>
-
-                <div className="d-flex align-self-center justify-content-center gap-2 mt-4">
-                    <p className="text-center text-muted mb-3" style={{ fontSize: "0.9rem" }}>¿No tienes una cuenta?</p>
-                    <a href="#" className="ms-2  registro-link">Crear cuenta</a>
                 </div>
             </div>
         </Fragment>
