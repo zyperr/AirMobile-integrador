@@ -142,3 +142,28 @@ code {
 .formulario {
   background-color: #F6F3F5;
 }
+
+.wrapper {
+  padding: 2rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 1;
+}
+
+.d-card {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 8px 40px rgba(26, 58, 107, 0.12);
+  width: 100%;
+  max-width: 500px;
+  animation: fadeInUp 0.5s ease forwards;
+}
+.subtitle {
+    color: #6b7280;
+    font-size: 0.92rem;
+    line-height: 1.6;
+    max-width: 340px;
+    margin: 0 auto;
+  
+  }

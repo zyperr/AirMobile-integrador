@@ -178,11 +178,6 @@ export default function Product() {
         </div>
       </section>
 
-      {/* FOOTER */}
-
-        <Footer/>
-
-
     </div>
   );
 }

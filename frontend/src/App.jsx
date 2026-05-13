@@ -6,6 +6,7 @@ import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
 import InicioSesion from "./pages/InicioSesion";
 import Registro from "./pages/Registro";
+import { RecuperarContraseña } from "./pages/RecuperarContraseña";
 
 
 function App() {
@@ -16,10 +17,11 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/product" element={<Product />} />
         <Route path="/catalogo" element={<CatalogoDeProductos />} />
-        <Route path="/inicio-sesion" element={<InicioSesion />} /> 
+        <Route path="/inicio-sesion" element={<InicioSesion />} />
         <Route path="/registro" element={<Registro />} />
+        <Route path="/recuperar-password" element={<RecuperarContraseña />} />
       </Routes>
-          <Footer />
+      <Footer />
     </BrowserRouter>
   );
 }

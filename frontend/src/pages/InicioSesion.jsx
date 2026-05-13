@@ -8,46 +8,31 @@ import { BtnForm } from '../components/BtnForm';
 import { BadgeSeguro } from '../components/BadgeSeguro';
 import { Link } from 'react-router-dom';
 import { SuccessCard } from '../components/SuccessCard';
-
+import { useApi } from '../hooks/useApi';
 
 const InicioSesion = () => {
-    const [errorServidor, setErrorServidor] = useState(null);
     const [loginExitoso, setLoginExitoso] = useState(false);
     const [submitted, setSubmitted] = useState(false);
 
     const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm();
+    const { ejecutarPeticion, isLoading, error } = useApi();
 
-    const url = "http://localhost:3000/api/usuarios/login";
+    const endpoint = "usuarios/login";
 
     const onSubmit = async (data) => {
-        setErrorServidor(null);
-        await enviarDatos(data);
-    };
 
-    const enviarDatos = async (data) => {
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                setLoginExitoso(true);
-                console.log("Éxito:", result);
-
-                // Ejemplo: Redirigir al home después de 3 segundos
-                // setTimeout(() => { window.location.href = "/"; }, 3000);
-            } else {
-                setErrorServidor(result.message || "Correo o contraseña incorrectos.");
-            }
-        } catch (error) {
-            setErrorServidor("Error de conexión con el servidor.");
-            console.log("Error:", error);
+        const resultado = await ejecutarPeticion(endpoint, {
+            method: "POST",
+            body: JSON.stringify(data)
+        })
+        if (resultado.exito) {
+            setLoginExitoso(true);
+            console.log("¡Login exitoso!", resultado.data);
+            // Ejemplo: Redirigir al home después de 3 segundos
+            // setTimeout(() => { window.location.href = "/"; }, 3000);
         }
     };
+
 
     return (
         <Fragment>
@@ -60,8 +45,8 @@ const InicioSesion = () => {
                                 <h3 className="registro-title text-center fs-3 text-dark fw-semibold">Bienvenido de nuevo</h3>
                                 <p className="text-center registro-subtitle fs-6">Inicia sesión para gestionar tus pedidos.</p>
                                 {/* --- CARTEL DE ERROR ESTÉTICO --- */}
-                                {errorServidor && (
-                                    <ErrorCard errorServidor={errorServidor} />
+                                {error && (
+                                    <ErrorCard errorServidor={error} />
                                 )}
                                 <form onSubmit={handleSubmit(onSubmit)}>
                                     <InputGenerico
@@ -92,12 +77,12 @@ const InicioSesion = () => {
                                         }}
                                     />
 
-                                    <BtnForm isSubmitting={isSubmitting} text={"Crear cuenta"} />
+                                    <BtnForm isSubmitting={isSubmitting} text={"iniciar sesion"} />
                                 </form>
                                 <BadgeSeguro mensaje={"INICIO SESIÓN SEGURO"} />
                                 <p className="text-center text-muted mt-2" style={{ fontSize: "0.9rem" }}>
                                     ¿No tienes una cuenta?
-                                    <Link className="registro-link text-decoration-none" to="/inicio-sesion" > Crear una</Link>
+                                    <Link className="registro-link text-decoration-none" to="/registro" > Crear una</Link>
                                 </p>
                             </div>
                         </div>

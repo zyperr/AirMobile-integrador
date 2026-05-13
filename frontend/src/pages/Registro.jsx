@@ -8,16 +8,18 @@ import { SuccessCard } from "../components/SuccessCard";
 import { BadgeSeguro } from "../components/BadgeSeguro";
 import { BtnForm } from "../components/BtnForm";
 import { useForm } from "react-hook-form";
+import React from "react";
+import { useApi } from "../hooks/useApi";
 
 
 const Registro = () => {
     const [submitted, setSubmitted] = useState(false);
-
+    const { ejecutarPeticion, isLoading, error } = useApi();
     // Inicializamos React Hook Form
     const {
         register,
         handleSubmit,
-        watch, 
+        watch,
         reset,
         formState: { errors, isSubmitting }
     } = useForm();
@@ -25,7 +27,7 @@ const Registro = () => {
     // "Observamos" la contraseña en tiempo real para la barrita y para comparar
     const passwordActual = watch("password", "");
 
-    const url = "http://localhost:3000/api/usuarios/registro";
+    const endpoint = "usuarios/registro";
 
     // data ya trae todos los campos validados!
     const onSubmit = async (data) => {
@@ -36,19 +38,15 @@ const Registro = () => {
                 nombre: data.nombre,
                 password: data.password
             };
-
-            const response = await fetch(url, {
+            const resultado = await ejecutarPeticion(endpoint, {
                 method: "POST",
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formParsed)
-            });
-            const result = await response.json();
-
-            if (response.ok) {
-                setSubmitted(true);
-                reset(); // Limpia todo el formulario automáticamente
-            } else {
-                console.log(result.message);
+            })
+            if (resultado.exito) {
+                setSubmitted(true)
+                console.log("¡Login exitoso!", resultado.data);
+                // Ejemplo: Redirigir al home después de 3 segundos
+                // setTimeout(() => { window.location.href = "/"; }, 3000);
             }
         } catch (error) {
             console.log("Error", error);

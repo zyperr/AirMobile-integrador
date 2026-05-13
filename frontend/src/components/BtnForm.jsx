@@ -3,7 +3,7 @@ export const BtnForm = ({isSubmitting, text }) => {
         <div className="d-grid gap-2">
             <button
                 type="submit"
-                className="btn-registro w-100 mb-3"
+                className="btn-registro w-100 mb-3 text-capitalize"
                 disabled={isSubmitting}
             >
                 {isSubmitting ? (
