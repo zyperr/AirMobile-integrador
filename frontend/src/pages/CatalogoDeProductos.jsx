@@ -1,30 +1,48 @@
+import { set } from "react-hook-form";
 import CartaDeProductos from "../components/CartaDeProductos";
-import "../style/catalogoDeProductos.css";
-import { useEffect, useState } from "react";
+import Paginacion from "../components/Paginacion";
 
-export default function CatalogoDeProductos() { 
+import "../style/catalogoDeProductos.css";
+import { use, useEffect, useState } from "react";
+
+
+
+export default function CatalogoDeProductos() {
     const URL_API = "http://localhost:3000/api/productos/productos";
     const [producto, setProducto] = useState(null);
+    const [paginaActual, setPaginaActual] = useState(1);
 
     useEffect(() => {
         const fetchProducto = async () => {
             try {
-                const respuesta = await fetch(URL_API);
+                const respuesta = await fetch(`${URL_API}?page=${paginaActual}`);
                 const data = await respuesta.json();
                 setProducto(data);
             } catch (error) {
                 console.error("Error al cargar los productos:", error);
             }
         }
+
+        // IMPORTANTE: Al poner 'pagina' aquí, cada vez que cambie el número, 
+        // el useEffect se dispara solo y trae la nueva data.
         fetchProducto();
-    }, []);
+    }, [paginaActual]);
+
+
+
+    const cambiarPagina = (pagina) => {
+        setPaginaActual(pagina);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+
 
     return (
         <main className="container-fluid px-4 px-lg-5 py-5 custom-catalog-min-height">
             {/* Contenedor central con límite máximo de ancho */}
             <div className="row justify-content-center">
                 <div className="col-12 d-flex flex-column flex-md-row gap-4" style={{ maxWidth: "1400px" }}>
-                    
+
                     {/* BARRA LATERAL (Filtros) */}
                     <aside className="sidebar-filters flex-shrink-0">
                         <h3 className="fs-5 fw-bold text-dark mb-4">Filtros</h3>
@@ -83,7 +101,7 @@ export default function CatalogoDeProductos() {
 
                     {/* CONTENEDOR PRINCIPAL DEL CATÁLOGO */}
                     <section className="flex-grow-1 w-100">
-                        
+
                         {/* Cabecera */}
                         <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-end mb-4 pb-2">
                             <h2 className="fs-2 fw-bold text-dark m-0">Explorar Productos</h2>
@@ -97,18 +115,34 @@ export default function CatalogoDeProductos() {
                             {producto?.data?.map((item) => (
                                 /* Cada CartaDeProductos va envuelta en una columna (col) */
                                 <div className="col" key={item.id}>
-                                    <CartaDeProductos 
-                                        nombreDeProducto={item.nombre_producto} 
-                                        condicion={item.condicion} 
-                                        precio={item.precio} 
-                                        capacidad={item.capacidad} 
+                                    <CartaDeProductos
+                                        nombreDeProducto={item.nombre_producto}
+                                        condicion={item.condicion}
+                                        precio={item.precio}
+                                        capacidad={item.capacidad}
                                     />
                                 </div>
                             ))}
                         </div>
 
+
+                        <div className="">
+                            {console.log(producto?.paginacion)}
+
+
+                            <Paginacion
+                                paginaActual={paginaActual}
+                                tienePaginaAnterior={producto?.paginacion.tienePaginaAnterior}
+                                tienePaginaSiguiente={producto?.paginacion.tienePaginaSiguiente}
+                                cambiarPagina={cambiarPagina}
+                            ></Paginacion>
+                        </div>
+
                     </section>
+
+
                 </div>
+
             </div>
         </main>
     );
