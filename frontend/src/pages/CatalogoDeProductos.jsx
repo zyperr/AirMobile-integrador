@@ -1,9 +1,9 @@
-import { set } from "react-hook-form";
+
 import CartaDeProductos from "../components/CartaDeProductos";
 import Paginacion from "../components/Paginacion";
 
 import "../style/catalogoDeProductos.css";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 
 
