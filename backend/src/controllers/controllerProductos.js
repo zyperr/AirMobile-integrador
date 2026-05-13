@@ -26,7 +26,8 @@ export const obtenerProductos = async (req, res) => {
             precioMin: value.precioMin,
             precioMax: value.precioMax,
             busqueda: value.busqueda,
-            orden:value.orden
+            orden:value.orden,
+            bateriaMin: value.bateriaMin
         };
 
 

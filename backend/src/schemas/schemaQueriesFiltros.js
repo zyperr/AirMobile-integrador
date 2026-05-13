@@ -39,5 +39,9 @@ export const schemaFiltrosProductos = Joi.object({
     orden: Joi.string().valid(...ordenValidos).default("asc").optional().messages({
         'string.base': 'El orden debe ser un texto.',
         'any.only': 'El orden no es valido. Solo se permite: {#valids}.'
+    }),
+    bateriaMin: Joi.string().min(70).max(100).optional().messages({
+        'number.min': 'La bateria debe de ser 70 o mas',
+        'number.max': 'La bateria debe de ser 100 o menos',
     })
 });

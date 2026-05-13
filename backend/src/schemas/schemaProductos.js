@@ -44,7 +44,7 @@ export const schemaProductos = Joi.object({
 
     bateria: Joi.any().when("categoria", {
         is: Joi.string().valid(...categoriasValidasParaBateria),
-        then: Joi.number().integer().min(1).max(100).optional(),
+        then: Joi.number().integer().min(70).max(100).optional(),
         otherwise: Joi.any().strip()
     }),
     
