@@ -1,4 +1,5 @@
 import Joi from 'joi';
+import { CAPACIDADES_PERMITIDAS, CONDICIONES_PERMITIDAS } from './schemaProductos.js';
 
 export const schemaActualizarProducto = Joi.object({
     
@@ -9,7 +10,7 @@ export const schemaActualizarProducto = Joi.object({
     stock: Joi.number().integer().min(0).optional(),
     
 
-    capacidad: Joi.array().items(Joi.string()).optional(), 
+    capacidad: Joi.array().items(Joi.string()).valid(...CAPACIDADES_PERMITIDAS).optional(), 
     
     descripcion: Joi.string().max(500).optional(),
     
@@ -17,7 +18,7 @@ export const schemaActualizarProducto = Joi.object({
     
     categoria: Joi.string().min(3).max(30).optional(),
 
-    condicion: Joi.string().valid("nuevo", "reacondicionado", "usado").optional(),
+    condicion: Joi.string().valid(...CONDICIONES_PERMITIDAS).optional(),
     
     bateria: Joi.any().when("categoria", {
         is: Joi.string().valid("iphone","iphones","smartphones","ipad","tablets"),

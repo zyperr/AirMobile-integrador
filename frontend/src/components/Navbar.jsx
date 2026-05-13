@@ -1,23 +1,8 @@
 import { Link } from "react-router-dom";
 import "../style/home.css";
-import { useEffect, useState } from "react";
+
 
 export default function Navbar({ carrito = [] }) {
-    const [producto, setProducto] = useState(null);
-    const URL_API = "http://localhost:3000/api/productos/productos?page=2";
-
-    useEffect(() => {
-        const fetchProducto = async () => {
-            try {
-                const respuesta = await fetch(URL_API);
-                const data = await respuesta.json();
-                setProducto(data);
-            } catch (error) {
-                console.error("Error al cargar datos en navbar:", error);
-            }
-        }
-        fetchProducto();
-    }, []);
 
     return (
         <nav className="navbar sticky-top border-bottom px-4 px-md-5 custom-navbar">

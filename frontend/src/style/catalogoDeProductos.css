@@ -29,3 +29,20 @@
   box-shadow: 0 0 0 0.25rem rgba(0, 92, 230, 0.25) !important;
   border-color: var(--primary-color, #005ce6) !important;
 }
+
+
+/* Evita que el dropdown se cierre al interactuar con los checks internos */
+.dropdown-menu.p-3 {
+  min-width: 200px;
+}
+
+/* Opcional: un efecto de fondo suave al pasar el mouse por la fila del check */
+.custom-dropdown-check:hover {
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+/* Estilo para que el botón del dropdown se vea más acorde al estilo Apple */
+.dropdown-toggle::after {
+  margin-left: auto; /* Empuja la flechita a la derecha */
+}

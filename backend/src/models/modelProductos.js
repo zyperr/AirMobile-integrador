@@ -10,12 +10,13 @@ class ModelProductos {
             let args = []
             let sqlOrderBy = "ORDER BY fecha_creacion DESC"; // mas recientes primeros
 
-            if(filtros.orden === "asc"){ // mas viejos primeros
+            if (filtros.orden === "asc") { // mas viejos primeros
                 sqlOrderBy = "ORDER BY fecha_creacion asc";
             }
-            if(filtros.bateriaMin){
-                sql += " AND bateria >= ?"
-                args.push(`%${Number(filtros.bateria)}`)
+            if (filtros.bateriaMin) {
+                sql += " AND bateria >= ?";
+                // Quitamos los % y usamos exactamente el nombre filtros.bateriaMin
+                args.push(Number(filtros.bateriaMin));
             }
             if (filtros.categoria) {
                 sql += " AND categoria LIKE ?"
@@ -25,6 +26,11 @@ class ModelProductos {
             if (filtros.condicion) {
                 sql += " AND condicion LIKE ?"
                 args.push(`%${filtros.condicion}%`)
+            }
+            if (filtros.capacidad) {
+
+                sql += " AND capacidad LIKE ?";
+                args.push(`%"${filtros.capacidad}"%`);
             }
 
             if (filtros.precioMin) {
@@ -69,9 +75,16 @@ class ModelProductos {
             let args = []
 
 
+
             if (filtros.categoria) {
                 sql += " AND categoria LIKE ?"
                 args.push(`%${filtros.categoria}%`)
+            }
+
+            if (filtros.capacidad) {
+                // Buscamos que el JSON contenga exactamente "16GB" (con todo y comillas)
+                sql += " AND capacidad LIKE ?";
+                args.push(`%"${filtros.capacidad}"%`);
             }
 
             if (filtros.condicion) {
@@ -79,6 +92,11 @@ class ModelProductos {
                 args.push(`%${filtros.condicion}%`)
             }
 
+            if (filtros.bateriaMin) {
+                sql += " AND bateria >= ?";
+                args.push(Number(filtros.bateriaMin));
+            }
+            
             if (filtros.precioMin) {
                 sql += " AND precio >= ?";
                 args.push(Number(filtros.precioMin));
@@ -126,7 +144,7 @@ class ModelProductos {
         const bateria = data.bateria ? data.bateria : null
         const result = await db.execute({
             sql: "INSERT INTO productos(nombre_producto,precio,capacidad,descripcion,imagen_url,categoria,condicion,bateria) VALUES(?,?,?,?,?,?,?,?)",
-            args: [nombre_producto, precio, capacidad, descripcion ? descripcion : "", imagen_url, categoria.toLowerCase(), condicion,bateria]
+            args: [nombre_producto, precio, capacidad, descripcion ? descripcion : "", imagen_url, categoria.toLowerCase(), condicion, bateria]
         })
 
         return result;

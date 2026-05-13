@@ -5,6 +5,10 @@ import Paginacion from "../components/Paginacion";
 import "../style/catalogoDeProductos.css";
 import { useEffect, useState } from "react";
 
+import { CAPACIDADES_PERMITIDAS, categoriasValidas, CONDICIONES_PERMITIDAS } from "../../../backend/src/schemas/schemaProductos";
+import FiltroRadioGroup from "../components/FiltroRadioGroup";
+import MensajeSinResultados from "../components/MensajeSinResultado";
+
 
 
 export default function CatalogoDeProductos() {
@@ -12,10 +16,48 @@ export default function CatalogoDeProductos() {
     const [producto, setProducto] = useState(null);
     const [paginaActual, setPaginaActual] = useState(1);
 
+    const [dropdownAbierto, setDropdownAbierto] = useState(false);
+
+    const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('');
+
+    const [capacidadSeleccionada, setCapacidadSeleccionada] = useState('');
+
+    const [condicionSeleccionada, setCondicionSeleccionada] = useState('');
+    const [bateriaMinima, setBateriaMinima] = useState('');
+
+    // Función para alternar el estado
+    const toggleDropdown = () => {
+        setDropdownAbierto(!dropdownAbierto);
+    };
+
     useEffect(() => {
         const fetchProducto = async () => {
             try {
-                const respuesta = await fetch(`${URL_API}?page=${paginaActual}`);
+
+                const url = new URL(URL_API);
+
+                url.searchParams.set("page", paginaActual);
+
+                if (categoriaSeleccionada) {
+                    url.searchParams.set("categoria", categoriaSeleccionada);
+                }
+                if (capacidadSeleccionada) {
+                    url.searchParams.set("capacidad", capacidadSeleccionada);
+                }
+
+                if (condicionSeleccionada) {
+                    url.searchParams.set("condicion", condicionSeleccionada);
+                }
+
+                if (bateriaMinima) {
+                    url.searchParams.set("bateriaMin", bateriaMinima);
+                }
+
+                const respuesta = await fetch(url.toString());
+
+                if (!respuesta.ok) {
+                    throw new Error("Error en la petición al servidor");
+                }
                 const data = await respuesta.json();
                 setProducto(data);
             } catch (error) {
@@ -26,7 +68,7 @@ export default function CatalogoDeProductos() {
         // IMPORTANTE: Al poner 'pagina' aquí, cada vez que cambie el número, 
         // el useEffect se dispara solo y trae la nueva data.
         fetchProducto();
-    }, [paginaActual]);
+    }, [paginaActual, categoriaSeleccionada, capacidadSeleccionada, condicionSeleccionada, bateriaMinima]);
 
 
 
@@ -35,8 +77,36 @@ export default function CatalogoDeProductos() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    const cambiarCategoria = (categoria) => {
+
+        setCategoriaSeleccionada(`${categoria}`);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    const cambiarCapacidad = (capacidad) => {
+        setCapacidadSeleccionada(`${capacidad}`);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    const cambiarCondicion = (condicion) => {
+        setCondicionSeleccionada(`${condicion}`);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 
 
+    const cambiarBateria = (bateria) => {
+        setBateriaMinima(bateria);
+    }
+
+
+    const limpiarTodosLosFiltros = () => {
+        setCategoriaSeleccionada('');
+        setCapacidadSeleccionada('');
+        setCondicionSeleccionada('');
+        setBateriaMinima('');
+        setPaginaActual(1); // Importante: volver a la página 1 al limpiar filtros
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
     return (
         <main className="container-fluid px-4 px-lg-5 py-5 custom-catalog-min-height">
             {/* Contenedor central con límite máximo de ancho */}
@@ -48,59 +118,156 @@ export default function CatalogoDeProductos() {
                         <h3 className="fs-5 fw-bold text-dark mb-4">Filtros</h3>
 
                         {/* Filtro: Modelo */}
-                        <div className="mb-4 pb-3 border-bottom">
-                            <h4 className="text-secondary text-uppercase mb-3" style={{ fontSize: "13px", letterSpacing: "0.5px" }}>Modelo</h4>
-                            <div className="form-check mb-2">
-                                <input className="form-check-input custom-checkbox" type="checkbox" id="mod1" />
-                                <label className="form-check-label text-dark" htmlFor="mod1">iPhone 15 Pro</label>
-                            </div>
-                            <div className="form-check mb-2">
-                                <input className="form-check-input custom-checkbox" type="checkbox" id="mod2" />
-                                <label className="form-check-label text-dark" htmlFor="mod2">iPhone 15</label>
-                            </div>
-                            <div className="form-check mb-2">
-                                <input className="form-check-input custom-checkbox" type="checkbox" id="mod3" />
-                                <label className="form-check-label text-dark" htmlFor="mod3">iPhone 14 Pro</label>
-                            </div>
+                        <div className="dropdown mb-4 pb-3 border-bottom">
+                            <h4 className="text-secondary text-uppercase mb-3" style={{ fontSize: "13px", letterSpacing: "0.5px" }}>
+                                Categorías
+                            </h4>
+
+                            {/* Botón que despliega el menú */}
+                            <button
+                                // Agregamos condicionalmente la clase 'show' al botón (opcional, pero buena práctica)
+                                className={`btn btn-primary dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center ${dropdownAbierto ? 'show' : ''}`}
+                                type="button"
+                                onClick={toggleDropdown} // Usamos nuestro evento de React
+                                aria-expanded={dropdownAbierto} // Actualizamos la accesibilidad
+                                style={{ fontSize: "14px", borderColor: "#e5e5ea" }}
+                            >
+                                Seleccionar categorías
+                            </button>
+
+                            {/* Menú desplegable */}
+                            <ul className={`dropdown-menu w-100 shadow-sm border-0 mt-2 p-3 ${dropdownAbierto ? 'show' : ''}`}>
+
+                                {/* Opción extra para "Limpiar" el filtro */}
+                                <li className="mb-3 border-bottom pb-2">
+                                    <div className="form-check custom-dropdown-check">
+                                        <input
+                                            className="form-check-input"
+                                            type="radio"
+                                            name="categoria-grupo"
+                                            id="cat-todas"
+                                            checked={categoriaSeleccionada === ""}
+                                            onChange={() => {
+                                                setCategoriaSeleccionada("");
+                                                setDropdownAbierto(false);
+                                            }
+                                            } // Limpia el estado
+                                        />
+                                        <label className="form-check-label text-dark w-100" htmlFor="cat-todas" style={{ cursor: "pointer", fontSize: "14px", fontWeight: "600" }}>
+                                            Todas las categorías
+                                        </label>
+                                    </div>
+                                </li>
+
+                                {/* Mapeo de tus categorías */}
+                                {categoriasValidas.map((categoria, index) => {
+                                    return (
+                                        <li key={index} className="mb-2">
+                                            <div className="form-check custom-dropdown-check">
+                                                <input
+                                                    className="form-check-input custom-checkbox"
+                                                    type="radio"
+                                                    name="categoria-grupo"
+                                                    id={`cat-${index}`}
+                                                    checked={categoriaSeleccionada === categoria}
+                                                    onChange={() => {
+                                                        cambiarCategoria(categoria)
+                                                        setDropdownAbierto(false);
+
+                                                    }}
+                                                />
+                                                <label
+                                                    className="form-check-label text-dark w-100 text-capitalize"
+                                                    htmlFor={`cat-${index}`}
+                                                    style={{ cursor: "pointer", fontSize: "14px" }}
+                                                >
+                                                    {categoria}
+                                                </label>
+                                            </div>
+                                        </li>
+                                    )
+                                })}
+                            </ul>
                         </div>
 
                         {/* Filtro: Condición */}
-                        <div className="mb-4 pb-3 border-bottom">
-                            <h4 className="text-secondary text-uppercase mb-3" style={{ fontSize: "13px", letterSpacing: "0.5px" }}>Condición</h4>
-                            <div className="form-check mb-2">
-                                <input className="form-check-input custom-checkbox" type="checkbox" id="cond1" />
-                                <label className="form-check-label text-dark" htmlFor="cond1">Mint</label>
-                            </div>
-                            <div className="form-check mb-2">
-                                <input className="form-check-input custom-checkbox" type="checkbox" id="cond2" />
-                                <label className="form-check-label text-dark" htmlFor="cond2">Excelente</label>
-                            </div>
-                            <div className="form-check mb-2">
-                                <input className="form-check-input custom-checkbox" type="checkbox" id="cond3" />
-                                <label className="form-check-label text-dark" htmlFor="cond3">Bueno</label>
-                            </div>
-                        </div>
+                        <FiltroRadioGroup
+                            titulo="Condición"
+                            nombreGrupo="condicion"
+                            opciones={CONDICIONES_PERMITIDAS}
+                            valorSeleccionado={condicionSeleccionada}
+                            onChange={cambiarCondicion}
+                            textoOpcionTodas="Todas las condiciones"
+                        />
 
                         {/* Filtro: Capacidad */}
+                        {/* Mantenemos la lógica de que no se muestre si eligen fundas/accesorios */}
+                        {categoriaSeleccionada !== 'fundas' && categoriaSeleccionada !== 'accesorios' && categoriaSeleccionada !== 'cargadores' && (
+                            <FiltroRadioGroup
+                                titulo="Capacidad"
+                                nombreGrupo="capacidad"
+                                opciones={CAPACIDADES_PERMITIDAS}
+                                valorSeleccionado={capacidadSeleccionada}
+                                onChange={cambiarCapacidad}
+                                textoOpcionTodas="Todas las capacidades"
+                            />
+                        )}
+                        {/* Filtro: Batería */}
                         <div className="mb-4 pb-3 border-bottom">
-                            <h4 className="text-secondary text-uppercase mb-3" style={{ fontSize: "13px", letterSpacing: "0.5px" }}>Capacidad</h4>
-                            <div className="form-check mb-2">
-                                <input className="form-check-input custom-checkbox" type="checkbox" id="cap1" />
-                                <label className="form-check-label text-dark" htmlFor="cap1">128GB</label>
+                            <div className="d-flex justify-content-between align-items-center mb-3">
+                                <h4 className="text-secondary text-uppercase m-0" style={{ fontSize: "13px", letterSpacing: "0.5px" }}>
+                                    Salud de Batería
+                                </h4>
+                                {/* El Badge cambia visualmente si está activo o inactivo */}
+                                <span
+                                    className="badge rounded-pill"
+                                    style={{ backgroundColor: bateriaMinima ? "#0066cc" : "#6c757d" }}
+                                >
+                                    {bateriaMinima ? `${bateriaMinima}% o más` : 'Inactivo'}
+                                </span>
                             </div>
-                            <div className="form-check mb-2">
-                                <input className="form-check-input custom-checkbox" type="checkbox" id="cap2" />
-                                <label className="form-check-label text-dark" htmlFor="cap2">256GB</label>
+
+                            {/* EL INPUT SLIDER */}
+                            <input
+                                type="range"
+                                className="form-range custom-range"
+                                min="70"
+                                max="100"
+                                step="10"
+                                id="filtroBateria"
+                                // TRUCO: Si el estado está vacío, el slider se queda visualmente en 70, pero sin afectar la URL
+                                value={bateriaMinima || "70"}
+                                onChange={(e) => {
+                                    // Guardamos el valor directamente como texto
+                                    cambiarBateria(e.target.value);
+                                }}
+                            />
+
+                            {/* Etiquetas visuales debajo del slider (volvemos al diseño original) */}
+                            <div className="d-flex justify-content-between text-secondary mt-1 px-1" style={{ fontSize: "11px", fontWeight: "500" }}>
+                                <span>70</span>
+                                <span>80</span>
+                                <span>90</span>
+                                <span>100</span>
                             </div>
-                            <div className="form-check mb-2">
-                                <input className="form-check-input custom-checkbox" type="checkbox" id="cap3" />
-                                <label className="form-check-label text-dark" htmlFor="cap3">512GB</label>
-                            </div>
+
+                            {/* TRUCO UX: El botón solo aparece si el usuario movió el slider */}
+                            {bateriaMinima !== '' && (
+                                <button
+                                    className="btn btn-outline-danger w-100 mt-3"
+                                    onClick={() => cambiarBateria('')} // Limpiamos el estado
+                                >
+                                    Apagar Filtro
+                                </button>
+                            )}
                         </div>
+
+
                     </aside>
 
                     {/* CONTENEDOR PRINCIPAL DEL CATÁLOGO */}
-                    <section className="flex-grow-1 w-100">
+
+                    <section className="flex-grow-1 w-100 d-flex flex-column h-100">
 
                         {/* Cabecera */}
                         <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-end mb-4 pb-2">
@@ -111,29 +278,38 @@ export default function CatalogoDeProductos() {
                         </div>
 
                         {/* Grilla de productos (Magia de Bootstrap) */}
-                        <div className="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4">
-                            {producto?.data?.map((item) => (
-                                /* Cada CartaDeProductos va envuelta en una columna (col) */
-                                <div className="col" key={item.id}>
-                                    <CartaDeProductos
-                                        nombreDeProducto={item.nombre_producto}
-                                        condicion={item.condicion}
-                                        precio={item.precio}
-                                        capacidad={item.capacidad}
-                                    />
-                                </div>
-                            ))}
-                        </div>
+                        <div className="flex-grow-1 row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4">
+                            {
 
+                                producto?.data?.length > 0 ? (
+                                    producto?.data?.map((item) => (
+                                        /* Cada CartaDeProductos va envuelta en una columna (col) */
+                                        <div className="col" key={item.id}>
+                                            <CartaDeProductos
+                                                nombreDeProducto={item.nombre_producto}
+                                                condicion={item.condicion}
+                                                precio={item.precio}
+                                                capacidad={item.capacidad}
+                                            />
+                                        </div>
+                                    ))
+                                ) : (
+                                    <MensajeSinResultados onLimpiarFiltros={limpiarTodosLosFiltros}
+                                        text="No pudimos encontrar productos que coincidan con los filtros seleccionados."
+                                        text2={"Intenta elegir otra opción o limpiar la búsqueda."}
+
+                                    />
+                                )
+                            }
+
+                        </div>
 
                         <div className="">
                             {console.log(producto?.paginacion)}
-
-
                             <Paginacion
                                 paginaActual={paginaActual}
-                                tienePaginaAnterior={producto?.paginacion.tienePaginaAnterior}
-                                tienePaginaSiguiente={producto?.paginacion.tienePaginaSiguiente}
+                                tienePaginaAnterior={producto?.paginacion?.tienePaginaAnterior}
+                                tienePaginaSiguiente={producto?.paginacion?.tienePaginaSiguiente}
                                 cambiarPagina={cambiarPagina}
                             ></Paginacion>
                         </div>

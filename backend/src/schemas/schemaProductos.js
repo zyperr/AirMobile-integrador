@@ -1,5 +1,5 @@
 import Joi from "joi";
-const categoriasValidas = [
+export const categoriasValidas = [
     // Dispositivos principales
     "celulares",      // iPhones
     "tablets",        // iPads
@@ -22,13 +22,27 @@ const categoriasValidasParaBateria = [
     "celulares",      // iPhones
     "tablets",        // iPads
 ]
+
+export const CAPACIDADES_PERMITIDAS = [
+  '16GB', 
+  '32GB', 
+  '64GB', 
+  '128GB', 
+  '256GB', 
+  '512GB', 
+  '1TB', 
+  '2TB'
+];
+
+export const CONDICIONES_PERMITIDAS = ['nuevo', 'reacondicionado', 'usado'];
+
 export const schemaProductos = Joi.object({
     nombre_producto: Joi.string().min(3).max(50).required(),
 
     //.positive() o .min(0) para evitar precios negativos
     precio: Joi.number().positive().required(),
 
-    capacidad: Joi.array().items(Joi.string()).optional(),
+    capacidad: Joi.array().items(Joi.string()).valid(...CAPACIDADES_PERMITIDAS).optional(),
 
 
     // Una descripción para detallar el modelo, etc.
@@ -40,7 +54,7 @@ export const schemaProductos = Joi.object({
     //(Appless, accesorios)
     categoria: Joi.string().min(3).max(30).valid(...categoriasValidas).required(),
 
-    condicion: Joi.string().valid("nuevo", "reacondicionado", "usado").required(),
+    condicion: Joi.string().valid(...CONDICIONES_PERMITIDAS).required(),
 
     bateria: Joi.any().when("categoria", {
         is: Joi.string().valid(...categoriasValidasParaBateria),

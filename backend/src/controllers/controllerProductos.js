@@ -23,10 +23,12 @@ export const obtenerProductos = async (req, res) => {
         const filtros = {
             categoria: value.categoria,
             condicion: value.condicion,
+            capacidad: value.capacidad,
             precioMin: value.precioMin,
             precioMax: value.precioMax,
+
             busqueda: value.busqueda,
-            orden:value.orden,
+            orden: value.orden,
             bateriaMin: value.bateriaMin
         };
 
@@ -50,7 +52,7 @@ export const obtenerProductos = async (req, res) => {
         const productosParseados = productos.map((producto) => {
             return {
                 ...producto,
-                imagen_url:JSON.parse(producto.imagen_url),
+                imagen_url: JSON.parse(producto.imagen_url),
                 capacidad: JSON.parse(producto.capacidad)
             }
         })
@@ -93,7 +95,7 @@ export const obtenerProducto = async (req, res) => {
 
         const parsedProducto = {
             ...producto,
-            imagen_url:JSON.parse(producto.imagen_url),
+            imagen_url: JSON.parse(producto.imagen_url),
             capacidad: JSON.parse(producto.capacidad)
         }
         return res.status(200).json(parsedProducto)
@@ -130,7 +132,7 @@ export const crearProducto = async (req, res) => {
             );
         }
         let capacidadArreglo = [];
-        
+
         if (req.body.capacidad) {
             try {
                 // Intentamos leerlo como un JSON '["64GB", "128GB"]'

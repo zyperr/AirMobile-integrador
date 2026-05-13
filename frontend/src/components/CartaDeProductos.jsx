@@ -7,7 +7,7 @@ const ProductCard = ({ nombreDeProducto, condicion, precio, capacidad = [] }) =>
 
   return (
     
-    <div className="card border-0 h-100 custom-product-card shadow-sm d-flex flex-column">
+    <div className="card border-0 h-60 custom-product-card shadow-sm d-flex flex-column">
       {/* card de Bootstrap con flex-column para empujar el botón hacia abajo */}
       {/* Contenedor de imagen */}
       <div className="custom-img-container position-relative">
