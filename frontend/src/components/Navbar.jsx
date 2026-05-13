@@ -1,8 +1,14 @@
+import { React, useState} from "react";
 import { Link } from "react-router-dom";
 import "../style/home.css";
+import "../style/navbar.css";
 
 
 export default function Navbar({ carrito = [] }) {
+
+    const [menu, setMenu] = useState(false)
+
+
 
     return (
         <nav className="navbar sticky-top border-bottom px-4 px-md-5 custom-navbar">
@@ -30,13 +36,25 @@ export default function Navbar({ carrito = [] }) {
                     </li>
                 </ul>
 
+                <div className="btn-ham d-md-none d-flex align-items-center ">
+                    <i class="bi bi-list fs-4"></i>
+                </div>
+
+
                 {/* ICONOS */}
                 <div className="d-flex align-items-center gap-3">
                     <span style={{ cursor: "pointer" }}>
-                        <i className="bi bi-search fs-5 text-dark"></i>
+
+                        <Link to="/barrabusquedad">
+                           <i className="bi bi-search fs-5 text-dark"></i>
+                        </Link>
+                        
                     </span>
                     <span style={{ cursor: "pointer" }}>
-                        <i className="bi bi-person fs-5 text-dark"></i>
+                        
+                        <Link to="/inicio-sesion">
+                            <i  className="bi bi-person fs-5 text-dark"></i>
+                        </Link>
                     </span>
                     
                     {/* CARRITO CON BURBUJA BOOTSTRAP */}
