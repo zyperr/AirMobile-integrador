@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "../style/Registro.css";
+import { Link } from "react-router-dom";
 
 const Registro = () => {
 const [form, setForm] = useState({
@@ -8,6 +9,25 @@ const [form, setForm] = useState({
     password: "",
     confirmarPassword: "",
 });
+const url ="http://localhost:3000/api/usuarios/registro"
+
+const enviarDatos = async(data) => {
+    try {
+        const response = await fetch (url, {
+            method: "POST",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if(response.ok){
+            console.log("Éxito: ",result)
+        } else {
+            console.log(result.message)
+        }
+    } catch (error) {
+        console.log("Error",error)
+    }
+};
 
 const [errors, setErrors] = useState({});
 const [submitted, setSubmitted] = useState(false);
@@ -59,11 +79,17 @@ const validar = () => {
     return Object.keys(tempErrors).length === 0;
 };
 
-const handleSubmit = (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
     if (validar()) {
         console.log("Enviando datos...", form);
         setSubmitted(true);
+        const formParsed = {
+            email: form.email,
+            nombre: form.nombre,
+            password: form.password
+        }
+        await enviarDatos(formParsed);
     }
 };
 
@@ -90,9 +116,10 @@ if (submitted) {
                 password: "",
                 confirmarPassword: "",
             });
-            }}>
-            Volver al registro
+            }}> 
+            <Link  className="btn-registro w-100" to= "/inicio-sesion">Ir al Login </Link> 
             </button>
+            
         </div>
         
     </div>
@@ -259,8 +286,8 @@ return (
 
             {/* LINK PARA EL LOGIN */}
             <p className="text-center text-muted mb-3" style={{ fontSize: "0.9rem" }}>
-            ¿Ya tienes una cuenta?{" "}
-            <a href="#" className="registro-link">Iniciar sesión</a>
+            {" "}
+            <Link className="registro-link" to="/inicio-sesion" > ¿Ya tienes una cuenta? </Link>  
             </p>
 
             {/* BADGE SEGURO */}
