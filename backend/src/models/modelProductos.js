@@ -5,7 +5,6 @@ const db = await obtenerDb()
 
 class ModelProductos {
     static async getAll(filtros, limit, offset) {
-
         try {
             let sql = "SELECT * FROM productos WHERE 1=1 AND activo = 1"
             let args = []
@@ -13,6 +12,10 @@ class ModelProductos {
 
             if(filtros.orden === "asc"){ // mas viejos primeros
                 sqlOrderBy = "ORDER BY fecha_creacion asc";
+            }
+            if(filtros.bateriaMin){
+                sql += " AND bateria >= ?"
+                args.push(`%${Number(filtros.bateria)}`)
             }
             if (filtros.categoria) {
                 sql += " AND categoria LIKE ?"

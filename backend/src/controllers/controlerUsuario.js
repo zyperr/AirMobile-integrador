@@ -48,8 +48,6 @@ export const login = async (req, res) => {
 
 
     try {
-
-
         const { email, password } = value;
 
         const usuarioEncontrado = await UsuarioModel.buscarEmail(email);
