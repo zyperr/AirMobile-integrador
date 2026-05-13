@@ -16,18 +16,22 @@ export default function Home() {
                 Equipos nuevos y reacondicionados con garantía de 12 meses.
               </p>
 
-              <div className="d-flex flex-column flex-sm-row justify-content-center justify-content-md-start gap-3">
-                <Link to="/catalogo" className="text-decoration-none">
-                  <button className="btn btn-primary px-4 py-3 fw-semibold rounded-3 w-100">Ver Catálogo</button>
+              <div className="d-flex flex-column flex-sm-row justify-content-center justify-content-md-start gap-3 mt-4">
+                {/* El Link ahora ES el botón */}
+                <Link
+                  to="/catalogo"
+                  className="btn btn-primary px-4 py-3 fw-semibold rounded-3 d-flex align-items-center justify-content-center"
+                  style={{ minWidth: "180px" }}
+                >
+                  Ver Catálogo
                 </Link>
-                <button className="btn btn-light border px-4 py-3 fw-semibold rounded-3 w-100 custom-btn-secondary">Conocer más</button>
               </div>
             </div>
 
             <div className="col-md-6 text-center">
-              <img 
-                src="/img/iPhone 13 Pro Sierra Blue.jpg" 
-                alt="iPhone" 
+              <img
+                src="/img/iPhone 13 Pro Sierra Blue.jpg"
+                alt="iPhone"
                 className="img-fluid rounded-4 shadow-sm hero-img-max"
               />
             </div>
@@ -60,7 +64,7 @@ export default function Home() {
         </div>
 
         <div className="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4">
-          
+
           <div className="col">
             <Link to="/product" className="text-decoration-none text-dark">
               <div className="card h-100 border-0 rounded-4 p-3 custom-card-hover">
@@ -122,9 +126,9 @@ export default function Home() {
       <section className="container mb-5">
         <div className="row align-items-center bg-light rounded-5 p-4 p-md-5">
           <div className="col-md-5 mb-4 mb-md-0 text-center">
-            <img 
-              src="/img/Img-Garantia.jpg" 
-              alt="Garantía" 
+            <img
+              src="/img/Img-Garantia.jpg"
+              alt="Garantía"
               className="img-fluid rounded-4 shadow"
             />
           </div>
