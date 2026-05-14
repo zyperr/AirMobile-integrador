@@ -47,6 +47,7 @@ export default function Home() {
                 <Link
                   to="/catalogo"
                   className="btn btn-primary px-4 py-3 fw-semibold rounded-3 d-flex align-items-center justify-content-center"
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                   style={{ minWidth: "200px" }}
                 >
                   Ver Catálogo
@@ -127,7 +128,10 @@ export default function Home() {
             <p className="text-secondary mb-4 fs-5">
               Cada dispositivo es inspeccionado en 40 puntos para asegurar tu tranquilidad.
             </p>
-            <button className="btn btn-primary px-5 py-3 fw-semibold rounded-3 w-100 w-md-auto">Ver Productos</button>
+            <Link to="/catalogo" className="btn btn-primary px-5 py-3 fw-semibold rounded-3 w-100 w-md-auto" 
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+              Ver Productos
+            </Link>
           </div>
         </div>
       </section>
