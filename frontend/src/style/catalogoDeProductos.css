@@ -46,3 +46,8 @@
 .dropdown-toggle::after {
   margin-left: auto; /* Empuja la flechita a la derecha */
 }
+
+
+.cursor-pointer{
+  cursor: pointer;
+}
