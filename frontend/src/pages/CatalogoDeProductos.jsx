@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { CAPACIDADES_PERMITIDAS, categoriasValidas, CONDICIONES_PERMITIDAS } from "../../../backend/src/schemas/schemaProductos";
 import FiltroRadioGroup from "../components/FiltroRadioGroup";
 import MensajeSinResultados from "../components/MensajeSinResultado";
+import { set } from "react-hook-form";
 
 
 
@@ -24,6 +25,17 @@ export default function CatalogoDeProductos() {
 
     const [condicionSeleccionada, setCondicionSeleccionada] = useState('');
     const [bateriaMinima, setBateriaMinima] = useState('');
+
+    const [ordenarPor, setOrdenarPor] = useState('');
+
+
+    // Estados para lo que el usuario está escribiendo en el momento
+    const [inputPrecioMin, setInputPrecioMin] = useState('');
+    const [inputPrecioMax, setInputPrecioMax] = useState('');
+
+    // Estados oficiales que dispararán el useEffect (se actualizan al darle "Aplicar")
+    const [precioMinimo, setPrecioMinimo] = useState('');
+    const [precioMaximo, setPrecioMaximo] = useState('');
 
     // Función para alternar el estado
     const toggleDropdown = () => {
@@ -53,6 +65,15 @@ export default function CatalogoDeProductos() {
                     url.searchParams.set("bateriaMin", bateriaMinima);
                 }
 
+                if (precioMinimo) {
+                    url.searchParams.set("precioMin", precioMinimo);
+                }
+                if (precioMaximo) {
+                    url.searchParams.set("precioMax", precioMaximo);
+                }
+                if (ordenarPor) {
+                    url.searchParams.set("orden", ordenarPor);
+                }
                 const respuesta = await fetch(url.toString());
 
                 if (!respuesta.ok) {
@@ -68,7 +89,7 @@ export default function CatalogoDeProductos() {
         // IMPORTANTE: Al poner 'pagina' aquí, cada vez que cambie el número, 
         // el useEffect se dispara solo y trae la nueva data.
         fetchProducto();
-    }, [paginaActual, categoriaSeleccionada, capacidadSeleccionada, condicionSeleccionada, bateriaMinima]);
+    }, [paginaActual, categoriaSeleccionada, capacidadSeleccionada, condicionSeleccionada, bateriaMinima, precioMinimo, precioMaximo, ordenarPor]);
 
 
 
@@ -98,12 +119,29 @@ export default function CatalogoDeProductos() {
         setBateriaMinima(bateria);
     }
 
+    const aplicarFiltroPrecio = () => {
+        setPrecioMinimo(inputPrecioMin);
+        setPrecioMaximo(inputPrecioMax);
+        setPaginaActual(1);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const cambiarOrden = (nuevoOrden) => {
+        setOrdenarPor(nuevoOrden);
+        setPaginaActual(1);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 
     const limpiarTodosLosFiltros = () => {
         setCategoriaSeleccionada('');
         setCapacidadSeleccionada('');
         setCondicionSeleccionada('');
         setBateriaMinima('');
+        setPrecioMinimo('');
+        setPrecioMaximo('');
+        setInputPrecioMax('');
+        setInputPrecioMin('');
+        setOrdenarPor('');
         setPaginaActual(1); // Importante: volver a la página 1 al limpiar filtros
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -190,6 +228,54 @@ export default function CatalogoDeProductos() {
                             </ul>
                         </div>
 
+
+                        {/* Filtro: Precio */}
+                        <div className="mb-4 pb-3 border-bottom">
+                            <h4 className="text-secondary text-uppercase mb-3" style={{ fontSize: "13px", letterSpacing: "0.5px" }}>
+                                Precio
+                            </h4>
+
+                            <div className="d-flex align-items-center gap-2 mb-3">
+                                <input
+                                    type="number"
+                                    className="form-control form-control-sm"
+                                    placeholder="Mínimo"
+                                    value={inputPrecioMin}
+                                    onChange={(e) => setInputPrecioMin(e.target.value)}
+                                    min="0"
+                                />
+                                <span className="text-secondary">-</span>
+                                <input
+                                    type="number"
+                                    className="form-control form-control-sm"
+                                    placeholder="Máximo"
+                                    value={inputPrecioMax}
+                                    onChange={(e) => setInputPrecioMax(e.target.value)}
+                                    min="0"
+                                />
+                            </div>
+
+                            {/* Los botones aparecen solo si el usuario escribió algo en algún input */}
+                            {(inputPrecioMin !== '' || inputPrecioMax !== '') && (
+                                <div className="d-flex gap-2">
+                                    <button
+                                        className="btn btn-primary btn-sm w-100 fw-bold"
+                                        onClick={aplicarFiltroPrecio}
+                                    >
+                                        Aplicar
+                                    </button>
+                                    <button
+                                        className="btn btn-outline-secondary btn-sm"
+                                        onClick={
+                                            limpiarTodosLosFiltros
+                                        }
+                                        title="Limpiar precio"
+                                    >
+                                        <i className="bi bi-trash3"></i>
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                         {/* Filtro: Condición */}
                         <FiltroRadioGroup
                             titulo="Condición"
@@ -262,7 +348,6 @@ export default function CatalogoDeProductos() {
                             )}
                         </div>
 
-
                     </aside>
 
                     {/* CONTENEDOR PRINCIPAL DEL CATÁLOGO */}
@@ -270,15 +355,40 @@ export default function CatalogoDeProductos() {
                     <section className="flex-grow-1 w-100 d-flex flex-column h-100">
 
                         {/* Cabecera */}
-                        <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-end mb-4 pb-2">
-                            <h2 className="fs-2 fw-bold text-dark m-0">Explorar Productos</h2>
-                            <span className="text-secondary mt-2 mt-sm-0">
-                                Mostrando {producto?.paginacion?.totalResultados || 0} resultados
-                            </span>
+                        <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-end mb-4 pb-2 border-bottom">
+
+                            {/* Izquierda: Título y contador */}
+                            <div>
+                                <h2 className="fs-2 fw-bold text-dark m-0">Explorar Productos</h2>
+                                <span className="text-secondary mt-2 d-block">
+                                    Mostrando {producto?.paginacion?.totalResultados || 0} resultados
+                                </span>
+                            </div>
+
+                            {/* Derecha: Selector de Ordenamiento */}
+                            <div className="mt-3 mt-sm-0" style={{ minWidth: "220px" }}>
+                                <label htmlFor="ordenarSelect" className="form-label text-secondary mb-1" style={{ fontSize: "13px" }}>
+                                    Ordenar por:
+                                </label>
+                                <select
+                                    id="ordenarSelect"
+                                    className="form-select form-select-sm border-secondary shadow-sm cursor-pointer"
+                                    value={ordenarPor}
+                                    onChange={(e) => cambiarOrden(e.target.value)}
+                                >
+                                    <option value="">Más recientes (Por defecto)</option>
+                                    <option value="asc">Más antiguos</option>
+                                   
+                                </select>
+                            </div>
+
                         </div>
 
+
+
+
                         {/* Grilla de productos (Magia de Bootstrap) */}
-                        <div className="flex-grow-1 row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4">
+                        <div className="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4">
                             {
 
                                 producto?.data?.length > 0 ? (
