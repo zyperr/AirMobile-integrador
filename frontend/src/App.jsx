@@ -7,6 +7,7 @@ import Navbar from "./components/Navbar";
 import InicioSesion from "./pages/InicioSesion";
 import Registro from "./pages/Registro";
 import { RecuperarContraseña } from "./pages/RecuperarContraseña";
+import PerfilUsuario from "./pages/PerfilUsuario";
 
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
         <Route path="/inicio-sesion" element={<InicioSesion />} />
         <Route path="/registro" element={<Registro />} />
         <Route path="/recuperar-password" element={<RecuperarContraseña />} />
+        <Route path="/perfil-usuario/" element={<PerfilUsuario />} />
       </Routes>
       <Footer />
     </BrowserRouter>

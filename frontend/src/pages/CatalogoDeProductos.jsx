@@ -287,7 +287,7 @@ export default function CatalogoDeProductos() {
 
                         {/* Filtro: Capacidad */}
                         {/* Mantenemos la lógica de que no se muestre si eligen fundas/accesorios */}
-                        {categoriaSeleccionada !== 'fundas' && categoriaSeleccionada !== 'accesorios' && categoriaSeleccionada !== 'cargadores' && (
+                        {categoriaSeleccionada !== 'fundas' && categoriaSeleccionada !== 'accesorios' && categoriaSeleccionada !== 'cargadores' && categoriaSeleccionada !== 'protectores' && (
                             <FiltroRadioGroup
                                 titulo="Capacidad"
                                 nombreGrupo="capacidad"
@@ -298,54 +298,60 @@ export default function CatalogoDeProductos() {
                             />
                         )}
                         {/* Filtro: Batería */}
-                        <div className="mb-4 pb-3 border-bottom">
-                            <div className="d-flex justify-content-between align-items-center mb-3">
-                                <h4 className="text-secondary text-uppercase m-0" style={{ fontSize: "13px", letterSpacing: "0.5px" }}>
-                                    Salud de Batería
-                                </h4>
-                                {/* El Badge cambia visualmente si está activo o inactivo */}
-                                <span
-                                    className="badge rounded-pill"
-                                    style={{ backgroundColor: bateriaMinima ? "#0066cc" : "#6c757d" }}
-                                >
-                                    {bateriaMinima ? `${bateriaMinima}% o más` : 'Inactivo'}
-                                </span>
-                            </div>
 
-                            {/* EL INPUT SLIDER */}
-                            <input
-                                type="range"
-                                className="form-range custom-range"
-                                min="70"
-                                max="100"
-                                step="10"
-                                id="filtroBateria"
-                                // TRUCO: Si el estado está vacío, el slider se queda visualmente en 70, pero sin afectar la URL
-                                value={bateriaMinima || "70"}
-                                onChange={(e) => {
-                                    // Guardamos el valor directamente como texto
-                                    cambiarBateria(e.target.value);
-                                }}
-                            />
+                        {
+                            categoriaSeleccionada !== 'fundas' && categoriaSeleccionada !== 'accesorios' && categoriaSeleccionada !== 'cargadores' && categoriaSeleccionada !== 'protectores' && (
+                                <div className="mb-4 pb-3 border-bottom">
+                                    <div className="d-flex justify-content-between align-items-center mb-3">
+                                        <h4 className="text-secondary text-uppercase m-0" style={{ fontSize: "13px", letterSpacing: "0.5px" }}>
+                                            Salud de Batería
+                                        </h4>
+                                        {/* El Badge cambia visualmente si está activo o inactivo */}
+                                        <span
+                                            className="badge rounded-pill"
+                                            style={{ backgroundColor: bateriaMinima ? "#0066cc" : "#6c757d" }}
+                                        >
+                                            {bateriaMinima ? `${bateriaMinima}% o más` : 'Inactivo'}
+                                        </span>
+                                    </div>
 
-                            {/* Etiquetas visuales debajo del slider (volvemos al diseño original) */}
-                            <div className="d-flex justify-content-between text-secondary mt-1 px-1" style={{ fontSize: "11px", fontWeight: "500" }}>
-                                <span>70</span>
-                                <span>80</span>
-                                <span>90</span>
-                                <span>100</span>
-                            </div>
+                                    {/* EL INPUT SLIDER */}
+                                    <input
+                                        type="range"
+                                        className="form-range custom-range"
+                                        min="70"
+                                        max="100"
+                                        step="10"
+                                        id="filtroBateria"
+                                        // TRUCO: Si el estado está vacío, el slider se queda visualmente en 70, pero sin afectar la URL
+                                        value={bateriaMinima || "70"}
+                                        onChange={(e) => {
+                                            // Guardamos el valor directamente como texto
+                                            cambiarBateria(e.target.value);
+                                        }}
+                                    />
 
-                            {/* TRUCO UX: El botón solo aparece si el usuario movió el slider */}
-                            {bateriaMinima !== '' && (
-                                <button
-                                    className="btn btn-outline-danger w-100 mt-3"
-                                    onClick={() => cambiarBateria('')} // Limpiamos el estado
-                                >
-                                    Apagar Filtro
-                                </button>
-                            )}
-                        </div>
+                                    {/* Etiquetas visuales debajo del slider (volvemos al diseño original) */}
+                                    <div className="d-flex justify-content-between text-secondary mt-1 px-1" style={{ fontSize: "11px", fontWeight: "500" }}>
+                                        <span>70</span>
+                                        <span>80</span>
+                                        <span>90</span>
+                                        <span>100</span>
+                                    </div>
+
+                                    {/* TRUCO UX: El botón solo aparece si el usuario movió el slider */}
+                                    {bateriaMinima !== '' && (
+                                        <button
+                                            className="btn btn-outline-danger w-100 mt-3"
+                                            onClick={() => cambiarBateria('')} // Limpiamos el estado
+                                        >
+                                            Apagar Filtro
+                                        </button>
+                                    )}
+                                </div>
+                            )
+                        }
+
 
                     </aside>
 
@@ -377,7 +383,7 @@ export default function CatalogoDeProductos() {
                                 >
                                     <option value="">Más recientes (Por defecto)</option>
                                     <option value="asc">Más antiguos</option>
-                                   
+
                                 </select>
                             </div>
 
@@ -387,7 +393,7 @@ export default function CatalogoDeProductos() {
 
 
                         {/* Grilla de productos (Magia de Bootstrap) */}
-                        <div className="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4">
+                        <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4">
                             {
 
                                 producto?.data?.length > 0 ? (

@@ -9,6 +9,7 @@ import { BadgeSeguro } from '../components/BadgeSeguro';
 import { Link } from 'react-router-dom';
 import { SuccessCard } from '../components/SuccessCard';
 import { useApi } from '../hooks/useApi';
+import { useAuth } from '../context/AuthContext';
 
 const InicioSesion = () => {
     const [loginExitoso, setLoginExitoso] = useState(false);
@@ -17,6 +18,8 @@ const InicioSesion = () => {
     const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm();
     const { ejecutarPeticion, isLoading, error } = useApi();
 
+
+    const { login } = useAuth();
     const endpoint = "usuarios/login";
 
     const onSubmit = async (data) => {
@@ -28,8 +31,10 @@ const InicioSesion = () => {
         if (resultado.exito) {
             setLoginExitoso(true);
             console.log("¡Login exitoso!", resultado.data);
-            // Ejemplo: Redirigir al home después de 3 segundos
-            // setTimeout(() => { window.location.href = "/"; }, 3000);
+
+
+            login(resultado.data.token);
+            setTimeout(() => { window.location.href = "/"; }, 3000);
         }
     };
 
