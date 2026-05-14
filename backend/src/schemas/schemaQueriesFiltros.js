@@ -2,6 +2,7 @@ import Joi from 'joi'; // Asumiendo que usás Joi, si usás Yup es casi idéntic
 
 
 import { CAPACIDADES_PERMITIDAS, CONDICIONES_PERMITIDAS } from './schemaProductos.js';
+
 const ordenValidos = ["asc", "desc"]
 
 export const schemaFiltrosProductos = Joi.object({
@@ -50,6 +51,18 @@ export const schemaFiltrosProductos = Joi.object({
 
     capacidad: Joi.string().valid(...CAPACIDADES_PERMITIDAS).messages({
         'any.only': 'La capacidad para filtrar no es válida.'
-    }).optional()
+    }).optional(),
+
+    limit: Joi.number().integer().min(1).max(100).default(10).optional().messages({
+        'number.base': 'El límite debe ser un número.',
+        'number.integer': 'El límite debe ser un número entero sin decimales.',
+        'number.min': 'El límite debe ser al menos 1.',
+        'number.max': 'El límite debe ser al menos 100.'
+    }),
+    offset: Joi.number().integer().min(0).optional().messages({
+        'number.base': 'El desplazamiento debe ser un número.',
+        'number.integer': 'El desplazamiento debe ser un número entero sin decimales.',
+        'number.min': 'El desplazamiento debe ser al menos 0.'
+    }),
 
 });

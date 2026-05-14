@@ -1,7 +1,32 @@
 import { Link } from "react-router-dom";
 import "../style/home.css";
+import { useApi } from "../hooks/useApi.js"
+import { useEffect, useState } from "react";
+import CartaProducto from "../components/CartaDeProductos";
 
 export default function Home() {
+
+
+  const endpoint = "productos/productos?page=1&orden=asc&limit=4";
+
+
+
+  const [productos, setProductos] = useState([]);
+
+  const { ejecutarPeticion, isLoading, err } = useApi();
+
+
+  useEffect(() => {
+    const getProductos = async () => {
+      const resultado = await ejecutarPeticion(endpoint);
+      if (resultado.exito) {
+        setProductos(resultado.data);
+      }
+    }
+    getProductos();
+  }, []);
+
+
   return (
     <div>
       {/* HERO */}
@@ -60,65 +85,23 @@ export default function Home() {
       {/* PRODUCTOS */}
       <section className="container py-5">
         <div className="d-flex justify-content-between align-items-end mb-4">
-          <h2 className="fw-bold fs-3 m-0">Los más buscados</h2>
+          <h2 className="fw-bold fs-3 m-0">Más recientes</h2>
         </div>
-
-        <div className="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4">
-
-          <div className="col">
-            <Link to="/product" className="text-decoration-none text-dark">
-              <div className="card h-100 border-0 rounded-4 p-3 custom-card-hover">
-                <div className="bg-light rounded-3 p-3 mb-3 d-flex align-items-center justify-content-center product-img-box">
-                  <img src="/img/iPhone 13 Pro.jpg" alt="iPhone 13" className="img-fluid" style={{ maxHeight: "100%" }} />
-                </div>
-                <div className="text-start">
-                  <span className="badge rounded-pill badge-reacondicionado mb-2">Reacondicionado</span>
-                  <div className="fw-semibold fs-6 mb-1">iPhone 13 Pro</div>
-                  <div className="text-secondary fs-5">$849.00</div>
-                </div>
+        <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+          {
+            productos?.data?.map((producto) => (
+              
+              <div className="col" key={producto.id}>
+                <CartaProducto
+                  nombreDeProducto={producto.nombre_producto}
+                  condicion={producto.condicion}
+                  precio={producto.precio}
+                  capacidad={producto.capacidad}
+                  imagen_url={producto.imagen_url}
+                />
               </div>
-            </Link>
-          </div>
-
-          <div className="col">
-            <div className="card h-100 border-0 rounded-4 p-3 custom-card-hover">
-              <div className="bg-light rounded-3 p-3 mb-3 d-flex align-items-center justify-content-center product-img-box">
-                <img src="/img/iPhone 15 Case.jpg" alt="Case" className="img-fluid" style={{ maxHeight: "100%" }} />
-              </div>
-              <div className="text-start">
-                <span className="badge rounded-pill badge-accesorio mb-2">Accesorio</span>
-                <div className="fw-semibold fs-6 mb-1">Silicone Case</div>
-                <div className="text-secondary fs-5">$49.00</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="col">
-            <div className="card h-100 border-0 rounded-4 p-3 custom-card-hover">
-              <div className="bg-light rounded-3 p-3 mb-3 d-flex align-items-center justify-content-center product-img-box">
-                <img src="/img/Cargador-Iphone.png" alt="Cargador" className="img-fluid" style={{ maxHeight: "100%" }} />
-              </div>
-              <div className="text-start">
-                <span className="badge rounded-pill badge-energia mb-2">Energía</span>
-                <div className="fw-semibold fs-6 mb-1">Cargador</div>
-                <div className="text-secondary fs-5">$19.00</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="col">
-            <div className="card h-100 border-0 rounded-4 p-3 custom-card-hover">
-              <div className="bg-light rounded-3 p-3 mb-3 d-flex align-items-center justify-content-center product-img-box">
-                <img src="/img/iPhone 12 Pro.png" alt="iPhone 12" className="img-fluid" style={{ maxHeight: "100%" }} />
-              </div>
-              <div className="text-start">
-                <span className="badge rounded-pill badge-reacondicionado mb-2">Reacondicionado</span>
-                <div className="fw-semibold fs-6 mb-1">iPhone 12</div>
-                <div className="text-secondary fs-5">$549.00</div>
-              </div>
-            </div>
-          </div>
-
+            ))
+          }
         </div>
       </section>
 
