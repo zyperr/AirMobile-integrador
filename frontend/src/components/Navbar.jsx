@@ -1,7 +1,8 @@
-import { React, useState, useEffect } from "react";
-import { data, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { data, Link, useNavigate } from "react-router-dom";
 import "../style/home.css";
 import "../style/navbar.css";
+import { useAuth } from "../context/AuthContext";
 import { useApi } from "../hooks/useApi";
 import { ProductSearchCard } from "./ProductSearchCard";
 
@@ -11,7 +12,16 @@ export default function Navbar({ carrito = [] }) {
     const [menu, setMenu] = useState(false);
     const [search, setSearch] = useState("");
     const [products, setProducts] = useState([])
+    const { estaAutenticado, logout } = useAuth();
 
+
+    const navigate = useNavigate(); // Hook de React Router para cambiar de página
+
+    // Función para manejar el clic en "Cerrar Sesión"
+    const manejarCerrarSesion = () => {
+        logout(); // Esto borra el token del contexto y del localStorage
+        navigate("/"); // Redirige al usuario al inicio
+    };
 
     const { ejecutarPeticion, isLoading, error } = useApi();
 
@@ -62,9 +72,6 @@ export default function Navbar({ carrito = [] }) {
                     </li>
                     <li className="nav-item">
                         <a href="#" className="nav-link custom-nav-link">Cargadores</a>
-                    </li>
-                    <li className="nav-item">
-                        <a href="#" className="nav-link custom-nav-link">Audio</a>
                     </li>
                 </ul>
 
@@ -122,10 +129,18 @@ export default function Navbar({ carrito = [] }) {
 
                     <span style={{ cursor: "pointer" }}>
 
-                        <Link to="/inicio-sesion">
+
+                        <Link to={estaAutenticado ? "/perfil-usuario" : "/inicio-sesion"}>
                             <i className="bi bi-person fs-5 text-dark"></i>
                         </Link>
                     </span>
+
+                  {estaAutenticado && (
+                        // 2. EJECUTAMOS LA FUNCIÓN AL HACER CLIC (Ya no usamos Link)
+                        <span style={{ cursor: "pointer" }} onClick={manejarCerrarSesion}>
+                            <i className="bi bi-box-arrow-right fs-5 text-danger"></i> {/* Le puse text-danger para que quede rojito */}
+                        </span>
+                    )}
 
                     {/* CARRITO CON BURBUJA BOOTSTRAP */}
                     <div className="position-relative" style={{ cursor: "pointer" }}>
