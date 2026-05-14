@@ -8,7 +8,6 @@ import { useEffect, useState } from "react";
 import { CAPACIDADES_PERMITIDAS, categoriasValidas, CONDICIONES_PERMITIDAS } from "../../../backend/src/schemas/schemaProductos";
 import FiltroRadioGroup from "../components/FiltroRadioGroup";
 import MensajeSinResultados from "../components/MensajeSinResultado";
-import { set } from "react-hook-form";
 
 
 
