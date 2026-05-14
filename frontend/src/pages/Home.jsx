@@ -100,6 +100,7 @@ export default function Home() {
 
               <div className="col" key={producto.id}>
                 <CartaProducto
+                  id={producto.id}
                   nombreDeProducto={producto.nombre_producto}
                   condicion={producto.condicion}
                   precio={producto.precio}
