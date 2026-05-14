@@ -3,6 +3,7 @@ import "../style/home.css";
 import { useApi } from "../hooks/useApi.js"
 import { useEffect, useState } from "react";
 import CartaProducto from "../components/CartaDeProductos";
+import { SkeletonLoader } from "../components/SkeletonLoader.jsx";
 
 export default function Home() {
 
@@ -88,9 +89,14 @@ export default function Home() {
           <h2 className="fw-bold fs-3 m-0">Más recientes</h2>
         </div>
         <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
-          {
+
+          {(isLoading || productos == null) ? (
+
+            SkeletonLoader({ cantidad: 4 })
+
+          ) : (
             productos?.data?.map((producto) => (
-              
+
               <div className="col" key={producto.id}>
                 <CartaProducto
                   nombreDeProducto={producto.nombre_producto}
@@ -101,6 +107,7 @@ export default function Home() {
                 />
               </div>
             ))
+          )
           }
         </div>
       </section>

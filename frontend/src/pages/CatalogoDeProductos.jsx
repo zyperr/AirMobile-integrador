@@ -8,6 +8,8 @@ import { useEffect, useState } from "react";
 import { CAPACIDADES_PERMITIDAS, categoriasValidas, CONDICIONES_PERMITIDAS } from "../../../backend/src/schemas/schemaProductos";
 import FiltroRadioGroup from "../components/FiltroRadioGroup";
 import MensajeSinResultados from "../components/MensajeSinResultado";
+import { useApi } from "../hooks/useApi";
+import { SkeletonLoader } from "../components/SkeletonLoader";
 
 
 
@@ -41,55 +43,40 @@ export default function CatalogoDeProductos() {
         setDropdownAbierto(!dropdownAbierto);
     };
 
+    // 1. Inicializamos el hook (fuera del useEffect)
+    // 1. Inicializamos el hook (fuera del useEffect)
+    const { ejecutarPeticion, isLoading, error } = useApi();
+
     useEffect(() => {
         const fetchProducto = async () => {
-            try {
+            // Construimos solo los parámetros de búsqueda
+            const params = new URLSearchParams();
+            params.set("page", paginaActual);
 
-                const url = new URL(URL_API);
+            if (categoriaSeleccionada) params.set("categoria", categoriaSeleccionada);
+            if (capacidadSeleccionada) params.set("capacidad", capacidadSeleccionada);
+            if (condicionSeleccionada) params.set("condicion", condicionSeleccionada);
+            if (bateriaMinima) params.set("bateriaMin", bateriaMinima);
+            if (precioMinimo) params.set("precioMin", precioMinimo);
+            if (precioMaximo) params.set("precioMax", precioMaximo);
+            if (ordenarPor) params.set("orden", ordenarPor);
 
-                url.searchParams.set("page", paginaActual);
+            // El endpoint completo sería algo como "productos?page=1&categoria=iphone..."
+            const endpoint = `productos/productos?${params.toString()}`;
 
-                if (categoriaSeleccionada) {
-                    url.searchParams.set("categoria", categoriaSeleccionada);
-                }
-                if (capacidadSeleccionada) {
-                    url.searchParams.set("capacidad", capacidadSeleccionada);
-                }
 
-                if (condicionSeleccionada) {
-                    url.searchParams.set("condicion", condicionSeleccionada);
-                }
+            setProducto(null);
+            const resultado = await ejecutarPeticion(endpoint);
 
-                if (bateriaMinima) {
-                    url.searchParams.set("bateriaMin", bateriaMinima);
-                }
-
-                if (precioMinimo) {
-                    url.searchParams.set("precioMin", precioMinimo);
-                }
-                if (precioMaximo) {
-                    url.searchParams.set("precioMax", precioMaximo);
-                }
-                if (ordenarPor) {
-                    url.searchParams.set("orden", ordenarPor);
-                }
-                const respuesta = await fetch(url.toString());
-
-                if (!respuesta.ok) {
-                    throw new Error("Error en la petición al servidor");
-                }
-                const data = await respuesta.json();
-                setProducto(data);
-            } catch (error) {
-                console.error("Error al cargar los productos:", error);
+            if (resultado.exito) {
+                setProducto(resultado.data);
             }
-        }
+        };
 
-        // IMPORTANTE: Al poner 'pagina' aquí, cada vez que cambie el número, 
-        // el useEffect se dispara solo y trae la nueva data.
         fetchProducto();
-    }, [paginaActual, categoriaSeleccionada, capacidadSeleccionada, condicionSeleccionada, bateriaMinima, precioMinimo, precioMaximo, ordenarPor]);
 
+        // Mantenemos las dependencias para que se dispare al filtrar o cambiar de página
+    }, [paginaActual, categoriaSeleccionada, capacidadSeleccionada, condicionSeleccionada, bateriaMinima, precioMinimo, precioMaximo, ordenarPor]);
 
 
     const cambiarPagina = (pagina) => {
@@ -394,11 +381,17 @@ export default function CatalogoDeProductos() {
 
                         {/* Grilla de productos (Magia de Bootstrap) */}
                         <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4">
-                            {
+                            {(isLoading || producto === null) ? (
 
+                                
+                                <SkeletonLoader cantidad={10} />
+
+                            ) : (
+                                // Si NO está cargando, pasamos al PASO 2 y 3
                                 producto?.data?.length > 0 ? (
-                                    producto?.data?.map((item) => (
-                                        /* Cada CartaDeProductos va envuelta en una columna (col) */
+
+                                    // PASO 2: Sí hay productos
+                                    producto.data.map((item) => (
                                         <div className="col" key={item.id}>
                                             <CartaDeProductos
                                                 id={item.id}
@@ -411,25 +404,27 @@ export default function CatalogoDeProductos() {
                                         </div>
                                     ))
                                 ) : (
-                                    <MensajeSinResultados onLimpiarFiltros={limpiarTodosLosFiltros}
-                                        text="No pudimos encontrar productos que coincidan con los filtros seleccionados."
-                                        text2={"Intenta elegir otra opción o limpiar la búsqueda."}
 
+                                    // PASO 3: Terminó de cargar y NO hay productos
+                                    <MensajeSinResultados
+                                        onLimpiarFiltros={limpiarTodosLosFiltros}
+                                        text="No pudimos encontrar productos que coincidan con los filtros seleccionados."
+                                        text2="Intenta elegir otra opción o limpiar la búsqueda."
                                     />
                                 )
-                            }
+                            )}
 
                         </div>
-
-                        <div className="">
-                            {console.log(producto?.paginacion)}
-                            <Paginacion
-                                paginaActual={paginaActual}
-                                tienePaginaAnterior={producto?.paginacion?.tienePaginaAnterior}
-                                tienePaginaSiguiente={producto?.paginacion?.tienePaginaSiguiente}
-                                cambiarPagina={cambiarPagina}
-                            ></Paginacion>
-                        </div>
+                        {!isLoading && producto?.data?.length > 0 && (
+                            <div className="">
+                                <Paginacion
+                                    paginaActual={paginaActual}
+                                    tienePaginaAnterior={producto?.paginacion?.tienePaginaAnterior}
+                                    tienePaginaSiguiente={producto?.paginacion?.tienePaginaSiguiente}
+                                    cambiarPagina={cambiarPagina}
+                                />
+                            </div>
+                        )}
 
                     </section>
 

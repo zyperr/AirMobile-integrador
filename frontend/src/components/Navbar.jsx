@@ -64,15 +64,8 @@ export default function Navbar({ carrito = [] }) {
 
                 {/* ENLACES (Ocultos en móviles, visibles desde pantallas medianas) */}
                 <ul className="navbar-nav flex-row gap-4 d-none d-md-flex m-0 p-0">
-                    <li className="nav-item">
-                        <a href="#" className="nav-link custom-nav-link active">iPhones</a>
-                    </li>
-                    <li className="nav-item">
-                        <a href="#" className="nav-link custom-nav-link">Fundas</a>
-                    </li>
-                    <li className="nav-item">
-                        <a href="#" className="nav-link custom-nav-link">Cargadores</a>
-                    </li>
+                    <Link to="/" className="nav-link custom-nav-link">Inicio</Link>
+                    <Link to="/catalogo" className="nav-link custom-nav-link">Catálogo</Link>
                 </ul>
 
                 {/* BOTÓN HAMBURGUESA (Visible solo en móviles) */}
