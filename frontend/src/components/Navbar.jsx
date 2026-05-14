@@ -6,10 +6,15 @@ import "../style/navbar.css";
 
 export default function Navbar({ carrito = [] }) {
 
-    const [menu, setMenu] = useState(false)
+    const [menu, setMenu] = useState(false);
     const [search, setSearch] = useState("");
 
 
+
+    // Función para alternar el menú
+    const toggleMenu = () => {
+        setMenu(!menu);
+    };
 
     const products = [
         {
@@ -78,8 +83,9 @@ export default function Navbar({ carrito = [] }) {
                     </li>
                 </ul>
 
-                <div className="btn-ham d-md-none d-flex align-items-center ">
-                    <i class="bi bi-list fs-4"></i>
+                {/* BOTÓN HAMBURGUESA (Visible solo en móviles) */}
+                <div className="btn-ham d-md-none d-flex align-items-center me-3" onClick={toggleMenu} style={{ cursor: "pointer" }}>
+                    <i className={`bi ${menu ? 'bi-x' : 'bi-list'} fs-4`}></i>
                 </div>
 
 
@@ -88,7 +94,7 @@ export default function Navbar({ carrito = [] }) {
                 <div className="d-flex align-items-center gap-3">
                     <span style={{ cursor: "pointer" }}>
 
-                        <div className="search-container">
+                        <div className="search-container me-5 me-sm-1  mb-1">
 
                             <input
                                 type="text"
@@ -137,6 +143,7 @@ export default function Navbar({ carrito = [] }) {
                         </div>
 
                     </span>
+
                     <span style={{ cursor: "pointer" }}>
 
                         <Link to="/inicio-sesion">
@@ -156,6 +163,15 @@ export default function Navbar({ carrito = [] }) {
                         </span>
                     </div>
                 </div>
+            </div>
+            {/* ENLACES MÓVILES (Se despliega hacia abajo) */}
+            <div className={`mobile-menu d-md-none ${menu ? "active" : ""}`}>
+                <ul className="navbar-nav p-3 border-top w-100">
+                    <li className="nav-item"><a href="#" className="nav-link custom-nav-link py-2">iPhones</a></li>
+                    <li className="nav-item"><a href="#" className="nav-link custom-nav-link py-2">Fundas</a></li>
+                    <li className="nav-item"><a href="#" className="nav-link custom-nav-link py-2">Cargadores</a></li>
+                    <li className="nav-item"><a href="#" className="nav-link custom-nav-link py-2">Audio</a></li>
+                </ul>
             </div>
         </nav>
     );

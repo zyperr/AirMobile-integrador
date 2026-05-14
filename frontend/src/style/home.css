@@ -37,6 +37,36 @@ body {
 .custom-nav-link.active {
   color: var(--primary-color) !important;
 }
+/* Contenedor del menú móvil */
+.mobile-menu {
+  width: 100%;
+  max-height: 0; /* Cerrado por defecto */
+  overflow: hidden;
+  transition: max-height 0.3s ease-in-out; /* Animación suave */
+  background-color: rgba(251, 251, 253, 0.95);
+}
+
+/* Cuando el menú está activo */
+.mobile-menu.active {
+  max-height: 300px; /* Altura suficiente para los enlaces */
+}
+
+.mobile-menu ul {
+  list-style: none;
+  width: 100%;
+  text-align: center;
+}
+
+/* Estilo para el icono del botón cuando cambia */
+.btn-ham i {
+  transition: transform 0.2s ease;
+}
+
+.btn-ham:active i {
+  transform: scale(0.8);
+}
+
+
 
 /* Botón secundario personalizado */
 .custom-btn-secondary {
