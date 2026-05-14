@@ -97,7 +97,7 @@ export const obtenerProducto = async (req, res) => {
             imagen_url: JSON.parse(producto.imagen_url),
             capacidad: JSON.parse(producto.capacidad)
         }
-        return res.status(200).json({ parsedProducto, exito: true })
+        return res.status(200).json({ data:parsedProducto, exito: true })
 
     } catch (err) {
         console.error(err)

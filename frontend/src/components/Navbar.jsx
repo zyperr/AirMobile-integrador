@@ -1,61 +1,46 @@
-import { React, useState } from "react";
-import { Link } from "react-router-dom";
+import { React, useState, useEffect } from "react";
+import { data, Link } from "react-router-dom";
 import "../style/home.css";
 import "../style/navbar.css";
+import { useApi } from "../hooks/useApi";
+import { ProductSearchCard } from "./ProductSearchCard";
 
 
 export default function Navbar({ carrito = [] }) {
 
     const [menu, setMenu] = useState(false);
     const [search, setSearch] = useState("");
+    const [products, setProducts] = useState([])
 
 
+    const { ejecutarPeticion, isLoading, error } = useApi();
 
-    // Función para alternar el menú
+    const endpoint = "productos/productos";
+
+    const query = search ? `?busqueda=${search}` : ""
+
+    const finalEndopoint = endpoint.concat(query)
+     
+    
     const toggleMenu = () => {
         setMenu(!menu);
     };
 
-    const products = [
-        {
-            id: 1,
-            name: "iPhone 13 Pro",
-            price: "$849.00",
-            image: "/img/iPhone 13 Pro.jpg",
-            badge: "Reacondicionado",
-            badgeClass: "badge-reacondicionado"
-        },
-        {
-            id: 2,
-            name: "Silicone Case",
-            price: "$49.00",
-            image: "/img/iPhone 15 Case.jpg",
-            badge: "Accesorio",
-            badgeClass: "badge-accesorio"
-        },
-        {
-            id: 3,
-            name: "Cargador USB-C",
-            price: "$19.00",
-            image: "/img/Cargador-Iphone.png",
-            badge: "Energía",
-            badgeClass: "badge-energia"
-        },
-        {
-            id: 4,
-            name: "iPhone 12 Pro",
-            price: "$549.00",
-            image: "/img/iPhone 12 Pro.png",
-            badge: "Reacondicionado",
-            badgeClass: "badge-reacondicionado"
-        }
-    ];
+    
+    useEffect(() => {
 
-    const filteredProducts = products.filter((product) =>
-        product.name
-            .toLowerCase()
-            .includes(search.toLowerCase())
-    );
+        const buscarProducto = async () => {
+            const resultado = await ejecutarPeticion(finalEndopoint, {
+                method: "GET",
+            })
+            if (resultado.exito) {
+                setProducts(resultado.data)
+            }
+        }
+        buscarProducto()
+        
+    }, [search])
+
 
     return (
         <nav className="navbar sticky-top border-bottom px-4 px-md-5 custom-navbar">
@@ -107,30 +92,21 @@ export default function Navbar({ carrito = [] }) {
                             {search && (
                                 <div className="search-dropdown">
 
-                                    {filteredProducts.length > 0 ? (
+                                    {products.data.length > 0 ? (
 
-                                        filteredProducts.map((product) => (
+                                        products.data.map((product) => (
 
-                                            <div
+                                            <ProductSearchCard
+                                                nombre_producto={product.nombre_producto}
+                                                id={product.id}
+                                                image_url={product.imagen_url[0]}
                                                 key={product.id}
-                                                className="search-item"
-                                            >
-
-                                                <img
-                                                    src={product.image}
-                                                    alt={product.name}
-                                                />
-
-                                                <span>
-                                                    {product.name}
-                                                </span>
-
-                                            </div>
-
+                                                onClick={() => setSearch("")}
+                                                
+                                            />
                                         ))
 
                                     ) : (
-
                                         <div className="search-empty">
                                             No se encontraron productos
                                         </div>

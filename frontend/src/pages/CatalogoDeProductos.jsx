@@ -395,6 +395,7 @@ export default function CatalogoDeProductos() {
                                         /* Cada CartaDeProductos va envuelta en una columna (col) */
                                         <div className="col" key={item.id}>
                                             <CartaDeProductos
+                                                id={item.id}
                                                 nombreDeProducto={item.nombre_producto}
                                                 condicion={item.condicion}
                                                 precio={item.precio}

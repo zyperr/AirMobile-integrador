@@ -22,7 +22,10 @@ const categoriasValidasParaBateria = [
     "celulares",      // iPhones
     "tablets",        // iPads
 ]
-
+export const categoriasValidasParaCapacidad = [
+    "celulares",
+    "tablets"
+]
 export const CAPACIDADES_PERMITIDAS = [
   '16GB', 
   '32GB', 
