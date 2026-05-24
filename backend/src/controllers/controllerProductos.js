@@ -106,22 +106,7 @@ export const obtenerProducto = async (req, res) => {
 }
 
 export const crearProducto = async (req, res) => {
-
-
     try {
-        const idUsuario = req?.user?.id
-
-        if (!idUsuario) {
-            return res.status(401).json({ exito: false, message: "Creedenciales invalidas" })
-        }
-        const rol = await UsuarioModel.getRol(idUsuario)
-
-        if (rol !== ROLES.ADMIN) {
-            return res.status(403).json({ exito: false, message: "El usuario no tiene permisos para esto" })
-
-        }
-
-
         let urlsImagenes = [];
         // req.files existe si en la ruta usaste multer.array('imagenes', 5)
         if (req.files && req.files.length > 0) {
@@ -195,17 +180,6 @@ export const actualizarProducto = async (req, res) => {
     };
 
     try {
-
-        const idUsuario = req?.user?.id
-        if (!idUsuario) {
-            return res.status(401).json({ exito: false, message: "Creedenciales invalidas" })
-        }
-        const rol = await UsuarioModel.getRol(idUsuario)
-        console.log(rol)
-        if (rol !== ROLES.ADMIN) {
-            return res.status(403).json({ exito: false, message: "El usuario no tiene permisos para esto" })
-        }
-
         let dataParaActualizar = { ...value };
 
 
@@ -218,7 +192,7 @@ export const actualizarProducto = async (req, res) => {
         const productoActualizado = await ModelProductos.updateProduct(idProducto, dataParaActualizar);
 
 
-        return res.status(200).json({ productoActualizado, exito: false, message: "El producto se actualizo con exito" })
+        return res.status(200).json({ productoActualizado, exito: true, message: "El producto se actualizo con exito" })
     } catch (err) {
         console.error(err)
         return res.status(500).json({ exito: false, message: "Error al actualizar un producto" })
@@ -228,19 +202,6 @@ export const actualizarProducto = async (req, res) => {
 
 export const eliminarProducto = async (req, res) => {
     try {
-
-        const idUsuario = req?.user?.id;
-
-        if (!idUsuario) {
-            return res.status(401).json({ exito: false, message: "Credenciales invalidas" })
-        }
-
-        const rol = await UsuarioModel.getRol(idUsuario);
-
-        if (rol !== ROLES.ADMIN) {
-            return res.status(403).json({ exito: false, message: "El usuario no tiene permisos para esto" });
-        }
-
         const idProducto = req.params.id;
         const productoAEliminar = await ModelProductos.deleteProduct(idProducto);
 
@@ -257,21 +218,6 @@ export const eliminarProducto = async (req, res) => {
 
 export const bulkUpload = async (req, res) => {
     try {
-        const idUsuario = req?.user?.id;
-
-        console.log(idUsuario);
-
-        if (!idUsuario) {
-            return res.status(401).json({ exito: false, message: "Creedenciales invalidas" })
-
-        }
-
-        const rol = await UsuarioModel.getRol(idUsuario);
-        console.log(rol)
-        if (rol !== ROLES.ADMIN) {
-            return res.status(403).json({ exito: false, message: "El usuario no tiene permisos para esto" })
-        }
-
         if (!req.file) {
             return res.status(400).json({ exito: false, message: "Por favor, subí un archivo." });
         }
