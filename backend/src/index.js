@@ -11,7 +11,7 @@ import routesCarrito from './routes/routesCarrito.js';
 import routeResetPassword  from "./routes/routeResetPassword.js"
 import routeRecuperarPassword from "./routes/routeRecuperarPassword.js"
 import routeFacturas from "./routes/routesFacturas.js";
-
+import routeStaff from "./routes/routesAdmin.js"
 
 import cors from "cors";
 
@@ -42,6 +42,8 @@ app.use("/api/carrito", routesCarrito);
 app.use("/api/recuperar-password",routeRecuperarPassword)
 app.use("/api/reset-password",routeResetPassword)
 app.use("/api/facturas", routeFacturas);
+
+app.use("/api/staff",routeStaff )
 
 app.get("", (req, res) => {
     res.send("hola");

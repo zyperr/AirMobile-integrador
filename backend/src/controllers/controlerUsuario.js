@@ -76,6 +76,7 @@ export const login = async (req, res) => {
         const datosUsuario = {
             id: usuarioEncontrado.id,
             nombre: usuarioEncontrado.nombre,
+            rol: usuarioEncontrado.rol
         }
 
         res.status(200).json({

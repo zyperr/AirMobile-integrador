@@ -6,14 +6,14 @@ const db = await obtenerDb()
 class UsuarioModel {
 
     static async getAll() {
-        const { rows } = await db.execute("SELECT * FROM usuarios");
+        const { rows } = await db.execute("SELECT * FROM usuarios WHERE activo = 1");
 
         return rows
     }
 
     static async getbyId(id) {
         const { rows } = await db.execute({
-            sql: "SELECT * FROM usuarios WHERE id = ?",
+            sql: "SELECT * FROM usuarios WHERE id = ? AND activo = 1",
             args: [id]
         })
         return rows[0];
@@ -22,7 +22,7 @@ class UsuarioModel {
     static async buscarEmail(email) {
         try {
             const { rows } = await db.execute({
-                sql: "SELECT * FROM usuarios where email = ?",
+                sql: "SELECT * FROM usuarios where email = ? AND activo = 1",
                 args: [email]
             })
 
@@ -74,8 +74,8 @@ class UsuarioModel {
 
     static async actualizarVerificado(id) {
         const result = await db.execute({
-            sql: "UPDATE usuarios SET verificado = ?,codigo_verificacion = NULL where id = ?",
-            args: [true, id]
+            sql: "UPDATE usuarios SET verificado = 1,codigo_verificacion = NULL where id = ?",
+            args: [id]
         })
 
         return result;
@@ -83,7 +83,7 @@ class UsuarioModel {
 
     static async getRol(id) {
         const result = await db.execute({
-            sql: "SELECT rol FROM usuarios WHERE id = ?",
+            sql: "SELECT rol FROM usuarios WHERE id = ? AND activo = 1",
             args: [id]
         })
 

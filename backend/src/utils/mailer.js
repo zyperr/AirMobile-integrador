@@ -33,7 +33,7 @@ export const enviarCorreoVerificacion = async (emailDestino, codigo) => {
     }
 }
 
-export const enviarEmailConfirmacionPassword = async (emailDestino,nombre) => {
+export const enviarEmailConfirmacionPassword = async (emailDestino, nombre) => {
     const mailOptions = {
         from: `"AirMobile Tienda" <${process.env.MAILER_EMAIL}>`,
         to: emailDestino,
@@ -63,7 +63,7 @@ export const enviarEmailConfirmacionPassword = async (emailDestino,nombre) => {
         // No queremos lanzar un "throw" porque la contraseña YA se cambió en la base de datos, 
         // y no queremos que el usuario reciba un error en la pantalla si solo falló el envío del mail.
         console.error("Error al enviar el email de confirmación:", error);
-        return false; 
+        return false;
     }
 }
 export const enviarEmailRecuperacion = async (emailDestino, codigoReseteo) => {
@@ -103,5 +103,46 @@ export const enviarEmailRecuperacion = async (emailDestino, codigoReseteo) => {
     } catch (error) {
         console.error("Error al enviar el email de recuperación:", error);
         throw new Error("No se pudo enviar el correo de recuperación");
+    }
+}
+
+export const enviarCorreoBlanqueo = async (emailDestino, nombre, passwordTemporal) => {
+    const mailOptions = {
+        // Usamos tu variable MAILER_EMAIL para mantener la consistencia
+        from: `"Seguridad AirMobile" <${process.env.MAILER_EMAIL}>`,
+        to: emailDestino,
+        subject: "Restablecimiento de Credenciales 🔐 | AirMobile",
+        html: `
+            <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+                <h2 style="color: #2c3e50; text-align: center;">AirMobile - Seguridad del Sistema</h2>
+                
+                <p>Hola, ${nombre}</p>
+                <p>Un administrador del sistema ha ejecutado un restablecimiento de emergencia para tu contraseña de acceso al panel de gestión.</p>
+                
+                <div style="background-color: #f8f9fa; border-left: 4px solid #3182ce; padding: 15px; margin: 25px 0;">
+                    <p style="margin: 0; font-size: 14px; color: #666; text-transform: uppercase; font-weight: bold;">Tu contraseña temporal es:</p>
+                    <p style="margin: 10px 0 0 0; font-size: 22px; font-weight: bold; color: #2b6cb0; letter-spacing: 2px;">
+                        ${passwordTemporal}
+                    </p>
+                </div>
+
+                <p style="font-size: 15px; color: #4a5568;">
+                    <strong>⚠️ Acción Requerida:</strong> Por políticas de seguridad, te pedimos que inicies sesión inmediatamente con esta clave temporal y la actualices desde la configuración de tu perfil.
+                </p>
+
+                <p style="margin-top: 30px; font-size: 13px; color: #999; text-align: center; border-top: 1px solid #eee; padding-top: 15px;">
+                    Este es un mensaje automático generado por el módulo administrativo de AirMobile.<br>Por favor, no respondas a este correo.
+                </p>
+            </div>
+        `
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Correo de blanqueo de emergencia enviado a: ${emailDestino}`);
+        return true;
+    } catch (error) {
+        console.error("Error al enviar el email de blanqueo de staff:", error);
+        throw new Error("No se pudo enviar el correo de recuperación al administrador.");
     }
 }
