@@ -19,6 +19,9 @@ router.post("/verificar",verificarToken,verificar)
 
 router.put("/actualizar",verificarToken,actualizarContrasena);
 
+
+
+
 // Esta función intercepta las peticiones antes de que lleguen a la ruta protegida
 router.get('/perfil', verificarToken, (req, res) => {
     // Si llegó hasta aquí, es porque el middleware lo dejó pasar

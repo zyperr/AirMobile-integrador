@@ -6,6 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev:backend": "node --watch .\\backend\\src\\index.js",
+    "dev:seed": "node --experimental-modules .\\backend\\src\\seed.js",
     "dev:frontend": "vite",
     "build": "vite build",
     "lint": "eslint .",
