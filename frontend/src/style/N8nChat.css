@@ -1,0 +1,86 @@
+/* Contenedor flotante general */
+.airmobile-chat-container {
+  position: fixed !important;
+  bottom: 25px !important;
+  right: 25px !important;
+  z-index: 999999 !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* El botón circular de Apple */
+.airmobile-chat-btn {
+  width: 60px !important;
+  height: 60px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: none !important;
+  background-color: #0B5ED7 !important; /* Negro Premium */
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease !important;
+}
+
+.airmobile-chat-btn:hover {
+  transform: scale(1.08);
+  background-color: #074197 !important; /* Variación gris Apple */
+}
+
+.airmobile-chat-btn:active {
+  transform: scale(0.95);
+}
+
+/* La mini pestaña / ventana de chat */
+.airmobile-chat-window {
+  position: absolute !important;
+  bottom: 75px !important;
+  right: 0 !important;
+  width: 370px !important;
+  height: 500px !important;
+  max-width: 90vw !important;
+  max-height: 75vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  border-radius: 18px !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Contenedor de mensajes interno */
+.airmobile-chat-body {
+  background-color: #dfdfdf !important; /* Fondo gris claro Apple */
+  flex-grow: 1 !important;
+}
+
+/* Formato de las burbujas de diálogo */
+.msg-bubble {
+  max-width: 82% !important;
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+}
+
+.user-bubble {
+  background-color: #0071e3 !important; /* Azul iOS clásico */
+  border-radius: 16px 16px 16px 16px !important;
+}
+
+.bot-bubble {
+  background-color: #ffffff !important;
+  border-radius: 16px 16px 16px 16px !important;
+  border: 1px solid rgba(0,0,0,0.04) !important;
+}
+
+/* Estilo para los inputs de Bootstrap dentro del footer */
+.airmobile-chat-window .form-control:focus {
+  border-color: #0071e3 !important;
+  box-shadow: 0 0 0 0.25rem rgba(0, 113, 227, 0.25) !important;
+}
+
+/* Animación de entrada suave */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}

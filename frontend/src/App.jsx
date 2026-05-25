@@ -8,6 +8,7 @@ import InicioSesion from "./pages/InicioSesion";
 import Registro from "./pages/Registro";
 import { RecuperarContraseña } from "./pages/RecuperarContraseña";
 import PerfilUsuario from "./pages/PerfilUsuario";
+import {N8nChat} from "./components/N8nChat.jsx";
 
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
         <Route path="/recuperar-password" element={<RecuperarContraseña />} />
         <Route path="/perfil-usuario/" element={<PerfilUsuario />} />
       </Routes>
+        <N8nChat/>
       <Footer />
     </BrowserRouter>
   );
