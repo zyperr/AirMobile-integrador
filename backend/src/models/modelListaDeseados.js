@@ -67,6 +67,27 @@ class ModelListaDeseados {
             throw err;
         }
     }
+
+    static async countWishListByUserId(usuarioId) {
+
+        try{
+            const query = `SELECT COUNT(*) AS total from lista_deseados WHERE usuario_id = ?`;
+            const args = [usuarioId];
+
+            const result = await db.execute({
+                sql: query,
+                args: args
+            });
+
+            
+            return result.rows[0].total;
+
+        }catch(err){
+            console.error("Error al contar la lista de deseados:", err);
+            throw err;
+        }
+
+    }
     static async isProductInWishList(usuarioId, productoId) {
     try {
         const query = `SELECT 1 FROM lista_deseados WHERE usuario_id = ? AND producto_id = ? LIMIT 1`;

@@ -3,13 +3,16 @@ import { useForm } from "react-hook-form";
 import { useApi } from '../hooks/useApi';
 import InputPassword from "../components/InputPassword";
 import HistorialFacturas from "../components/HistorialFacturas";
-import { SuccessCard } from "../components/SuccessCard"; 
+import { SuccessCard } from "../components/SuccessCard";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+
 
 const PerfilUsuario = () => {
 
     const [datosUsuario, setDatosUsuario] = useState(null);
     const [nombre, setNuevoNombre] = useState("");
-    
+
     // ESTADO: Controla qué pestaña está visible
     const [seccionActiva, setSeccionActiva] = useState('informacion');
 
@@ -19,6 +22,14 @@ const PerfilUsuario = () => {
         mensaje: "",
         descripcion: ""
     });
+
+    const { logout } = useAuth();
+
+
+    const navigate = useNavigate(); // Hook de React Router para cambiar de página
+
+    // Función para manejar el clic en "Cerrar Sesión"
+
 
     // HOOKS DE FORMULARIO
     const { register, handleSubmit, watch, formState: { errors }, reset } = useForm();
@@ -58,7 +69,7 @@ const PerfilUsuario = () => {
 
         const token = localStorage.getItem('token');
         const response = await actualizarNombre('usuarios/actualizar-nombre', {
-            method: 'PUT', 
+            method: 'PUT',
             headers: {
                 Authorization: `Bearer ${token}`,
                 'Content-Type': 'application/json'
@@ -71,7 +82,7 @@ const PerfilUsuario = () => {
                 ...prevDatos,
                 nombre: response.data.data.nombre
             }));
-            
+
             // Reemplazamos el alert por nuestro componente
             setNotificacion({
                 mostrar: true,
@@ -84,7 +95,7 @@ const PerfilUsuario = () => {
     const onSubmitNuevaClave = async (data) => {
         const token = localStorage.getItem('token');
         const response = await actualizarPassword('usuarios/actualizar', {
-            method: 'PUT', 
+            method: 'PUT',
             headers: {
                 Authorization: `Bearer ${token}`,
                 'Content-Type': 'application/json'
@@ -94,7 +105,7 @@ const PerfilUsuario = () => {
 
         if (response.exito) {
             reset();
-            
+
             // Reemplazamos el alert por nuestro componente
             setNotificacion({
                 mostrar: true,
@@ -103,6 +114,12 @@ const PerfilUsuario = () => {
             });
         }
     }
+
+
+    const manejarCerrarSesion = () => {
+        logout(); // Esto borra el token del contexto y del localStorage
+        navigate("/"); // Redirige al usuario al inicio
+    };
 
     // CONTROLES DE CARGA Y ERROR
     if (loadingPerfil || !datosUsuario) {
@@ -140,11 +157,11 @@ const PerfilUsuario = () => {
         <>
             {/* OVERLAY DE NOTIFICACIÓN (Se renderiza por encima de todo) */}
             {notificacion.mostrar && (
-                <div 
-                    className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" 
+                <div
+                    className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
                     style={{ zIndex: 9999, backgroundColor: 'rgba(0,0,0,0.6)' }}
                 >
-                    <SuccessCard 
+                    <SuccessCard
                         mensaje={notificacion.mensaje}
                         descripcion={notificacion.descripcion}
                         setSubmitted={(valor) => setNotificacion({ ...notificacion, mostrar: valor })}
@@ -177,7 +194,7 @@ const PerfilUsuario = () => {
                                 <i className="bi bi-heart me-3"></i> Lista de Deseos
                             </button>
                             <hr className="my-2" />
-                            <button className="btn btn-white text-danger d-flex align-items-center justify-content-start border-0 px-3 py-2 text-start mt-4">
+                            <button className="btn btn-white text-danger d-flex align-items-center justify-content-start border-0 px-3 py-2 text-start mt-4" onClick={manejarCerrarSesion}>
                                 <i className="bi bi-box-arrow-right me-3"></i> Cerrar Sesión
                             </button>
                         </div>
