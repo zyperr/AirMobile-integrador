@@ -5,7 +5,7 @@ const db = await obtenerDb();
 
 
 
-class ModelFactura {
+class ModelDetalleFactura {
 
 
     static async createDetalleFactura(facturaId, productoId, cantidad, precioUnitario) {
@@ -32,9 +32,12 @@ class ModelFactura {
                     df.precio_unitario,
                     p.id AS producto_id,
                     p.nombre_producto,
-                    p.imagen_url
+                    p.imagen_url,
+                    f.fecha,           
+                    f.usuario_id       
                 FROM detalles_factura df
                 INNER JOIN productos p ON df.producto_id = p.id
+                INNER JOIN facturas f ON df.factura_id = f.id  
                 WHERE df.factura_id = ?
             `;
             const {rows} = await db.execute({
@@ -51,4 +54,4 @@ class ModelFactura {
 
 
 
-export default ModelFactura;
+export default ModelDetalleFactura;

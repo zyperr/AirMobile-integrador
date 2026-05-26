@@ -55,6 +55,14 @@ export const inicializarBaseDeDatos = async () => {
         FOREIGN KEY (producto_id) REFERENCES productos(id) 
     )`;
 
+    const queryListaDeseados = `CREATE TABLE IF NOT EXISTS lista_deseados(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario_id INTEGER NOT NULL,
+    producto_id INTEGER NOT NULL,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+    FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE,
+    UNIQUE(usuario_id, producto_id) 
+    )`;
     try {
         await db.execute(queryUsuarios);
         await db.execute(queryProductos);
@@ -62,7 +70,7 @@ export const inicializarBaseDeDatos = async () => {
         await db.execute(queryFacturas);
         await db.execute(queryDetallesFactura);
 
-        
+
         console.log("✅ Base de datos y tablas inicializadas correctamente.");
         return true;
 

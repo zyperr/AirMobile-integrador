@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { obtenerUsuarios,registro,login,verificar} from "../controllers/controlerUsuario.js";
+import { obtenerUsuarios,registro,login,verificar, obtenerPerfil, actualizarNombreUsuario} from "../controllers/controlerUsuario.js";
 import { verificarToken } from "../middlewares/authMiddleware.js";
 import { actualizarContrasena } from "../controllers/controllerPassword.js";
 
@@ -19,6 +19,8 @@ router.post("/verificar",verificarToken,verificar)
 
 router.put("/actualizar",verificarToken,actualizarContrasena);
 
+router.put("/actualizar-nombre",verificarToken,actualizarNombreUsuario);
+
 
 
 
@@ -30,6 +32,8 @@ router.get('/perfil', verificarToken, (req, res) => {
         datosDelToken: req.usuario // Aquí están el ID y el email que guardamos en el token
     });
 });
+
+router.get("/mi-perfil", verificarToken,obtenerPerfil);
 
 
 export default router

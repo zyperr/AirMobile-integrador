@@ -14,7 +14,7 @@ import { SkeletonLoader } from "../components/SkeletonLoader";
 
 
 export default function CatalogoDeProductos() {
-    const URL_API = "http://localhost:3000/api/productos/productos";
+    
     const [producto, setProducto] = useState(null);
     const [paginaActual, setPaginaActual] = useState(1);
 
@@ -37,6 +37,8 @@ export default function CatalogoDeProductos() {
     // Estados oficiales que dispararán el useEffect (se actualizan al darle "Aplicar")
     const [precioMinimo, setPrecioMinimo] = useState('');
     const [precioMaximo, setPrecioMaximo] = useState('');
+    const [errorPrecio, setErrorPrecio] = useState('');
+
 
     // Función para alternar el estado
     const toggleDropdown = () => {
@@ -106,12 +108,24 @@ export default function CatalogoDeProductos() {
     }
 
     const aplicarFiltroPrecio = () => {
+
+
+
+        const min = parseFloat(inputPrecioMin);
+        const max = parseFloat(inputPrecioMax);
+
+        if (inputPrecioMin !== '' && inputPrecioMax !== '' && min > max) {
+            // Mostramos el error y detenemos la función aquí mismo
+            setErrorPrecio('El precio máximo no puede ser menor al mínimo.');
+            return;
+        }
         setPrecioMinimo(inputPrecioMin);
         setPrecioMaximo(inputPrecioMax);
+        setErrorPrecio('');
         setPaginaActual(1);
         window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
 
+    }
     const cambiarOrden = (nuevoOrden) => {
         setOrdenarPor(nuevoOrden);
         setPaginaActual(1);
@@ -138,7 +152,15 @@ export default function CatalogoDeProductos() {
                 <div className="col-12 d-flex flex-column flex-md-row gap-4" style={{ maxWidth: "1400px" }}>
 
                     {/* BARRA LATERAL (Filtros) */}
-                    <aside className="sidebar-filters flex-shrink-0">
+                    <aside
+                        className="sidebar-filters flex-shrink-0 sticky-md-top align-self-md-start custom-scrollbar pe-4"
+                        style={{
+                            top: "100px", // Le damos un espacio para que no choque con tu Navbar
+                            zIndex: 10,
+                            maxHeight: "calc(100vh - 120px)", // Truco UX: Evita que el aside sea más alto que la pantalla
+                            overflowY: "auto" // Si los filtros son muchos, permite scrollear solo la barra lateral
+                        }}
+                    >
                         <h3 className="fs-5 fw-bold text-dark mb-4">Filtros</h3>
 
                         {/* Filtro: Modelo */}
@@ -222,12 +244,17 @@ export default function CatalogoDeProductos() {
                             </h4>
 
                             <div className="d-flex align-items-center gap-2 mb-3">
+
+
                                 <input
                                     type="number"
                                     className="form-control form-control-sm"
                                     placeholder="Mínimo"
                                     value={inputPrecioMin}
-                                    onChange={(e) => setInputPrecioMin(e.target.value)}
+                                    onChange={(e) => {
+                                        setInputPrecioMin(e.target.value);
+                                        setErrorPrecio('');
+                                    }}
                                     min="0"
                                 />
                                 <span className="text-secondary">-</span>
@@ -236,10 +263,19 @@ export default function CatalogoDeProductos() {
                                     className="form-control form-control-sm"
                                     placeholder="Máximo"
                                     value={inputPrecioMax}
-                                    onChange={(e) => setInputPrecioMax(e.target.value)}
+                                    onChange={(e) => {
+                                        setInputPrecioMax(e.target.value);
+                                        setErrorPrecio('');
+                                    }}
                                     min="0"
                                 />
                             </div>
+
+                            {errorPrecio && (
+                                <div className="text-danger mb-3 slide-down-animation" style={{ fontSize: "12px", fontWeight: "500" }}>
+                                    <i className="bi bi-exclamation-triangle-fill me-1"></i> {errorPrecio}
+                                </div>
+                            )}
 
                             {/* Los botones aparecen solo si el usuario escribió algo en algún input */}
                             {(inputPrecioMin !== '' || inputPrecioMax !== '') && (
@@ -383,7 +419,7 @@ export default function CatalogoDeProductos() {
                         <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4">
                             {(isLoading || producto === null) ? (
 
-                                
+
                                 <SkeletonLoader cantidad={10} />
 
                             ) : (

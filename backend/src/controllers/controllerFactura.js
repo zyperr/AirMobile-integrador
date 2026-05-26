@@ -111,33 +111,49 @@ export const obtenerTodasLasFacturas = async (req, res) => {
 };
 
 
+
+// OBTENER FACTURAS DE UN USUARIO
 export const obtenerFacturasDeUsuario = async (req, res) => {
     try {
         const idUsuarioActual = req?.user?.id;
 
         if (!idUsuarioActual) {
-            return res.status(401).json({ exito:false,message: "Credenciales inválidas" });
+            return res.status(401).json({ exito:false, message: "Credenciales inválidas" });
         }
 
         const page = Math.max(1, parseInt(req.query.page) || 1);
         const limit = Math.max(1, parseInt(req.query.limit) || 10);
         const offset = (page - 1) * limit;
 
-        // EJECUCIÓN EN PARALELO: Pedimos los datos y el total al mismo tiempo
-        const [facturas, totalResultados] = await Promise.all([
+        // EJECUCIÓN EN PARALELO
+        let [facturas, totalResultados] = await Promise.all([
             ModelFactura.getFacturasDeUsuario(idUsuarioActual, limit, offset),
             ModelFactura.countFacturasDeUsuario(idUsuarioActual)
         ]);
 
-        // LA MATEMÁTICA: Math.ceil redondea hacia arriba. 
-        // Si tienes 12 facturas y traes de a 10: 12 / 10 = 1.2 -> Redondea a 2 páginas.
         const totalPaginas = Math.ceil(totalResultados / limit);
 
-        
+        // ==========================================
+        // FORMATEO DE FECHAS PARA EL HISTORIAL
+        // ==========================================
+        facturas = facturas.map(factura => {
+            if (factura.fecha) {
+                const fechaObjeto = new Date(factura.fecha + 'Z');
+                
+                // Para el historial suele ser mejor una fecha más corta (Ej: "14 May 2026")
+                factura.fecha_formateada = fechaObjeto.toLocaleString("es-AR", {
+                    timeZone: "America/Argentina/Buenos_Aires",
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric"
+                });
+            }
+            return factura;
+        });
 
         return res.status(200).json({
             exito: true,
-            paginacion: { // Agrupamos todo en un objeto para que sea más ordenado para el frontend
+            paginacion: { 
                 paginaActual: page,
                 limitePorPagina: limit,
                 totalResultados: totalResultados,
@@ -145,15 +161,16 @@ export const obtenerFacturasDeUsuario = async (req, res) => {
                 tienePaginaSiguiente: page < totalPaginas,
                 tienePaginaAnterior: page > 1
             },
-            facturas: facturas
+            facturas: facturas // Ahora todas vienen con su fecha_formateada
         });
 
     } catch (err) {
         console.error("Error al obtener las facturas del usuario:", err);
-        return res.status(500).json({ exito:false,message: "Error interno al obtener las facturas del usuario" });
+        return res.status(500).json({ exito:false, message: "Error interno al obtener las facturas del usuario" });
     }
 };
 
+// OBTENER UNA FACTURA POR ID
 export const obtenerFactura = async (req, res) => {
     try {
 

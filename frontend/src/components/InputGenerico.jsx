@@ -1,5 +1,3 @@
-import React from 'react';
-
 export const InputGenerico = ({ label, name, type = "text", placeholder, register, reglas, errors }) => {
     // React Hook Form guarda el texto del error en errors.message
     const errorMessage = errors?.message;

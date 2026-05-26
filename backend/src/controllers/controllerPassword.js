@@ -1,65 +1,76 @@
 import UsuarioModel from "../models/modelUsuario.js";
 import { schemaResetPassword } from "../schemas/schemaResetPassword.js";
-import schemaUpdateUsuario from "../schemas/schemaUpdateUsuario.js"
+import {schemaActualizarPassword} from "../schemas/schemaUpdateUsuario.js"
 import { enviarEmailConfirmacionPassword, enviarEmailRecuperacion } from "../utils/mailer.js";
-import { generarCodigo } from "../middlewares/authMiddleware.js";
+import { generarCodigo, comprobarContrasena } from "../middlewares/authMiddleware.js";
 import bcrypt from "bcryptjs";
 
 export const actualizarContrasena = async (req, res) => {
 
-
-    const { error, value } = schemaUpdateUsuario.validate(req.body, { abortEarly: false });
-
+    // 1. Validación de Joi
+    const { error, value } = schemaActualizarPassword.validate(req.body, { abortEarly: false });
 
     if (error) {
         return res.status(400).json({
             exito: false,
+            message: "Por favor, revisa los datos enviados.",
             errores: error.details.map(detalle => detalle.message)
         });
     }
 
-
     try {
-
-        let { password } = value;
-        const idUsuario = req.user.id
+        let { password } = value; // Este es el newPassword que viene del frontend
+        const idUsuario = req.user.id;
+        
+        // 2. Buscamos al usuario y validamos que exista
         const usuarioActual = await UsuarioModel.getbyId(idUsuario);
 
-        if (password) {
-            const passwordEsIgual = await comprobarContraseña(password, usuarioActual.password);
+        if (!usuarioActual) {
+            return res.status(404).json({ 
+                exito: false, 
+                message: "No se encontró el usuario en la base de datos." 
+            });
+        }
 
+        // Verificamos que la nueva no sea igual a la vieja
+        if (password) {
+            
+            const passwordEsIgual = await comprobarContrasena(password, usuarioActual.password);
 
             if (passwordEsIgual) {
-                return res.status(400).json({ error: "La nueva contraseña no puede ser igual a la anterior." });
+                return res.status(400).json({ 
+                    exito: false, 
+                    message: "La nueva contraseña no puede ser igual a la anterior." 
+                });
             }
 
+            // Encriptamos la nueva contraseña
             password = await bcrypt.hash(password, 10);
         }
 
-
-        // Si el usuario no mandó email, email será 'undefined' y el modelo lo ignorará
-        // Si no mandó password, password será 'undefined' y el modelo lo ignorará
-
+        // Actualizamos en la base de datos
         const resultado = await UsuarioModel.updateUserPassword(idUsuario, password);
 
         if (!resultado) {
-            return res.status(400).json({ error: "No se enviaron datos válidos para actualizar." });
+            return res.status(400).json({ 
+                exito: false, 
+                message: "No se pudo actualizar la contraseña." 
+            });
         }
 
-
+        
         res.status(200).json({
             exito: true,
-            mensaje: "Tus datos han sido actualizados correctamente."
+            message: "Tu contraseña ha sido actualizada correctamente."
         });
 
-
     } catch (err) {
-        if (err.message && err.message.includes('UNIQUE constraint failed: usuarios.email')) {
-            return res.status(400).json({ error: "Este correo ya está registrado en otra cuenta." });
-        }
-
-        console.error("Error en el servidor:", err);
-        res.status(500).json({ error: "Error interno al actualizar los datos." });
+        
+        console.error("Error en el servidor (actualizarContrasena):", err);
+        res.status(500).json({ 
+            exito: false, 
+            message: "Error interno al actualizar la contraseña." 
+        });
     }
 }
 

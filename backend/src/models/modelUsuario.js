@@ -42,6 +42,25 @@ class UsuarioModel {
 
         return result;
     }
+
+
+   static async updateUserPassword(id, passwordHash) {
+    try {
+        const query = `UPDATE usuarios SET password = ? WHERE id = ?`;
+        
+        const result = await db.execute({
+            sql: query,
+            args: [passwordHash, id] // IMPORTANTE: Este debe ser el hash, no la contraseña plana
+        });
+
+        // Retorna true si modificó la fila, false si no encontró el ID
+        return result.rowsAffected > 0; 
+        
+    } catch (error) {
+        console.error("Error al actualizar la contraseña en la BD:", error);
+        throw error; // Lanzamos el error para que el controlador lo atrape y envíe el status 500
+    }
+}
     static async updatePasswordClearCodeVerificate(email, nuevaPassword, codigoIngresado) {
         const queryActualizar = `
             UPDATE usuarios 
@@ -93,6 +112,22 @@ class UsuarioModel {
 
         return result.rows[0].rol
     }
+
+    static async actualizarNombre(id, nuevoNombre) {
+    try {
+        const query = `UPDATE usuarios SET nombre = ? WHERE id = ?`;
+        const result = await db.execute({
+            sql: query,
+            args: [nuevoNombre, id]
+        });
+        
+        // rowsAffected nos dirá si realmente se modificó alguna fila
+        return result.rowsAffected > 0; 
+    } catch (error) {
+        console.error("Error al actualizar el nombre en la BD:", error);
+        throw error;
+    }
+}
 
 }
 
