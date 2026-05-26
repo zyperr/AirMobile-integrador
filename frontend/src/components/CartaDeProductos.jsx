@@ -1,15 +1,28 @@
 import { Link } from 'react-router-dom';
 import '../style/CartaDeProductos.css';
+import BotonDeseados from './BotonDeseados'; // Asegúrate de que la ruta sea la correcta
 
-const ProductCard = ({ id,nombreDeProducto, condicion, precio, capacidad = [], imagen_url }) => {
+const ProductCard = ({ id, nombreDeProducto, condicion, precio, capacidad = [], imagen_url , onRemover}) => {
   // Validación por si capacidad viene como texto (string) desde la base de datos
   const capacidadFormateada = Array.isArray(capacidad) ? capacidad.join(', ') : capacidad;
   
+
+  
   return (
-    <div className="card border-0 h-100 custom-product-card shadow-sm d-flex flex-column">
-      <Link className='text-decoration-none' to={`/producto/${id}`}>
+    // Agregamos 'position-relative' aquí para que el botón flote relativo a la tarjeta
+    <div className="card border-0 h-100 custom-product-card shadow-sm d-flex flex-column position-relative">
+      
+      {/* BOTÓN DE FAVORITOS
+        Debe ir FUERA del <Link> para evitar que el clic nos lleve a otra página.
+        Como nuestro BotonDeseos tiene position-absolute, se pondrá en la esquina sin empujar nada.
+      */}
+      <BotonDeseados idProducto={id} onRemover={onRemover} />
+
+      {/* Todo lo demás envuelto en el Link, como lo tenías */}
+      <Link className='text-decoration-none text-dark flex-grow-1 d-flex flex-column' to={`/producto/${id}`}>
+        
         {/* Contenedor de imagen */}
-        <div className="custom-img-container position-relative text-center">
+        <div className="custom-img-container position-relative text-center mt-3">
           <img
             src={imagen_url[0]}
             alt={`Imagen de ${nombreDeProducto}`}
@@ -20,7 +33,7 @@ const ProductCard = ({ id,nombreDeProducto, condicion, precio, capacidad = [], i
         {/* Contenedor de detalles */}
         <div className="card-body p-3 d-flex flex-column flex-grow-1">
 
-          <div className="d-flex flex-column align-items-start mb-2">
+          <div className="d-flex flex-column align-items-start mb-2 mt-2">
             <h2
               className="card-title m-0 fw-bold text-dark text-start mb-2"
               style={{
@@ -46,19 +59,16 @@ const ProductCard = ({ id,nombreDeProducto, condicion, precio, capacidad = [], i
           </div>
 
           {/* ========================================== */}
-          {/* PRECIO Y BOTÓN (AQUÍ ESTÁ LA MAGIA CORREGIDA) */}
+          {/* PRECIO Y BOTÓN */}
           {/* ========================================== */}
-          {/* Agregamos gap-2 por seguridad */}
           <div className="d-flex justify-content-between align-items-center mt-auto pt-3 border-top gap-2">
 
-            {/* Le bajamos el tamaño con fs-5 (o puedes usar style={{ fontSize: "18px" }}) */}
             <span className="fw-bold text-dark fs-5 text-truncate" title={`$${precio}`}>
-              ${precio}
+              ${parseFloat(precio).toFixed(2)}
             </span>
 
-            {/* Agregamos text-nowrap y ajustamos el padding (px-2 py-1) */}
-            <button  className="btn btn-primary fw-semibold custom-view-btn btn-sm text-nowrap px-2 py-1">
-              View Details
+            <button className="btn btn-primary fw-semibold custom-view-btn btn-sm text-nowrap px-3 py-1">
+              Ver Detalles
             </button>
 
           </div>

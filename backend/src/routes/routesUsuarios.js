@@ -15,6 +15,8 @@ router.post("/registro",registro);
 
 router.post("/login",login);
 
+
+
 router.post("/verificar",verificarToken,verificar)
 
 router.put("/actualizar",verificarToken,actualizarContrasena);

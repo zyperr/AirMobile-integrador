@@ -5,13 +5,16 @@ import InputPassword from "../components/InputPassword";
 import HistorialFacturas from "../components/HistorialFacturas";
 import { SuccessCard } from "../components/SuccessCard";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import ProductCard from "../components/CartaDeProductos";
 
 
 const PerfilUsuario = () => {
 
     const [datosUsuario, setDatosUsuario] = useState(null);
     const [nombre, setNuevoNombre] = useState("");
+
+    const [listaDeseos, setListaDeseos] = useState({ data: [], total: 0 });
 
     // ESTADO: Controla qué pestaña está visible
     const [seccionActiva, setSeccionActiva] = useState('informacion');
@@ -39,6 +42,7 @@ const PerfilUsuario = () => {
     const { ejecutarPeticion: fetchPerfil, isLoading: loadingPerfil, error: errorPerfil } = useApi();
     const { ejecutarPeticion: actualizarNombre, isLoading: guardandoNombre } = useApi();
     const { ejecutarPeticion: actualizarPassword, isLoading: guardandoPassword } = useApi();
+    const { ejecutarPeticion: fetchListaDeseos, isLoading: loadingDeseos, error: errorDeseos } = useApi();
 
     // EFECTOS
     useEffect(() => {
@@ -58,8 +62,23 @@ const PerfilUsuario = () => {
             if (responsePerfil.exito) {
                 setDatosUsuario(responsePerfil.data.data);
             }
+
         };
 
+        const fetchDeseos = async () => {
+            const token = localStorage.getItem('token');
+            const responseDeseos = await fetchListaDeseos('lista-deseados/obtener', {
+                method: 'GET',
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (responseDeseos.exito) {
+                setListaDeseos(responseDeseos.data);
+                console.log("Lista de deseos:", responseDeseos.data);
+            }
+        }
+
+        fetchDeseos();
         fetchDatos();
     }, []);
 
@@ -119,6 +138,15 @@ const PerfilUsuario = () => {
     const manejarCerrarSesion = () => {
         logout(); // Esto borra el token del contexto y del localStorage
         navigate("/"); // Redirige al usuario al inicio
+    };
+
+
+    const quitarDeseoLocalmente = (idProductoEliminado) => {
+        setListaDeseos(prevEstado => ({
+            ...prevEstado,
+            data: prevEstado.data.filter(producto => producto.producto_id !== idProductoEliminado),
+            total: prevEstado.total - 1
+        }));
     };
 
     // CONTROLES DE CARGA Y ERROR
@@ -307,26 +335,113 @@ const PerfilUsuario = () => {
                         )}
 
                         {/* SECCIÓN 4: LISTA DE DESEOS */}
+                        {/* SECCIÓN 4: LISTA DE DESEOS */}
                         {seccionActiva === 'deseos' && (
                             <section className="mb-5 slide-down-animation">
-                                <div className="d-flex justify-content-between align-items-center mb-3">
-                                    <h3 className="fs-4 fw-bold m-0">Lista de Deseos</h3>
-                                    <span className="badge bg-danger rounded-pill">2 items</span>
+                                <div className="d-flex justify-content-between align-items-center mb-4">
+                                    <h3 className="fs-4 fw-bold m-0" style={{ color: '#5a5a5a' }}>Lista de Deseos</h3>
+
+                                    {/* El badge solo se muestra si NO está cargando, NO hay error, y hay productos */}
+                                    {!loadingDeseos && !errorDeseos && listaDeseos.data.length > 0 && (
+                                        <span className="badge rounded-pill px-3 py-2 shadow-sm" style={{ backgroundColor: '#0d6efd', color: '#fff', fontSize: '0.85rem' }}>
+                                            {listaDeseos.total} {listaDeseos.total === 1 ? 'ítem' : 'ítems'}
+                                        </span>
+                                    )}
                                 </div>
-                                <div className="row row-cols-1 row-cols-md-2 g-4">
-                                    <div className="col">
-                                        <div className="card border-0 bg-light h-100 p-4 text-center d-flex flex-column justify-content-center align-items-center text-secondary border border-secondary border-opacity-25 border-dashed" style={{ borderStyle: 'dashed' }}>
-                                            <i className="bi bi-phone mb-2 fs-1 text-secondary opacity-50"></i>
-                                            <p className="m-0" style={{ fontSize: "13px" }}>Tu <b>ProductCard</b> irá aquí</p>
+
+                                {/* LÓGICA DE RENDERIZADO: Cargando -> Error -> Vacío -> Lista */}
+                                {loadingDeseos ? (
+
+                                    /* ESTADO 1: CARGANDO */
+                                    <div className="w-100 mt-2">
+                                        <div
+                                            className="p-5 rounded-4 text-center shadow-sm d-flex flex-column align-items-center justify-content-center"
+                                            style={{ backgroundColor: '#f8f9fa', border: '1px solid #e9ecef', minHeight: '250px' }}
+                                        >
+                                            <div className="spinner-border text-primary mb-3" role="status" style={{ width: "2.5rem", height: "2.5rem" }}>
+                                                <span className="visually-hidden">Cargando...</span>
+                                            </div>
+                                            <h5 className="fw-semibold text-secondary">Cargando tus favoritos...</h5>
                                         </div>
                                     </div>
-                                    <div className="col">
-                                        <div className="card border-0 bg-light h-100 p-4 text-center d-flex flex-column justify-content-center align-items-center text-secondary border border-secondary border-opacity-25 border-dashed" style={{ borderStyle: 'dashed' }}>
-                                            <i className="bi bi-smartwatch mb-2 fs-1 text-secondary opacity-50"></i>
-                                            <p className="m-0" style={{ fontSize: "13px" }}>Tu <b>ProductCard</b> irá aquí</p>
+
+                                ) : errorDeseos ? (
+
+                                    /* ESTADO 2: ERROR */
+                                    <div className="w-100 mt-2">
+                                        <div
+                                            className="p-5 rounded-4 text-center shadow-sm d-flex flex-column align-items-center justify-content-center"
+                                            style={{ backgroundColor: '#fff5f5', border: '1px solid #ffe3e3', minHeight: '250px' }}
+                                        >
+                                            <i className="bi bi-cloud-slash text-danger mb-3" style={{ fontSize: '3.5rem' }}></i>
+                                            <h5 className="fw-bold text-danger">¡Oops! Hubo un problema</h5>
+                                            <p className="text-muted mb-4" style={{ maxWidth: '400px' }}>
+                                                {errorDeseos || "No pudimos cargar tu lista de deseos en este momento. Por favor, revisa tu conexión e inténtalo de nuevo."}
+                                            </p>
+                                            <button
+                                                className="btn px-4 py-2 fw-semibold rounded-pill shadow-sm"
+                                                style={{ backgroundColor: '#0d6efd', color: '#fff' }}
+                                                onClick={() => window.location.reload()} // O puedes crear una función que vuelva a llamar a fetchDeseos()
+                                            >
+                                                <i className="bi bi-arrow-clockwise me-2"></i>Reintentar
+                                            </button>
                                         </div>
                                     </div>
-                                </div>
+
+                                ) : listaDeseos.data.length === 0 ? (
+
+                                    /* ESTADO 3: VACÍO (El diseño tierno que ya teníamos) */
+                                    <div className="w-100 mt-2">
+                                        <div
+                                            className="p-5 rounded-4 text-center shadow-sm d-flex flex-column align-items-center justify-content-center"
+                                            style={{ backgroundColor: '#0d6efd0d', border: '2px dashed #0d6efd40', minHeight: '250px' }}
+                                        >
+                                            <i className="bi bi-balloon-heart mb-3" style={{ fontSize: '3.5rem', color: '#0d6efd' }}></i>
+                                            <h5 className="fw-bold" style={{ color: '#0d6efd' }}>¡Tu lista está muy solita!</h5>
+                                            <p className="text-muted mb-4" style={{ maxWidth: '400px' }}>
+                                                Aún no has guardado ninguno de nuestros productos. Explora el catálogo y dale amor a tus favoritos.
+                                            </p>
+                                            <Link to="/catalogo" className="btn px-4 py-2 fw-semibold rounded-pill shadow-sm" style={{ backgroundColor: '#0d6efd', color: '#fff' }}>
+                                                Ir al catálogo
+                                            </Link>
+                                        </div>
+                                    </div>
+
+                                ) : (
+
+                                    /* ESTADO 4: CON RESULTADOS (Tu scroll horizontal premium) */
+                                    <div
+                                        className="d-flex flex-row gap-3 pb-4 custom-horizontal-scroll"
+                                        style={{
+                                            overflowX: 'auto',
+                                            overflowY: 'hidden',
+                                            scrollSnapType: 'x mandatory',
+                                            WebkitOverflowScrolling: 'touch'
+                                        }}
+                                    >
+                                        {listaDeseos.data.map((product) => (
+                                            <div
+                                                key={product.producto_id}
+                                                className="flex-shrink-0"
+                                                style={{
+                                                    width: '260px',
+                                                    scrollSnapAlign: 'start'
+                                                }}
+                                            >
+                                                <ProductCard
+                                                    id={product.producto_id}
+                                                    nombreDeProducto={product.nombre_producto}
+                                                    imagen_url={product.imagen_url}
+                                                    precio={product.precio}
+                                                    capacidad={product.capacidad}
+                                                    condicion={product.condicion}
+                                                    onRemover={quitarDeseoLocalmente}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                )}
                             </section>
                         )}
 

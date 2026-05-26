@@ -69,7 +69,8 @@ export const inicializarBaseDeDatos = async () => {
         await db.execute(queryCarrito);
         await db.execute(queryFacturas);
         await db.execute(queryDetallesFactura);
-
+        await db.execute(queryListaDeseados);
+        
 
         console.log("✅ Base de datos y tablas inicializadas correctamente.");
         return true;

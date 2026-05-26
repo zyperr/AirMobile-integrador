@@ -33,7 +33,9 @@ class ModelListaDeseados {
                     p.id AS producto_id,
                     p.nombre_producto,
                     p.precio,
-                    p.imagen_url
+                    p.condicion,
+                    p.imagen_url,
+                    p.capacidad 
                 FROM lista_deseados ld
                 INNER JOIN productos p ON ld.producto_id = p.id
                 WHERE ld.usuario_id = ?

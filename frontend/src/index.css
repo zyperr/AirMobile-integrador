@@ -167,3 +167,54 @@ code {
     margin: 0 auto;
   
   }
+/* Estilos para el scroll horizontal en Chrome, Safari y Edge */
+.custom-horizontal-scroll::-webkit-scrollbar {
+  height: 8px; /* Altura del scrollbar */
+}
+
+.custom-horizontal-scroll::-webkit-scrollbar-track {
+  background: #f0f0f0; /* Un gris súper clarito para que contraste bien */
+  border-radius: 10px;
+}
+
+.custom-horizontal-scroll::-webkit-scrollbar-thumb {
+  background-color: #0d6efd; /* Tu azul vibrante */
+  border-radius: 10px;
+}
+
+/* Efecto hover: se oscurece a un azul más profundo cuando pasas el mouse */
+.custom-horizontal-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: #0b5ed7; 
+}
+
+/* Compatibilidad para Firefox */
+.custom-horizontal-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #0d6efd #f0f0f0; /* Color del thumb y del track */
+}
+
+::-webkit-scrollbar {
+  width: 10px; /* Un poquitito más ancha para la página general */
+  height: 10px; /* Por si en algún momento la página tiene scroll horizontal general */
+}
+
+::-webkit-scrollbar-track {
+  background: #f0f0f0; 
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #0d6efd; 
+  border-radius: 10px;
+  /* Un pequeño borde para que no toque los bordes exactos de la pantalla */
+  border: 2px solid #f0f0f0; 
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #0b5ed7; 
+}
+
+/* Compatibilidad para Firefox */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #0d6efd #f0f0f0;
+}
