@@ -10,7 +10,7 @@ import Joi from "joi";
 
 export const obtenerProductos = async (req, res) => {
     const { error, value } = schemaFiltrosProductos.validate(req.query);
-    console.log(value)
+
     if (error) {
         return res.status(400).json({
             exito: false,
@@ -19,7 +19,7 @@ export const obtenerProductos = async (req, res) => {
         });
     }
     try {
-
+        
         const filtros = {
             categoria: value.categoria,
             condicion: value.condicion,
@@ -97,7 +97,7 @@ export const obtenerProducto = async (req, res) => {
             imagen_url: JSON.parse(producto.imagen_url),
             capacidad: JSON.parse(producto.capacidad)
         }
-        return res.status(200).json({ data:parsedProducto, exito: true })
+        return res.status(200).json({ data: parsedProducto, exito: true })
 
     } catch (err) {
         console.error(err)
@@ -236,7 +236,7 @@ export const bulkUpload = async (req, res) => {
             return {
                 nombre_producto: prod.nombre_producto || prod.nombre,
                 categoria: prod.categoria,
-                precio: Number(prod.precio), 
+                precio: Number(prod.precio),
                 capacidad: Array.isArray(prod.capacidad)
                     ? prod.capacidad.map(String)
                     : prod.capacidad ? [String(prod.capacidad)] : [],
