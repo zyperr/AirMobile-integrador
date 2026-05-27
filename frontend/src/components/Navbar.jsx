@@ -1,18 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect,useContext } from "react";
 import { data, Link, useNavigate } from "react-router-dom";
 import "../style/home.css";
 import "../style/navbar.css";
 import { useAuth } from "../context/AuthContext";
+import { CarritoContext } from "../context/CarritoContext";
 import { useApi } from "../hooks/useApi";
 import { ProductSearchCard } from "./ProductSearchCard";
 
 
-export default function Navbar({ carrito = [] }) {
+export default function Navbar() {
 
     const [menu, setMenu] = useState(false);
     const [search, setSearch] = useState("");
     const [products, setProducts] = useState([])
     const { estaAutenticado, logout } = useAuth();
+    const { cartItems } = useContext(CarritoContext);
 
 
     const navigate = useNavigate(); // Hook de React Router para cambiar de página
@@ -136,16 +138,20 @@ export default function Navbar({ carrito = [] }) {
                     )}
 
                     {/* CARRITO CON BURBUJA BOOTSTRAP */}
-                    <div className="position-relative" style={{ cursor: "pointer" }}>
+                    <Link
+                        to="/carrito"
+                        className="position-relative text-dark"
+                        style={{ cursor: "pointer" }}
+                    >
                         <i className="bi bi-cart fs-5 text-dark"></i>
                         {/* Clases mágicas de Bootstrap para el badge */}
                         <span
                             className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary"
                             style={{ fontSize: "0.65rem", padding: "0.3em 0.45em" }}
                         >
-                            {carrito.length > 0 ? carrito.length : 0}
+                            {cartItems.length > 0 ? cartItems.length : 0}
                         </span>
-                    </div>
+                    </Link>
                 </div>
             </div>
             {/* ENLACES MÓVILES (Se despliega hacia abajo) */}

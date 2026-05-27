@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
+import Carrito from "./pages/Carrito";
 import Product from "./pages/Product";
 import CatalogoDeProductos from "./pages/CatalogoDeProductos";
 import Footer from "./components/Footer";
@@ -22,6 +23,7 @@ function App() {
         <Route path="/registro" element={<Registro />} />
         <Route path="/recuperar-password" element={<RecuperarContraseña />} />
         <Route path="/perfil-usuario/" element={<PerfilUsuario />} />
+        <Route path="/carrito" element={<Carrito />} />
       </Routes>
       <Footer />
     </BrowserRouter>

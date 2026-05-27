@@ -13,6 +13,8 @@ import { categoriasValidasParaCapacidad } from "../../../backend/src/schemas/sch
 import { BtnAccion } from "../components/BtnAccion.jsx";
 import { DescripcionProducto } from "../components/DescripcionProducto.jsx";
 import { ProductosRelacionados } from "../components/ProductosRelacionados.jsx";
+import { SkeletonLoader } from "../components/SkeletonLoader.jsx";
+import MensajeSinResultados from "../components/MensajeSinResultado.jsx";
 
 
 export default function Product() {
@@ -38,6 +40,8 @@ export default function Product() {
       const resultado = await ejecutarPeticion(endpoint.concat(id), {
         method: "GET",
       })
+
+      setProducts(null);
       if (resultado.exito) {
         setProducts(resultado.data)
       }
@@ -112,10 +116,19 @@ export default function Product() {
         <div className="col-9 mt-2">
           <DescripcionProducto descripcion={products.data?.descripcion} />
         </div>
-        <ProductosRelacionados
-          categoria={products.data?.categoria}
-          idActual={products.data?.id}
-        />
+
+        {
+          (isLoading || products === null)?(
+            <SkeletonLoader cantidad={4}/>          )
+            :(
+              <ProductosRelacionados
+                      categoria={products.data?.categoria}
+                      idActual={products.data?.id}
+                    />
+            ) 
+            
+        }
+        
       </div>
     </section>
   );

@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom';
+import { useContext } from 'react';
 import '../style/CartaDeProductos.css';
+import { CarritoContext } from '../context/CarritoContext';
 
 const ProductCard = ({ id,nombreDeProducto, condicion, precio, capacidad = [], imagen_url }) => {
+const { addToCart } = useContext(CarritoContext);
   // Validación por si capacidad viene como texto (string) desde la base de datos
   const capacidadFormateada = Array.isArray(capacidad) ? capacidad.join(', ') : capacidad;
   
@@ -53,12 +56,28 @@ const ProductCard = ({ id,nombreDeProducto, condicion, precio, capacidad = [], i
 
             {/* Le bajamos el tamaño con fs-5 (o puedes usar style={{ fontSize: "18px" }}) */}
             <span className="fw-bold text-dark fs-5 text-truncate" title={`$${precio}`}>
-              ${precio}
+              ${Number(precio).toFixed(2)}
             </span>
 
             {/* Agregamos text-nowrap y ajustamos el padding (px-2 py-1) */}
-            <button  className="btn btn-primary fw-semibold custom-view-btn btn-sm text-nowrap px-2 py-1">
-              View Details
+            <button
+              className="btn btn-primary fw-semibold custom-view-btn btn-sm text-nowrap px-2 py-1"
+              onClick={(e) => {
+
+                e.preventDefault();
+
+                addToCart({
+                  id,
+                  nombreDeProducto,
+                  precio,
+                  imagen: imagen_url[0],
+                  condicion,
+                  capacidad: capacidadFormateada
+                });
+
+              }}
+            >
+              Añadir
             </button>
 
           </div>
