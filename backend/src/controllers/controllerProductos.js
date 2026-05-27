@@ -10,7 +10,7 @@ import Joi from "joi";
 
 export const obtenerProductos = async (req, res) => {
     const { error, value } = schemaFiltrosProductos.validate(req.query);
-    console.log(value)
+
     if (error) {
         return res.status(400).json({
             exito: false,
@@ -19,8 +19,7 @@ export const obtenerProductos = async (req, res) => {
         });
     }
     try {
-        console.log(value)
-
+        
         const filtros = {
             categoria: value.categoria,
             condicion: value.condicion,
