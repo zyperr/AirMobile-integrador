@@ -15,6 +15,8 @@ router.post("/crear-factura",verificarToken,crearFactura)
 //recibe el id de la factura por params 
 router.get("/obtener-factura/:id",verificarToken,obtenerFactura);
 
+
+//obtiene todas las facturas del sistema admin
 router.get("/obtener-facturas",verificarToken,obtenerTodasLasFacturas);
 
 //recibe el id de la factura por params y devuelve el detalle de la factura con los productos comprados, cantidades y precios
