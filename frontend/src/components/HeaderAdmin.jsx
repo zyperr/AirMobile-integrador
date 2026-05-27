@@ -26,16 +26,7 @@ const HeaderAdmin = () => {
             {/* Lado derecho: íconos + perfil */}
             <div className="d-flex align-items-center gap-3">
 
-                {/* Campana */}
-                <button className="header-icono-btn">
-                    <i className="bi bi-bell" />
-                </button>
-
-                {/* Configuraciones */}
-                <button className="header-icono-btn">
-                    <i className="bi bi-gear" />
-                </button>
-
+                
                 {/* Separador */}
                 <div className="header-separador" />
 

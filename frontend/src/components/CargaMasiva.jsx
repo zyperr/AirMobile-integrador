@@ -49,7 +49,7 @@ const CargaMasivaAdmin = () => {
                 {/* TEXTO */}
                 <h3 className="carga-titulo">Carga masiva de inventario</h3>
                 <p className="carga-subtitulo">
-                    Arrastra y suelta aquí tu archivo Excel o CSV para
+                    Arrastra y suelta aquí tu archivo Excel,CSV o JSON para
                     actualizar los niveles de existencias de forma masiva.
                 </p>
 

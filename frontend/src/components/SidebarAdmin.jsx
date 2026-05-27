@@ -9,7 +9,7 @@ const SidebarAdmin = () => {
      // Lista de items del menu principal con su iconos.
 
     const menuitems = [
-        {nombre: "Inicio", icono: "bi-grid" },
+        {nombre: "Administracion", icono: "bi-grid" },
         {nombre: "inventario", icono: "bi-archive"},
         {nombre: "Ordenes", icono: "bi-cart3"},
     ];
