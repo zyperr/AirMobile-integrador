@@ -52,6 +52,7 @@
 
 /* Formato de las burbujas de diálogo */
 .msg-bubble {
+  text-align: left;
   max-width: 82% !important;
   font-size: 14px !important;
   line-height: 1.4 !important;

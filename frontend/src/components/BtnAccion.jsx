@@ -16,6 +16,7 @@ export const BtnAccion = ({
             {...rest}
             onClick={onClick}
             className={`btn w-100 py-3 fw-semibold rounded-3 mb-3 ${activo ? colorActivo : colorDefault}`}
+            disabled={activo}
             style={{ fontSize: "1rem", transition: "background 0.3s" }}
         >
             {activo ? (

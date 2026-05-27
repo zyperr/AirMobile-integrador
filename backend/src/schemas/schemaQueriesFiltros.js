@@ -13,13 +13,13 @@ export const schemaFiltrosProductos = Joi.object({
     }),
 
     // El precio mínimo debe ser un número mayor o igual a 0
-    precioMin: Joi.number().min(0).optional().messages({
+    precioMin: Joi.number().empty('').min(0).optional().messages({
         'number.base': 'El precio mínimo debe ser un valor numérico.',
         'number.min': 'El precio mínimo no puede ser negativo.'
     }),
 
     // El precio máximo debe ser numérico
-    precioMax: Joi.number().min(0).optional().messages({
+    precioMax: Joi.number().empty('').min(0).optional().messages({
         'number.base': 'El precio máximo debe ser un valor numérico.',
         'number.min': 'El precio máximo no puede ser negativo.'
     }),
@@ -34,13 +34,13 @@ export const schemaFiltrosProductos = Joi.object({
         'any.only': 'La condición no es válida. Solo se permite: {#valids}.'
     }),
 
-    page: Joi.number().integer().min(1).optional().messages({
+    page: Joi.number().integer().empty('').default(1).min(1).optional().messages({
         'number.base': 'La página debe ser un número.',
         'number.integer': 'La página debe ser un número entero sin decimales.',
         'number.min': 'La página debe ser al menos 1.'
     }),
 
-    orden: Joi.string().valid(...ordenValidos).default("asc").optional().messages({
+    orden: Joi.string().valid(...ordenValidos).default(ordenValidos[1]).optional().messages({
         'string.base': 'El orden debe ser un texto.',
         'any.only': 'El orden no es valido. Solo se permite: {#valids}.'
     }),
@@ -53,13 +53,13 @@ export const schemaFiltrosProductos = Joi.object({
         'any.only': 'La capacidad para filtrar no es válida.'
     }).optional(),
 
-    limit: Joi.number().integer().min(1).max(100).default(10).optional().messages({
+    limit: Joi.number().integer().empty('').min(1).max(100).default(10).optional().messages({
         'number.base': 'El límite debe ser un número.',
         'number.integer': 'El límite debe ser un número entero sin decimales.',
         'number.min': 'El límite debe ser al menos 1.',
         'number.max': 'El límite debe ser al menos 100.'
     }),
-    offset: Joi.number().integer().min(0).optional().messages({
+    offset: Joi.number().integer().empty('').min(0).optional().messages({
         'number.base': 'El desplazamiento debe ser un número.',
         'number.integer': 'El desplazamiento debe ser un número entero sin decimales.',
         'number.min': 'El desplazamiento debe ser al menos 0.'
