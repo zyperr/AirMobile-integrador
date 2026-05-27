@@ -14,7 +14,7 @@ export default function Navbar() {
     const [search, setSearch] = useState("");
     const [products, setProducts] = useState([])
     const { estaAutenticado, logout } = useAuth();
-    const { cartItems } = useContext(CarritoContext);
+    const { cartItems,cartCount } = useContext(CarritoContext);
 
 
     const navigate = useNavigate(); // Hook de React Router para cambiar de página
@@ -149,7 +149,7 @@ export default function Navbar() {
                             className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary"
                             style={{ fontSize: "0.65rem", padding: "0.3em 0.45em" }}
                         >
-                            {cartItems.length > 0 ? cartItems.length : 0}
+                            {cartCount > 0 ? cartCount : 0}
                         </span>
                     </Link>
                 </div>
