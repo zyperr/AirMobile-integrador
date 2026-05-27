@@ -15,13 +15,15 @@
   align-items: center !important;
   justify-content: center !important;
   border: none !important;
-  background-color: #0B5ED7 !important; /* Negro Premium */
+  background-color: #0B5ED7 !important;
+  /* Negro Premium */
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease !important;
 }
 
 .airmobile-chat-btn:hover {
   transform: scale(1.08);
-  background-color: #074197 !important; /* Variación gris Apple */
+  background-color: #074197 !important;
+  /* Variación gris Apple */
 }
 
 .airmobile-chat-btn:active {
@@ -46,7 +48,8 @@
 
 /* Contenedor de mensajes interno */
 .airmobile-chat-body {
-  background-color: #dfdfdf !important; /* Fondo gris claro Apple */
+  background-color: #dfdfdf !important;
+  /* Fondo gris claro Apple */
   flex-grow: 1 !important;
 }
 
@@ -56,18 +59,19 @@
   max-width: 82% !important;
   font-size: 14px !important;
   line-height: 1.4 !important;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
 }
 
 .user-bubble {
-  background-color: #0071e3 !important; /* Azul iOS clásico */
+  background-color: #0071e3 !important;
+  /* Azul iOS clásico */
   border-radius: 16px 16px 16px 16px !important;
 }
 
 .bot-bubble {
   background-color: #ffffff !important;
   border-radius: 16px 16px 16px 16px !important;
-  border: 1px solid rgba(0,0,0,0.04) !important;
+  border: 1px solid rgba(0, 0, 0, 0.04) !important;
 }
 
 /* Estilo para los inputs de Bootstrap dentro del footer */
@@ -76,10 +80,31 @@
   box-shadow: 0 0 0 0.25rem rgba(0, 113, 227, 0.25) !important;
 }
 
+/* Ajustes para el texto parseado del bot */
+.markdown-container p:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-container ul {
+  padding-left: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.markdown-container li {
+  margin-bottom: 0.25rem;
+}
+
 /* Animación de entrada suave */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(15px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-fade-in {

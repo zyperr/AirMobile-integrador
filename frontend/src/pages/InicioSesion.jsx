@@ -34,7 +34,6 @@ const InicioSesion = () => {
 
 
             login(resultado.data.token);
-            setTimeout(() => { window.location.href = "/"; }, 3000);
         }
     };
 

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useN8nChat } from '../hooks/useN8nChat'; // Ajusta la ruta según tu estructura
 import { ChatInput } from './ChatInput';
+import ReactMarkdown from 'react-markdown';
 import '../style/N8nChat.css';
 
 export const N8nChat = () => {
@@ -48,13 +49,16 @@ export const N8nChat = () => {
                 className={`d-flex mb-2 ${msg.sender === 'user' ? 'justify-content-end' : 'justify-content-start'}`}
               >
                 <div
-                  className={`p-2 px-3 rounded-3 msg-bubble ${
-                    msg.sender === 'user'
-                      ? 'bg-primary text-white user-bubble'
-                      : 'bg-light text-dark bot-bubble text-align-left'
-                  }`}
+                  className={`p-2 px-3 rounded-3 msg-bubble markdown-container ${msg.sender === 'user'
+                    ? 'bg-primary text-white user-bubble'
+                    : 'bg-light text-dark bot-bubble text-align-left'
+                    }`}
                 >
-                  {msg.text}
+                  {msg.sender === 'bot' ? (
+                    <ReactMarkdown >
+                      {msg.text}
+                    </ReactMarkdown>
+                  ) : (msg.text)}
                 </div>
               </div>
             ))}
