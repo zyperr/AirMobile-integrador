@@ -1,13 +1,13 @@
 import React, { Fragment, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import "../style/Registro.css";
-import { ErrorCard } from '../components/ErrorCard';
-import { InputGenerico } from '../components/InputGenerico';
-import InputPassword from '../components/InputPassword';
-import { BtnForm } from '../components/BtnForm';
-import { BadgeSeguro } from '../components/BadgeSeguro';
+import { ErrorCard } from '../components/common/ErrorCard';
+import { InputGenerico } from '../components/common/InputGenerico';
+import InputPassword from '../components/common/InputPassword';
+import { BtnForm } from '../components/common/BtnForm';
+import { BadgeSeguro } from '../components/common/BadgeSeguro';
 import { Link } from 'react-router-dom';
-import { SuccessCard } from '../components/SuccessCard';
+import { SuccessCard } from '../components/common/SuccessCard';
 import { useApi } from '../hooks/useApi';
 import { useAuth } from '../context/AuthContext';
 

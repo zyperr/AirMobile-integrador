@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useApi } from '../hooks/useApi';
-import InputPassword from "../components/InputPassword";
-import HistorialFacturas from "../components/HistorialFacturas";
-import { SuccessCard } from "../components/SuccessCard";
+import InputPassword from "../components/common/InputPassword";
+import HistorialFacturas from "../components/cuenta/HistorialFacturas";
+import { SuccessCard } from "../components/common/SuccessCard";
 import { useAuth } from "../context/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
-import ProductCard from "../components/CartaDeProductos";
+import ProductCard from "../components/productos/CartaDeProductos";
 
 
 const PerfilUsuario = () => {

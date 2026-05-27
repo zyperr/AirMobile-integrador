@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { useApi } from '../hooks/useApi';
-import Paginacion from "./Paginacion";
+import { useApi } from '../../hooks/useApi';
+import Paginacion from "../common/Paginacion";
+
 
 
 // Recibimos 'endpointFetch' como propiedad para que sea dinámico

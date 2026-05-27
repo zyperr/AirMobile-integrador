@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import '../style/CartaDeProductos.css';
-import BotonDeseados from './BotonDeseados'; // Asegúrate de que la ruta sea la correcta
+import '../../style/CartaDeProductos.css';
+import BotonDeseados from '../productos/BotonDeseados'; // Asegúrate de que la ruta sea la correcta
 
 const ProductCard = ({ id, nombreDeProducto, condicion, precio, capacidad = [], imagen_url , onRemover}) => {
   // Validación por si capacidad viene como texto (string) desde la base de datos

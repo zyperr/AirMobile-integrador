@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { data, Link, useNavigate } from "react-router-dom";
-import "../style/home.css";
-import "../style/navbar.css";
-import { useAuth } from "../context/AuthContext";
-import { useApi } from "../hooks/useApi";
-import { ProductSearchCard } from "./ProductSearchCard";
+import "../../style/home.css";
+import "../../style/navbar.css";
+import { useAuth } from "../../context/AuthContext";
+import { useApi } from "../../hooks/useApi";
+import { ProductSearchCard } from "../productos/ProductSearchCard";
 
 
 export default function Navbar({ carrito = [] }) {

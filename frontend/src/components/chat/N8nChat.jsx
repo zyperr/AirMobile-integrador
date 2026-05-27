@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { useN8nChat } from '../hooks/useN8nChat'; // Ajusta la ruta según tu estructura
-import { ChatInput } from './ChatInput';
+import { useN8nChat } from '../../hooks/useN8nChat'; // Ajusta la ruta según tu estructura
+import { ChatInput } from '../chat/ChatInput';
 import ReactMarkdown from 'react-markdown';
-import '../style/N8nChat.css';
+import '../../style/N8nChat.css';
 
 export const N8nChat = () => {
   const [isOpen, setIsOpen] = useState(false);

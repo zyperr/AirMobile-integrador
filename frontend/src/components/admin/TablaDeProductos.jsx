@@ -1,8 +1,7 @@
 
 // Muestra: imagen, nombre, variante, badge de estado y precio
 
-import BadgeEstado from "./BadgeEstado";
-
+import BadgeEstado from "../common/BadgeEstado"
 // Datos de ejemplo — después se reemplaza por datos reales de la API
 const productosEjemplo = [
     {

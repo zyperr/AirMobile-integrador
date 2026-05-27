@@ -1,12 +1,12 @@
 import { useState } from "react";
 import "../style/Registro.css";
 import { Link } from "react-router-dom";
-import { InputGenerico } from "../components/InputGenerico";
-import InputPassword from "../components/InputPassword";
-import { PasswordStrengthBar } from "../components/PasswordStrengthBar";
-import { SuccessCard } from "../components/SuccessCard";
-import { BadgeSeguro } from "../components/BadgeSeguro";
-import { BtnForm } from "../components/BtnForm";
+import { InputGenerico } from "../components/common/InputGenerico";
+import InputPassword from "../components/common/InputPassword";
+import { PasswordStrengthBar } from "../components/common/PasswordStrengthBar";
+import { SuccessCard } from "../components/common/SuccessCard";
+import { BadgeSeguro } from "../components/common/BadgeSeguro";
+import { BtnForm } from "../components/common/BtnForm";
 import { useForm } from "react-hook-form";
 import React from "react";
 import { useApi } from "../hooks/useApi";
