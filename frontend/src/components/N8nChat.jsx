@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useN8nChat } from '../hooks/useN8nChat'; // Ajusta la ruta según tu estructura
+import { useN8nChat } from '../hooks/useN8nChat';
 import { ChatInput } from './ChatInput';
 import ReactMarkdown from 'react-markdown';
 import '../style/N8nChat.css';

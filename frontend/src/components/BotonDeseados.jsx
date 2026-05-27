@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useApi } from '../hooks/useApi';
 
+
+
 export default function BotonDeseados({ idProducto, onRemover = () => { } }) {
 
 
@@ -9,6 +11,7 @@ export default function BotonDeseados({ idProducto, onRemover = () => { } }) {
     const { ejecutarPeticion } = useApi();
 
     const { ejecutarPeticion: verificarProductoEnDeseos } = useApi();
+
 
     useEffect(() => {
         const verificarDeseado = async () => {
