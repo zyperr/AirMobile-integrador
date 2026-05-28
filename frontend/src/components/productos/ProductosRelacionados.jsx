@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useApi } from '../hooks/useApi';
+import { useApi } from '../../hooks/useApi';
 import ProductCard from './CartaDeProductos';
 
 export const ProductosRelacionados = ({ categoria, idActual }) => {

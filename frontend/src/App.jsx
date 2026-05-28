@@ -2,13 +2,13 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Home from "./pages/Home";
 import Product from "./pages/Product";
 import CatalogoDeProductos from "./pages/CatalogoDeProductos";
-import Footer from "./components/Footer";
-import Navbar from "./components/Navbar";
+import Footer from "./components/layout/Footer";
+import Navbar from "./components/layout/Navbar";
 import InicioSesion from "./pages/InicioSesion";
 import Registro from "./pages/Registro";
 import { RecuperarContraseña } from "./pages/RecuperarContraseña";
 import PerfilUsuario from "./pages/PerfilUsuario";
-import {N8nChat} from "./components/N8nChat.jsx";
+import {N8nChat} from "./components/chat/N8nChat.jsx";
 import GestionAdmin from "./pages/GestionAdmin";
 
 function Layout() {

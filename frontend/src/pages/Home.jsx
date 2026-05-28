@@ -2,8 +2,8 @@ import { Link } from "react-router-dom";
 import "../style/home.css";
 import { useApi } from "../hooks/useApi.js"
 import { useEffect, useState } from "react";
-import CartaProducto from "../components/CartaDeProductos";
-import { SkeletonLoader } from "../components/SkeletonLoader.jsx";
+import CartaProducto from "../components/productos/CartaDeProductos.jsx";
+import { SkeletonLoader } from "../components/common/SkeletonLoader.jsx";
 
 export default function Home() {
 

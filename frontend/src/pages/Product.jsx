@@ -4,15 +4,15 @@ import { useApi } from "../hooks/useApi";
 import "../style/home.css";
 import "../style/detalleProducto.css";
 import { React } from "react";
-import { ImageGallery } from "../components/ImageGallery";
-import { LoadingCard } from "../components/LoadingCard";
-import { ErrorCard } from "../components/ErrorCard";
-import { Condition } from "../components/Condition";
-import { CapacitySelector } from "../components/CapacitySelector";
+import { ImageGallery } from "../components/productos/ImageGallery.jsx";
+import { LoadingCard } from "../components/common/LoadingCard";
+import { ErrorCard } from "../components/common/ErrorCard";
+import { Condition } from "../components/productos/Condition.jsx";
+import { CapacitySelector } from "../components/productos/CapacitySelector.jsx";
 import { categoriasValidasParaCapacidad } from "../../../backend/src/schemas/schemaProductos.js"
-import { BtnAccion } from "../components/BtnAccion.jsx";
-import { DescripcionProducto } from "../components/DescripcionProducto.jsx";
-import { ProductosRelacionados } from "../components/ProductosRelacionados.jsx";
+import { BtnAccion } from "../components/common/BtnAccion.jsx"
+import { DescripcionProducto } from "../components/productos/DescripcionProducto.jsx";
+import { ProductosRelacionados } from "../components/productos/ProductosRelacionados.jsx";
 
 
 export default function Product() {

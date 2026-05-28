@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
-import '../style/CartaDeProductos.css';
-import BotonDeseados from './BotonDeseados'; // Asegúrate de que la ruta sea la correcta
+import '../../style/CartaDeProductos.css';
+import BotonDeseados from '../productos/BotonDeseados'; // Asegúrate de que la ruta sea la correcta
 
-import { useAuth } from '../context/AuthContext'; // Importamos el hook para acceder al estado de autenticación
+import { useAuth } from '../../context/AuthContext'; // Importamos el hook para acceder al estado de autenticación
 
 const ProductCard = ({ id, nombreDeProducto, condicion, precio, capacidad = [], imagen_url , onRemover}) => {
   // Validación por si capacidad viene como texto (string) desde la base de datos

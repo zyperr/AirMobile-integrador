@@ -1,8 +1,8 @@
-import SidebarAdmin from "../components/SidebarAdmin";
-import HeaderAdmin from "../components/HeaderAdmin";
-import TablaDeProductos from "../components/TablaDeProductos";
+import SidebarAdmin from "../components/admin/SidebarAdmin";
+import HeaderAdmin from "../components/admin/HeaderAdmin";
+import TablaDeProductos from "../components/admin/TablaDeProductos";
 import "../style/GestionAdmin.css";
-import CargaMasiva from "../components/CargaMasiva";
+import CargaMasiva from "../components/admin/CargaMasiva";
 
 const GestionAdmin = () => {
     return (

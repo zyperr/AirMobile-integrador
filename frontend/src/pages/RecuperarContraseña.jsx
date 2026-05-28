@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { set, useForm, Watch } from "react-hook-form";
-import { InputGenerico } from "../components/InputGenerico";
-import { BtnForm } from "../components/BtnForm";
+import { InputGenerico } from "../components/common/InputGenerico";
+import { BtnForm } from "../components/common/BtnForm";
 import { useApi } from "../hooks/useApi";
-import { ErrorCard } from "../components/ErrorCard";
+import { ErrorCard } from "../components/common/ErrorCard";
 import { Link } from "react-router-dom";
-import InputPassword from "../components/InputPassword";
-import { PasswordStrengthBar } from "../components/PasswordStrengthBar";
-import { SuccessCard } from "../components/SuccessCard";
+import InputPassword from "../components/common/InputPassword";
+import { PasswordStrengthBar } from "../components/common/PasswordStrengthBar";
+import { SuccessCard } from "../components/common/SuccessCard";
 export const RecuperarContraseña = () => {
     const [saveEmail, setSaveEmail] = useState("")
     const [paso, setPaso] = useState(1)

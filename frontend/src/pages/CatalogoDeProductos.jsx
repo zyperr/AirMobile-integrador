@@ -1,15 +1,15 @@
 
-import CartaDeProductos from "../components/CartaDeProductos";
-import Paginacion from "../components/Paginacion";
+import CartaDeProductos from "../components/productos/CartaDeProductos";
+import Paginacion from "../components/common/Paginacion";
 
 import "../style/catalogoDeProductos.css";
 import { useEffect, useState } from "react";
 
 import { CAPACIDADES_PERMITIDAS, categoriasValidas, CONDICIONES_PERMITIDAS } from "../../../backend/src/schemas/schemaProductos";
-import FiltroRadioGroup from "../components/FiltroRadioGroup";
-import MensajeSinResultados from "../components/MensajeSinResultado";
+import FiltroRadioGroup from "../components/productos/FiltroRadioGroup";
+import MensajeSinResultados from "../components/common/MensajeSinResultado";
 import { useApi } from "../hooks/useApi";
-import { SkeletonLoader } from "../components/SkeletonLoader";
+import { SkeletonLoader } from "../components/common/SkeletonLoader";
 
 
 

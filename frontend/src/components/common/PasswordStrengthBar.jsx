@@ -1,4 +1,4 @@
-import { getPasswordStrength } from "../utils/getPasswordStrength"
+import { getPasswordStrength } from "../../utils/getPasswordStrength"
 
 
 export const PasswordStrengthBar = ({password}) => {
