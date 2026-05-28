@@ -31,7 +31,7 @@ router.get('/perfil', verificarToken, (req, res) => {
     // Si llegó hasta aquí, es porque el middleware lo dejó pasar
     res.json({
         mensaje: "¡TOKEN VERIFICADO!",
-        datosDelToken: req.usuario // Aquí están el ID y el email que guardamos en el token
+        data: req.user // Aquí están el ID y el email que guardamos en el token
     });
 });
 

@@ -65,7 +65,9 @@ export const login = async (req, res) => {
 
         const tokenPayload = {
             id: usuarioEncontrado.id,
-            rol: usuarioEncontrado.rol
+            rol: usuarioEncontrado.rol,
+            email: usuarioEncontrado.email,
+            nombre: usuarioEncontrado.nombre
         };
 
         const token = jwt.sign(
@@ -204,10 +206,16 @@ export const obtenerPerfil = async (req, res) => {
             return res.status(404).json({ exito: false, message: "Usuario no encontrado" });
         }
 
+        const payload = {
+            id: usuario.id, 
+            nombre: usuario.nombre, 
+            email: usuario.email,
+            rol: usuario.rol
+        }
 
         res.status(200).json({
             exito: true,
-            data: { id: usuario.id, nombre: usuario.nombre, email: usuario.email },
+            data: payload,
             message: "Perfil del usuario"
         });
 

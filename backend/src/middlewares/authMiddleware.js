@@ -23,6 +23,7 @@ export const verificarToken = (req, res, next) => {
     try {
         const user = jwt.verify(token, SECRET_KEY);
         req.user = user; // Guardamos el payload (id, email) en la request
+        console.log(user)
         next();
     } catch (error) {
         // Si el token expiró o fue manipulado, cae directamente aquí
