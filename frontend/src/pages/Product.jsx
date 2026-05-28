@@ -10,9 +10,12 @@ import { ErrorCard } from "../components/common/ErrorCard";
 import { Condition } from "../components/productos/Condition.jsx";
 import { CapacitySelector } from "../components/productos/CapacitySelector.jsx";
 import { categoriasValidasParaCapacidad } from "../../../backend/src/schemas/schemaProductos.js"
-import { BtnAccion } from "../components/common/BtnAccion.jsx"
+import { BtnAccion } from "../components/common/BtnAccion.jsx";
 import { DescripcionProducto } from "../components/productos/DescripcionProducto.jsx";
 import { ProductosRelacionados } from "../components/productos/ProductosRelacionados.jsx";
+import { SkeletonLoader } from "../components/common/SkeletonLoader.jsx";
+import MensajeSinResultados from "../components/common/MensajeSinResultado.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 
 
 export default function Product() {
@@ -23,6 +26,7 @@ export default function Product() {
   const [added, setAdded] = useState(false);
   const [capacidad, setCapacidad] = useState(null);
 
+  const { estaAutenticado } = useAuth();
 
   const handleAdd = () => {
     setAdded(true);
@@ -38,6 +42,8 @@ export default function Product() {
       const resultado = await ejecutarPeticion(endpoint.concat(id), {
         method: "GET",
       })
+
+      setProducts(null);
       if (resultado.exito) {
         setProducts(resultado.data)
       }
@@ -96,26 +102,37 @@ export default function Product() {
               </>
             )}
           </div>
-
-          {/* Botón de añadir al carrito */}
           <div className="mt-auto">
-            <BtnAccion
-              activo={added}
-              onClick={handleAdd}
-              disabled={isLoading}
-            />
-          </div>
+            {estaAutenticado ? (
+              <BtnAccion
 
+                activo={added}
+                onClick={handleAdd}
+                disabled={isLoading}
+              />
+            ) : (
+              <ErrorCard errorServidor={"Necesita tener una cuenta para añadir al carrito"} />
+            )}
+          
+          </div>
         </div>
 
         {/* FILA INFERIOR: Descripción */}
         <div className="col-9 mt-2">
           <DescripcionProducto descripcion={products.data?.descripcion} />
         </div>
-        <ProductosRelacionados
-          categoria={products.data?.categoria}
-          idActual={products.data?.id}
-        />
+
+        {
+          (isLoading || products === null) ? (
+            <SkeletonLoader cantidad={4} />)
+            : (
+              <ProductosRelacionados
+                categoria={products.data?.categoria}
+                idActual={products.data?.id}
+              />
+            )
+        }
+
       </div>
     </section>
   );

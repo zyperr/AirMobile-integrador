@@ -12,9 +12,12 @@ export const useApi = () => {
         const URL = urlBase.concat(endpoint)
         console.log(URL)
         try {
+            const esFormData = options.body instanceof FormData;
+            const headersBase = esFormData ? {} : { 'Content-Type': 'application/json' };
+
             const response = await fetch(URL, {
                 headers: {
-                    'Content-Type': 'application/json',
+                    ...headersBase,
                     ...options.headers,
                 },
                 ...options

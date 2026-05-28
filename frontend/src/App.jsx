@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Home from "./pages/Home";
+import Carrito from "./pages/Carrito";
 import Product from "./pages/Product";
 import CatalogoDeProductos from "./pages/CatalogoDeProductos";
 import Footer from "./components/layout/Footer";
@@ -10,11 +11,11 @@ import { RecuperarContraseña } from "./pages/RecuperarContraseña";
 import PerfilUsuario from "./pages/PerfilUsuario";
 import {N8nChat} from "./components/chat/N8nChat.jsx";
 import GestionAdmin from "./pages/GestionAdmin";
-
+import { useAuth } from "./context/AuthContext.jsx";
 function Layout() {
 
   const location = useLocation();
-    
+    const {estaAutenticado} = useAuth();
     // Páginas donde no se usa Navbar ni Footer
     const esAdmin = location.pathname === "/admin";
 
@@ -30,6 +31,10 @@ function Layout() {
         <Route path="/recuperar-password" element={<RecuperarContraseña />} />
         <Route path="/perfil-usuario/" element={<PerfilUsuario />} />
         <Route path="/admin" element={<GestionAdmin />} />
+        {
+          estaAutenticado && <Route path="/carrito" element={<Carrito />} />
+        }
+        
       </Routes>
         <N8nChat/>
       {!esAdmin && <Footer />}
