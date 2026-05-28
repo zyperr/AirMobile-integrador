@@ -1,13 +1,17 @@
 import { Link } from 'react-router-dom';
+import { useContext } from 'react';
+import '../../style/CartaDeProductos.css';
+import { CarritoContext } from '../../context/CarritoContext';
 import '../../style/CartaDeProductos.css';
 import BotonDeseados from '../productos/BotonDeseados'; // Asegúrate de que la ruta sea la correcta
 
 import { useAuth } from '../../context/AuthContext'; // Importamos el hook para acceder al estado de autenticación
 
-const ProductCard = ({ id, nombreDeProducto, condicion, precio, capacidad = [], imagen_url , onRemover}) => {
+const ProductCard = ({ id, nombreDeProducto, condicion, precio, capacidad = [], imagen_url ,onRemover}) => {
+  const { addToCart } = useContext(CarritoContext);
   // Validación por si capacidad viene como texto (string) desde la base de datos
   const capacidadFormateada = Array.isArray(capacidad) ? capacidad.join(', ') : capacidad;
-  
+
 
   const { estaAutenticado } = useAuth();
 
@@ -16,7 +20,7 @@ const ProductCard = ({ id, nombreDeProducto, condicion, precio, capacidad = [], 
   return (
     // Agregamos 'position-relative' aquí para que el botón flote relativo a la tarjeta
     <div className="card border-0 h-100 custom-product-card shadow-sm d-flex flex-column position-relative">
-      
+
       {/* BOTÓN DE FAVORITOS
         Debe ir FUERA del <Link> para evitar que el clic nos lleve a otra página.
         Como nuestro BotonDeseos tiene position-absolute, se pondrá en la esquina sin empujar nada.
@@ -29,7 +33,7 @@ const ProductCard = ({ id, nombreDeProducto, condicion, precio, capacidad = [], 
 
       {/* Todo lo demás envuelto en el Link, como lo tenías */}
       <Link className='text-decoration-none text-dark flex-grow-1 d-flex flex-column' to={`/producto/${id}`}>
-        
+
         {/* Contenedor de imagen */}
         <div className="custom-img-container position-relative text-center mt-3">
           <img
@@ -64,7 +68,8 @@ const ProductCard = ({ id, nombreDeProducto, condicion, precio, capacidad = [], 
 
           {/* Descripción */}
           <div className="text-secondary mb-3 text-start" style={{ fontSize: "14px" }}>
-             <span className="custom-bullet mx-1">•</span> {capacidadFormateada || "N/A"}
+            
+            <span className="custom-bullet mx-1">•</span> {capacidadFormateada || "N/A"}
           </div>
 
           {/* ========================================== */}
@@ -73,19 +78,37 @@ const ProductCard = ({ id, nombreDeProducto, condicion, precio, capacidad = [], 
           <div className="d-flex justify-content-between align-items-center mt-auto pt-3 border-top gap-2">
 
             <span className="fw-bold text-dark fs-5 text-truncate" title={`$${precio}`}>
-              ${parseFloat(precio).toFixed(2)}
+              ${Number(precio).toFixed(2)}
             </span>
 
-            <button className="btn btn-primary fw-semibold custom-view-btn btn-sm text-nowrap px-3 py-1">
-              Ver Detalles
-            </button>
+            {/* Agregamos text-nowrap y ajustamos el padding (px-2 py-1) */}
+            {estaAutenticado && (
+              <button
+                className="btn btn-primary fw-semibold custom-view-btn btn-sm text-nowrap px-2 py-1"
+                onClick={(e) => {
 
-          </div>
+                  e.preventDefault();
 
-        </div>
-      </Link>
+                  addToCart({
+                    id,
+                    nombreDeProducto,
+                    precio,
+                    imagen: imagen_url[0],
+                    condicion,
+                    capacidad: capacidadFormateada
+                  });
 
-    </div>
+                }}
+              >
+                Añadir
+              </button>
+            )}
+          </div >
+
+        </div >
+      </Link >
+
+    </div >
   );
 };
 

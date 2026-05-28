@@ -181,6 +181,7 @@ const PerfilUsuario = () => {
         );
     }
 
+    console.log(datosUsuario)
     return (
         <>
             {/* OVERLAY DE NOTIFICACIÓN (Se renderiza por encima de todo) */}
