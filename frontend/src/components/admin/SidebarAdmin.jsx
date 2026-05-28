@@ -40,9 +40,7 @@ const SidebarAdmin = () => {
 
             {/* Boton de nuevo Producto */}
             <div className="sidebar-footer">
-                <button className="sidebar-btn-nuevo w-100">
-                    <i className="bi bi-plus me-2"> Nuevo Producto</i>
-                </button>
+    
 
                 {/* Links de abajo */}
                 <ul className="list-unstyled mt-3 m-0">
