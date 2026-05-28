@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useApi } from "../../hooks/useApi";
 import BadgeEstado from "../common/BadgeEstado";
@@ -80,12 +79,15 @@ const [paginaActual, setPaginaActual] = useState(1);
                     />
                 ))
             )}
-            
 
             {/* LINK VER TODOS */}
             <div className="tabla-footer">
-                < Paginacion paginaActual={paginaActual} cambiarPagina={cambiarPagina} tienePaginaAnterior={productos?.paginacion?.tienePaginaAnterior} tienePaginaSiguiente={productos?.paginacion?.tienePaginaSiguiente} />
-
+                <Paginacion 
+                    paginaActual={paginaActual} 
+                    cambiarPagina={cambiarPagina} 
+                    tienePaginaAnterior={productos?.paginacion?.tienePaginaAnterior} 
+                    tienePaginaSiguiente={productos?.paginacion?.tienePaginaSiguiente} 
+                />
             </div>
 
         </div>

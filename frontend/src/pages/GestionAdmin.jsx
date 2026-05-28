@@ -10,7 +10,6 @@ const GestionAdmin = () => {
 
     const [modaleNuevoProducto, setModaleNuevoProducto] = useState(false);
 
-
     return (
         <div className="admin-layout">
             <SidebarAdmin />
@@ -30,7 +29,7 @@ const GestionAdmin = () => {
                         <div className="d-flex gap-2">
                             <button className="admin-btn-exportar">Exportar CSV</button>
 
-                            <button className="admin-btn-nuevo" onClick={()=> setModaleNuevoProducto(true)}>
+                            <button className="admin-btn-nuevo" onClick={()=> setModaleNuevoProducto(!modaleNuevoProducto)}>
                             <i className="bi bi-plus me-1" />Nuevo Producto
                             </button>
                         </div>
@@ -40,8 +39,7 @@ const GestionAdmin = () => {
                     {/*  Tabla de productos utiliza el componente Badge de Estados */}
                     <TablaDeProductos />
                     <CargaMasiva />
-                    < ModaleNuevoProducto  isOpen={modaleNuevoProducto} onClose={setModaleNuevoProducto (false)} />
-
+                    < ModaleNuevoProducto  isOpen={modaleNuevoProducto} onClose={() => setModaleNuevoProducto (false)} />
                 </main>
             </div>
         </div>
