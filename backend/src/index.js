@@ -28,6 +28,10 @@ const corsOptions = {
 
 
 const PORT = 3000;
+const api = "/api";
+
+
+
 const app = expreess();
 
 app.use(cors(corsOptions));
@@ -36,18 +40,18 @@ app.use(cors(corsOptions));
 
 app.use(expreess.json())
 
-app.use("/api/usuarios", routesUsuarios);
-app.use("/api/productos",routesProductos)
-app.use("/api/carrito", routesCarrito);
+app.use(`${api}/usuarios`, routesUsuarios);
+app.use(`${api}/productos`,routesProductos)
+app.use(`${api}/carrito`, routesCarrito);
 
-app.use("/api/recuperar-password",routeRecuperarPassword)
-app.use("/api/reset-password",routeResetPassword)
-app.use("/api/facturas", routeFacturas);
+app.use(`${api}/recuperar-password`,routeRecuperarPassword)
+app.use(`${api}/reset-password`,routeResetPassword)
+app.use(`${api}/facturas`, routeFacturas);
 
 
-app.use("/api/lista-deseados", routesListaDeseados);
+app.use(`${api}/lista-deseados`, routesListaDeseados);
 
-app.use("/api/staff",routeStaff )
+app.use(`${api}/staff`,routeStaff )
 
 app.get("", (req, res) => {
     res.send("hola");
