@@ -10,7 +10,8 @@ export const inicializarBaseDeDatos = async () => {
         password TEXT NOT NULL,
         rol TEXT DEFAULT 'cliente',
         verificado TEXT DEFAULT 'falso',
-        codigo_verificacion TEXT
+        codigo_verificacion TEXT,
+        activo INTEGER DEFAULT 1
     )`;
 
 
