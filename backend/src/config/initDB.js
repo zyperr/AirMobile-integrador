@@ -66,7 +66,7 @@ export const inicializarBaseDeDatos = async () => {
     )`;
 
     const queryRefreshToken = `
-    CREATE TABLE refresh_tokens (
+    CREATE TABLE IF NOT EXISTS refresh_tokens (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         usuario_id INTEGER NOT NULL,
         refresh_token TEXT NOT NULL UNIQUE,
