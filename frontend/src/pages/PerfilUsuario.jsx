@@ -73,7 +73,6 @@ const PerfilUsuario = () => {
 
             if (responseDeseos.exito) {
                 setListaDeseos(responseDeseos.data);
-                console.log("Lista de deseos:", responseDeseos.data);
             }
         }
 
@@ -180,7 +179,6 @@ const PerfilUsuario = () => {
         );
     }
 
-    console.log(datosUsuario)
     return (
         <>
             {/* OVERLAY DE NOTIFICACIÓN (Se renderiza por encima de todo) */}

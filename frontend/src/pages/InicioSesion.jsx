@@ -19,7 +19,7 @@ const InicioSesion = () => {
     const { ejecutarPeticion, isLoading, error } = useApi();
 
 
-    const { login } = useAuth();
+    const { login,setUsuario } = useAuth();
     const endpoint = "usuarios/login";
 
     const onSubmit = async (data) => {
@@ -31,9 +31,8 @@ const InicioSesion = () => {
         if (resultado.exito) {
             setLoginExitoso(true);
             console.log("¡Login exitoso!", resultado.data);
-
-
-            login(resultado.data.token);
+            setUsuario(resultado?.data?.data)
+            login(resultado.data.token,resultado.data.refreshToken);
         }
     };
 

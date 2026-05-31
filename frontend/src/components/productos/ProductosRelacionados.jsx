@@ -23,7 +23,6 @@ export const ProductosRelacionados = ({ categoria, idActual }) => {
                     ?.filter(prod => prod.categoria === categoria && prod.id !== idActual)
                     ?.slice(0, 4);
 
-                console.log(filtrados)
                 setRelacionados(filtrados);
             }
         };

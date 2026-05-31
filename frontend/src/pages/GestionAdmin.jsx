@@ -1,5 +1,4 @@
 import SidebarAdmin from "../components/admin/SidebarAdmin";
-import HeaderAdmin from "../components/admin/HeaderAdmin";
 import TablaDeProductos from "../components/admin/TablaDeProductos";
 import "../style/GestionAdmin.css";
 import CargaMasiva from "../components/admin/CargaMasiva";
@@ -11,10 +10,9 @@ const GestionAdmin = () => {
     const [modaleNuevoProducto, setModaleNuevoProducto] = useState(false);
 
     return (
-        <div className="admin-layout">
+        <div className="admin-layout bg-light">
             <SidebarAdmin />
             <div className="admin-contenido">
-                <HeaderAdmin />
                 <main className="admin-main">
                     {/* ENCABEZADO DE LA PÁGINA */}
                     <div className="d-flex align-items-center justify-content-between mb-4">

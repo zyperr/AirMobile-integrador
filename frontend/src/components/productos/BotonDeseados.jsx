@@ -26,9 +26,7 @@ export default function BotonDeseados({ idProducto, onRemover = () => { } }) {
             });
 
             if (response.exito) {
-                // ¡Aquí está la corrección! Agregamos .data.data
                 setEsFavorito(response.data.data === true);
-                console.log(`Producto ${idProducto} en lista de deseos:`, response.data.data);
             }
         }
 
@@ -65,7 +63,6 @@ export default function BotonDeseados({ idProducto, onRemover = () => { } }) {
                 });
 
                 if (!response.exito) {
-                    console.error("Error al agregar:", response.message);
                     setEsFavorito(estadoAnterior); // Revertimos al estado original
                 }
             } else {
@@ -80,7 +77,6 @@ export default function BotonDeseados({ idProducto, onRemover = () => { } }) {
                 });
 
                 if (!response.exito) {
-                    console.error("Error al eliminar:", response.message);
                     setEsFavorito(estadoAnterior); // Revertimos al estado original
                 } else {
                     // ¡AQUÍ ESTÁ LA MAGIA! Si se borró con éxito en el backend, 
