@@ -5,8 +5,9 @@ import { schemaFiltrosProductos } from "../schemas/schemaQueriesFiltros.js";
 import { schemaActualizarProducto } from "../schemas/schemaUpdateProducto.js";
 import { procesarArchivo } from "../utils/leerArchivos.js";
 import { ROLES } from "../utils/roles.js";
-import { eliminarDeCloudinary, subirACloudinary } from "../utils/manejarImagenes.js";
+import { eliminarDeCloudinary, subirACloudinary, extraerPublicId, borrarImagenesDescartadas } from "../utils/manejarImagenes.js";
 import Joi from "joi";
+import cloudinary from "../config/cloudinarySetup.js";
 
 export const obtenerProductos = async (req, res) => {
     const { error, value } = schemaFiltrosProductos.validate(req.query);
@@ -19,7 +20,7 @@ export const obtenerProductos = async (req, res) => {
         });
     }
     try {
-        
+
         const filtros = {
             categoria: value.categoria,
             condicion: value.condicion,
@@ -168,10 +169,13 @@ export const crearProducto = async (req, res) => {
 }
 
 export const actualizarProducto = async (req, res) => {
+    console.log("BODY RECIBIDO:", req.body);
+    console.log("FILES RECIBIDOS:", req.files);
     const { error, value } = schemaActualizarProducto.validate(req.body, { abortEarly: false });
 
     if (error) {
         const erroresLimpios = error.details.map(detalle => detalle.message);
+        console.log("❌ JOI RECHAZÓ LOS DATOS POR ESTO:", erroresLimpios);
         return res.status(400).json({
             exito: false,
             message: "Por favor, corrige los siguientes errores:",
@@ -181,23 +185,76 @@ export const actualizarProducto = async (req, res) => {
 
     try {
         let dataParaActualizar = { ...value };
-
+        const idProducto = req.params.id;
 
         if (dataParaActualizar.capacidad) {
             dataParaActualizar.capacidad = JSON.stringify(dataParaActualizar.capacidad);
         }
 
-        const idProducto = req.params.id
+        // 1. OBTENEMOS EL PRODUCTO VIEJO
+        const productoViejo = await ModelProductos.getById(idProducto);
+        if (!productoViejo) {
 
-        const productoActualizado = await ModelProductos.updateProduct(idProducto, dataParaActualizar);
+            return res.status(404).json({ exito: false, message: "Producto no encontrado" });
+        }
 
+        // 2. LÓGICA DE IMÁGENES (Solo si subieron fotos nuevas)
+        if (req.body?.layout_imagenes) {
+            const layout = JSON.parse(req.body.layout_imagenes);
 
-        return res.status(200).json({ productoActualizado, exito: true, message: "El producto se actualizo con exito" })
+            await borrarImagenesDescartadas(req.body.layout_imagenes, productoViejo.imagen_url);
+
+            // 2. SUBIDA Y REORDENAMIENTO
+            const categoriaFinal = dataParaActualizar.categoria || productoViejo.categoria;
+            const nombreFinal = dataParaActualizar.nombre_producto || productoViejo.nombre_producto;
+
+            const nuevasImagenesUrls = [];
+            let fileIndex = 0; 
+
+            for (const item of layout) {
+                if (item === 'NUEVA_IMAGEN' && req.files[fileIndex]) {
+                    const file = req.files[fileIndex++];
+                    // Tu otra función útil en acción
+                    const url = await subirACloudinary(file.buffer, categoriaFinal, nombreFinal);
+                    nuevasImagenesUrls.push(url);
+                } else {
+                    nuevasImagenesUrls.push(item);
+                }
+            }
+
+            dataParaActualizar.imagen_url = JSON.stringify(nuevasImagenesUrls);
+        }
+
+        if (dataParaActualizar.layout_imagenes) {
+            delete dataParaActualizar.layout_imagenes;
+        }
+
+        // --- ¡CLAVE 2! Si después de todo, el objeto está vacío, no hacemos el UPDATE ---
+        if (Object.keys(dataParaActualizar).length === 0) {
+            return res.status(200).json({
+                productoActualizado: productoViejo,
+                exito: true,
+                message: "No hubo cambios para guardar."
+            });
+        }
+
+        const result = await ModelProductos.updateProduct(idProducto, dataParaActualizar);
+
+        if (!result.success) {
+            return res.status(404).json({ exito: false, message: result.message });
+        }
+
+        return res.status(200).json({
+            productoActualizado: dataParaActualizar,
+            exito: true,
+            message: "El producto se actualizó con éxito"
+        });
+
     } catch (err) {
-        console.error(err)
-        return res.status(500).json({ exito: false, message: "Error al actualizar un producto" })
+        console.error(err);
+        return res.status(500).json({ exito: false, message: "Error al actualizar un producto" });
     }
-}
+};
 
 
 export const eliminarProducto = async (req, res) => {
