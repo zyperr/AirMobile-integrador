@@ -36,17 +36,14 @@ export const useN8nChat = (usuarioPerfil) => {
     const [isLoading, setIsLoading] = useState(false);
 
     const sendMessage = async (userMessage) => {
-        console.log(userMessage)
         // Armamos los datos dinámicos justo antes de enviar
         const sessionData = getSessionData(usuarioPerfil);
-        console.log(sessionData.nombreCliente)
         const payload = {
             chatInput: userMessage,
             sessionId: sessionData.sessionId,
             nombreCliente: sessionData.nombreCliente
         };
         
-        console.log("Enviando a n8n:", payload);
 
         if (!userMessage.trim() || isLoading) return;
 

@@ -15,7 +15,6 @@ const ProductCard = ({ id, nombreDeProducto, condicion, precio, capacidad = [], 
 
   const { estaAutenticado } = useAuth();
 
-  console.log("Estado de autenticación en ProductCard:", estaAutenticado);
 
   return (
     // Agregamos 'position-relative' aquí para que el botón flote relativo a la tarjeta

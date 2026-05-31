@@ -70,7 +70,6 @@ export const N8nChat = () => {
     cargarPerfil();
   }, [estaAutenticado, token]);
 
-  console.log(usuarioPerfil)
   // Auto scroll para que el chat baje siempre al último mensaje
   useEffect(() => {
     if (isOpen) {

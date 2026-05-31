@@ -1,3 +1,4 @@
+
 .navbar-search {
   padding: 10px 16px;
   border-radius: 20px;
@@ -63,4 +64,48 @@
   padding: 16px;
   font-size: 14px;
   color: #777;
+}
+
+/* --- EFECTO MENÚ LATERAL (ESTILO YOUTUBE) --- */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1040;
+}
+
+.sidebar-menu {
+    position: fixed;
+    top: 0;
+    left: -280px; /* Empieza escondido a la izq */
+    width: 280px;
+    height: 100vh;
+    background-color: white;
+    z-index: 1050;
+    transition: left 0.3s ease-in-out;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.15);
+    overflow-y: auto;
+}
+
+.sidebar-user {
+    position: fixed;
+    top: 0;
+    right: -300px; /* Empieza escondido a la derecha */
+    width: 300px;
+    height: 100vh;
+    background-color: white;
+    z-index: 1050;
+    transition: right 0.3s ease-in-out;
+    box-shadow: -2px 0 8px rgba(0,0,0,0.15);
+    overflow-y: auto;
+}
+
+.sidebar-user.open{
+  right: 0 !important; 
+}
+.sidebar-menu.open {
+   left: 0 ; /* Desliza hacia adentro */
 }
