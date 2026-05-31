@@ -38,6 +38,7 @@ const GestionAdmin = () => {
                     <TablaDeProductos />
                     <CargaMasiva />
                     < ModaleNuevoProducto  isOpen={modaleNuevoProducto} onClose={() => setModaleNuevoProducto (false)} />
+
                 </main>
             </div>
         </div>
