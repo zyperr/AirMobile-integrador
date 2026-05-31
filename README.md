@@ -31,6 +31,7 @@
 - Panel de administración para gestión de productos y staff
 - Registro/login con verificación de cuenta por email
 - Recuperación de contraseña por correo
+- **Sistema de autenticación seguro con access token (15 min) + refresh token (7 días) con rotación automática**
 - Chat con asistente virtual impulsado por IA conectado a la base de datos real de productos
 
 ---
@@ -44,7 +45,7 @@
 | Turso (LibSQL) | Base de datos SQL en la nube |
 | Cloudinary | Almacenamiento de imágenes de productos |
 | Nodemailer | Envío de emails (verificación y recuperación de contraseña) |
-| JWT (jsonwebtoken) | Autenticación con tokens |
+| JWT (jsonwebtoken) | Access tokens de corta duración (15 min) |
 | bcryptjs | Hash de contraseñas |
 | Joi | Validación de schemas de entrada |
 | Multer | Subida de archivos (imágenes y CSV) |
@@ -74,7 +75,7 @@ AirMobile-integrador/
 │       │   ├── cloudinarySetup.js   # Configuración de Cloudinary
 │       │   └── initDB.js            # Inicialización de tablas
 │       ├── controllers/             # Lógica de negocio
-│       │   ├── controlerUsuario.js
+│       │   ├── controlerUsuario.js  # login, registro, refresh, logout
 │       │   ├── controllerCarrito.js
 │       │   ├── controllerFactura.js
 │       │   ├── controllerListaDeseados.js
@@ -82,46 +83,62 @@ AirMobile-integrador/
 │       │   ├── controllerProductos.js
 │       │   └── controllerStaff.js
 │       ├── middlewares/
-│       │   ├── authMiddleware.js    # Verificación JWT
+│       │   ├── authMiddleware.js    # Verificación JWT (401 en token inválido)
 │       │   ├── verificarAdmin.js    # Control de rol admin
 │       │   ├── multer.js            # Subida de archivos
 │       │   └── fileFilter.js        # Filtro de tipos de imagen
 │       ├── models/                  # Queries a la base de datos
+│       │   ├── modelUsuario.js
+│       │   ├── modelProductos.js
+│       │   ├── modelCarrito.js
+│       │   ├── modelFactura.js
+│       │   ├── modelDetalleFactura.js  # Separado de modelFactura
+│       │   ├── modelListaDeseados.js
+│       │   ├── modelStaff.js
+│       │   └── modelToken.js           # Gestión de refresh tokens
 │       ├── routes/                  # Definición de rutas
 │       ├── schemas/                 # Validaciones Joi
+│       │   ├── schemaProductos.js
+│       │   ├── schemaUpdateProducto.js
+│       │   ├── schemaQueriesFiltros.js
+│       │   ├── schemaRegistroUsuario.js
+│       │   ├── schemaLoginUsuarios.js
+│       │   ├── schemaUpdateUsuario.js
+│       │   ├── schemaVerificacion.js
+│       │   ├── schemaResetPassword.js
+│       │   ├── schemaRefreshToken.js   # Validación de tokens
+│       │   └── schemaStaff.js
 │       ├── utils/
-│       │   ├── mailer.js            # Emails de verificación y contraseña
+│       │   ├── mailer.js
 │       │   ├── descargarFacturaPDF.js
 │       │   ├── manejarImagenes.js
 │       │   ├── leerArchivos.js
 │       │   ├── estados.js
 │       │   └── roles.js
-│       ├── seed.js                  # Datos iniciales
-│       └── index.js                 # Entry point del servidor
+│       ├── seed.js
+│       └── index.js
 ├── frontend/
 │   └── src/
 │       ├── components/
-│       │   ├── admin/               # Componentes del panel admin
-│       │   ├── chat/                # Chatbot N8N
-│       │   ├── common/              # Componentes reutilizables
-│       │   ├── layout/              # Navbar y Footer
-│       │   └── productos/           # Tarjetas y detalles de productos
+│       │   ├── admin/
+│       │   ├── chat/
+│       │   ├── common/
+│       │   ├── layout/
+│       │   └── productos/
 │       ├── context/
-│       │   ├── AuthContext.jsx      # Estado de autenticación global
-│       │   └── CarritoContext.jsx   # Estado del carrito global
+│       │   ├── AuthContext.jsx      # Maneja access + refresh token + usuario
+│       │   └── CarritoContext.jsx
 │       ├── hooks/
-│       │   ├── useApi.js
+│       │   ├── useApi.js            # Con interceptor automático de renovación
 │       │   └── useN8nChat.js
-│       ├── pages/                   # Vistas principales
-│       ├── style/                   # Estilos por página
+│       ├── pages/
+│       ├── style/
 │       ├── utils/
-│       │   ├── rutas.js
-│       │   └── getPasswordStrength.js
 │       ├── App.jsx
 │       └── main.jsx
 ├── package.json
 ├── vite.config.js
-└── .env                             # Variables de entorno (no subir al repo)
+└── .env
 ```
 
 ---
@@ -160,11 +177,11 @@ VITE_TEST_N8N=
 
 | Variable | Descripción |
 |---|---|
-| `TURSO_TOKEN` | Token de autenticación de la base de datos Turso (LibSQL en la nube) |
-| `SECRET_KEY` | Clave secreta para firmar y verificar los tokens JWT |
+| `TURSO_TOKEN` | Token de autenticación de la base de datos Turso |
+| `SECRET_KEY` | Clave secreta para firmar y verificar los access tokens JWT |
 | `MAILER_EMAIL` | Dirección Gmail desde la que se envían los correos |
-| `MAILER_PASS` | Contraseña de aplicación de Gmail (no la contraseña de la cuenta) |
-| `CLOUDINARY_CLOUD_NAME` | Nombre del cloud en Cloudinary para subir imágenes |
+| `MAILER_PASS` | Contraseña de aplicación de Gmail |
+| `CLOUDINARY_CLOUD_NAME` | Nombre del cloud en Cloudinary |
 | `CLOUDINARY_API_KEY` | API Key de Cloudinary |
 | `CLOUDINARY_API_SECRET` | API Secret de Cloudinary |
 | `ADMIN_PASSWORD` | Contraseña inicial del administrador (usada en seed) |
@@ -227,7 +244,7 @@ Base URL: `http://localhost:3000/api`
 
 Todos los endpoints protegidos requieren el header:
 ```
-Authorization: Bearer <token>
+Authorization: Bearer <accessToken>
 ```
 
 ### Usuarios — `/api/usuarios`
@@ -236,8 +253,10 @@ Authorization: Bearer <token>
 |---|---|---|---|
 | `GET` | `/usuarios` | No | Listar todos los usuarios |
 | `POST` | `/registro` | No | Registrar nuevo usuario |
-| `POST` | `/login` | No | Iniciar sesión |
-| `POST` | `/verificar` | ✅ Token | Verificar cuenta con código |
+| `POST` | `/login` | No | Iniciar sesión → devuelve `accessToken` (15 min) + `refreshToken` (7 días) |
+| `POST` | `/refresh` | No | Renovar sesión con refresh token → rota ambos tokens |
+| `POST` | `/logout` | No | Revocar refresh token y cerrar sesión |
+| `POST` | `/verificar` | ✅ Token | Verificar cuenta con código de 6 dígitos |
 | `PUT` | `/actualizar` | ✅ Token | Actualizar contraseña |
 | `PUT` | `/actualizar-nombre` | ✅ Token | Actualizar nombre de usuario |
 | `GET` | `/perfil` | ✅ Token | Verificar token activo |
@@ -247,11 +266,11 @@ Authorization: Bearer <token>
 
 | Método | Ruta | Autenticación | Descripción |
 |---|---|---|---|
-| `GET` | `/productos` | No | Listar productos (con filtros) |
+| `GET` | `/productos` | No | Listar productos con filtros y paginación |
 | `GET` | `/:id` | No | Obtener un producto por ID |
 | `POST` | `/agregar-producto` | ✅ Admin | Crear producto (con imágenes, máx. 3) |
 | `PUT` | `/actualizar-producto/:id` | ✅ Admin | Actualizar producto |
-| `DELETE` | `/eliminar-producto/:id` | ✅ Admin | Eliminar producto |
+| `DELETE` | `/eliminar-producto/:id` | ✅ Admin | Eliminar producto (borrado lógico) |
 | `POST` | `/carga-masiva` | ✅ Admin | Carga masiva desde CSV/Excel |
 
 ### Carrito — `/api/carrito`
@@ -260,7 +279,7 @@ Authorization: Bearer <token>
 |---|---|---|---|
 | `GET` | `/` | ✅ Token | Obtener carrito del usuario |
 | `POST` | `/agregar-carrito/:id` | ✅ Token | Agregar producto al carrito |
-| `DELETE` | `/eliminar-carrito/:id` | ✅ Token | Reducir cantidad de un producto |
+| `DELETE` | `/eliminar-carrito/:id` | ✅ Token | Reducir cantidad en 1 |
 | `DELETE` | `/eliminar-producto-completo/:id` | ✅ Token | Eliminar producto completamente |
 | `DELETE` | `/vaciar-carrito` | ✅ Token | Vaciar todo el carrito |
 
@@ -280,9 +299,10 @@ Authorization: Bearer <token>
 | `POST` | `/crear-factura` | ✅ Token | Crear factura desde el carrito |
 | `GET` | `/obtener-factura/:id` | ✅ Token | Obtener una factura |
 | `GET` | `/obtener-facturas` | ✅ Admin | Obtener todas las facturas del sistema |
+| `PATCH` | `/:id/estado` | ✅ Admin | Actualizar el estado de una factura |
 | `GET` | `/detalle-factura/:id` | ✅ Token | Detalle de una factura con productos |
 | `GET` | `/detalle-factura/:id/pdf` | ✅ Token | Descargar factura como PDF |
-| `GET` | `/obtener-facturas-usuario` | ✅ Token | Historial de facturas del usuario |
+| `GET` | `/obtener-facturas-usuario` | ✅ Token | Historial de facturas del usuario (con `fecha_formateada`) |
 
 ### Recuperación de Contraseña
 
@@ -309,19 +329,20 @@ Authorization: Bearer <token>
 ### Para usuarios
 
 - **Registro y login** con verificación de cuenta por código enviado al email
+- **Sesión segura** con access token de 15 minutos y refresh token de 7 días; renovación automática y transparente
 - **Recuperación de contraseña** mediante código enviado al correo
-- **Catálogo de productos** con filtros por categoría, condición, precio y búsqueda por texto
+- **Catálogo de productos** con filtros por categoría, condición, precio, capacidad, batería y búsqueda por texto
 - **Detalle de producto** con galería de imágenes, selección de capacidad y productos relacionados
 - **Carrito de compras** persistente
 - **Lista de deseados** para guardar productos favoritos
-- **Historial de facturas** con descarga en PDF
+- **Historial de facturas** con fechas formateadas y descarga en PDF
 - **Perfil de usuario** editable (nombre y contraseña)
 
 ### Para administradores
 
 - **Panel de gestión** de productos (alta, baja, modificación)
 - **Carga masiva** de productos desde archivos CSV o Excel
-- **Gestión de facturas** de todo el sistema
+- **Gestión de facturas** con posibilidad de cambiar el estado
 - **Gestión de staff**: registrar, editar, dar de baja y restaurar administradores
 - **Blanqueo de contraseñas** de otros admins
 
@@ -331,12 +352,10 @@ Authorization: Bearer <token>
 
 El proyecto incluye un chatbot flotante en toda la aplicación que conecta con un workflow de **N8N** orquestado localmente. El modelo de lenguaje que alimenta el asistente es **Qwen3:8b**, servido a través de **Ollama**.
 
-El asistente está configurado como vendedor especializado de AirMobile con dos herramientas (tools) conectadas a la base de datos real:
+El asistente está configurado como vendedor especializado de AirMobile con dos herramientas conectadas a la base de datos real:
 
-- **Buscar Producto** — Se activa cuando el usuario menciona una categoría o modelo específico (ej: "fundas", "iPhone 13"). Busca por nombre, modelo o categoría y devuelve precios e IDs.
-- **Consultar Catálogo General** — Se activa ante consultas genéricas ("qué venden", "mostrame todo"). Trae hasta 50 productos agrupados por categoría.
-
-La lógica del system prompt está definida en `system_prompt.txt` y la descripción de cada tool en `tool_busqueda.txt` y `tool_catalogo.txt`.
+- **Buscar Producto** — Se activa cuando el usuario menciona una categoría o modelo específico. Busca por nombre, modelo o categoría y devuelve precios e IDs.
+- **Consultar Catálogo General** — Se activa ante consultas genéricas. Trae hasta 50 productos agrupados por categoría.
 
 Las variables de entorno necesarias para el chat son:
 - `VITE_N8N_WEBHOOK_URL` — URL del webhook de producción
@@ -355,8 +374,6 @@ Descargá e instalá Ollama desde [https://ollama.com/download](https://ollama.c
 curl -fsSL https://ollama.com/install.sh | sh
 ```
 
-Una vez instalado, Ollama corre automáticamente como servicio en `http://localhost:11434`.
-
 Para verificar que está activo:
 ```bash
 ollama --version
@@ -366,25 +383,18 @@ ollama --version
 
 ### 2. Descargar el modelo Qwen3:8b
 
-Con Ollama ya instalado, descargá el modelo desde la terminal:
-
 ```bash
 ollama pull qwen3:8b
 ```
 
-> La descarga pesa aproximadamente **5 GB**. El tiempo depende de tu conexión.
+> La descarga pesa aproximadamente **5 GB**.
 
 Para verificar que el modelo está disponible:
 ```bash
 ollama list
 ```
 
-Para correr el modelo de forma interactiva (opcional, para probar):
-```bash
-ollama run qwen3:8b
-```
-
-Para que N8N pueda usarlo, Ollama debe estar corriendo en segundo plano. En la mayoría de los sistemas queda activo automáticamente tras la instalación. Si necesitás iniciarlo manualmente:
+Para iniciar Ollama manualmente si no corre como servicio:
 ```bash
 ollama serve
 ```
@@ -393,15 +403,11 @@ ollama serve
 
 ### 3. Correr N8N
 
-N8N se puede correr localmente con `npx` sin necesidad de instalación global:
-
 ```bash
 npx n8n
 ```
 
 Esto levanta el editor de N8N en `http://localhost:5678`.
-
-> En la primera ejecución puede tardar unos segundos mientras descarga los paquetes necesarios.
 
 Si preferís instalarlo globalmente:
 ```bash
@@ -415,14 +421,14 @@ n8n
 
 Una vez dentro del editor de N8N (`http://localhost:5678`):
 
-1. Importá el workflow del proyecto (archivo `.json` del workflow si está incluido en el repositorio, o creá uno nuevo).
+1. Importá el workflow del proyecto.
 2. Configurá el nodo de **Ollama** apuntando a `http://localhost:11434` y seleccionando el modelo `qwen3:8b`.
-3. Configurá el nodo de **Webhook** como trigger — N8N te dará la URL del webhook que debés pegar en las variables de entorno:
+3. Configurá el nodo de **Webhook** como trigger y pegá la URL resultante en las variables de entorno:
    ```env
    VITE_N8N_WEBHOOK_URL=http://localhost:5678/webhook/tu-id-de-webhook
    VITE_TEST_N8N=http://localhost:5678/webhook-test/tu-id-de-webhook
    ```
-4. Conectá los tools (Buscar Producto y Consultar Catálogo) a los endpoints del backend:
-   - `GET http://localhost:3000/api/productos/productos` — catálogo general
-   - `GET http://localhost:3000/api/productos/:id` — búsqueda específica
+4. Conectá los tools a los endpoints del backend:
+   - `GET http://localhost:3000/api/productos/productos`
+   - `GET http://localhost:3000/api/productos/:id`
 5. Activá el workflow con el switch **Active** en la esquina superior derecha.

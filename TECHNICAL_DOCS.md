@@ -22,7 +22,7 @@
    - [Hooks Personalizados](#hooks-personalizados)
 5. [Flujos Funcionales](#5-flujos-funcionales)
    - [Registro y Verificación de Cuenta](#registro-y-verificación-de-cuenta)
-   - [Autenticación (Login)](#autenticación-login)
+   - [Autenticación y Refresh Token](#autenticación-y-refresh-token)
    - [Ciclo de Compra](#ciclo-de-compra)
    - [Carga Masiva de Productos](#carga-masiva-de-productos)
    - [Recuperación de Contraseña](#recuperación-de-contraseña)
@@ -46,7 +46,7 @@ Cliente (React + Vite)          Servidor (Express)           Servicios externos
         │ ─────────────────────────►  N8N ── Ollama (qwen3:8b)  IA del chatbot
 ```
 
-- **Frontend:** SPA (Single Page Application) construida con React 19 y Vite. Se comunica con el backend exclusivamente mediante `fetch` a través del hook `useApi`.
+- **Frontend:** SPA construida con React 19 y Vite. Se comunica con el backend exclusivamente mediante `fetch` a través del hook `useApi`, que incluye un interceptor automático de renovación de sesión.
 - **Backend:** API REST construida con Express 5, organizada en capas (routes → middlewares → controllers → models).
 - **Base de datos:** Turso, una base de datos LibSQL (SQLite compatible) serverless alojada en la nube. La conexión se establece mediante `@libsql/client`.
 - **Imágenes:** Las imágenes de productos se almacenan en Cloudinary. Solo las URLs resultantes se guardan en la base de datos.
@@ -67,9 +67,9 @@ Cliente (React + Vite)          Servidor (Express)           Servicios externos
 | `nombre` | TEXT | NOT NULL | Nombre del usuario |
 | `email` | TEXT | NOT NULL, UNIQUE | Correo electrónico |
 | `password` | TEXT | NOT NULL | Hash bcrypt de la contraseña |
-| `rol` | TEXT | DEFAULT `'cliente'` | Puede ser `'cliente'` o `'admin'` |
-| `verificado` | TEXT | DEFAULT `'falso'` | `'falso'` o `'verdadero'` / `1` tras verificar |
-| `codigo_verificacion` | TEXT | — | Código de 6 dígitos temporal (se limpia tras usar) |
+| `rol` | TEXT | DEFAULT `'cliente'` | `'cliente'` o `'admin'` |
+| `verificado` | TEXT | DEFAULT `'falso'` | `'falso'` o `'verdadero'` tras verificar |
+| `codigo_verificacion` | TEXT | — | Código de 6 dígitos temporal |
 | `activo` | INTEGER | DEFAULT `1` | Borrado lógico: `0` = dado de baja |
 
 ---
@@ -80,17 +80,17 @@ Cliente (React + Vite)          Servidor (Express)           Servicios externos
 |---|---|---|---|
 | `id` | INTEGER | PK, AUTOINCREMENT | Identificador único |
 | `nombre_producto` | TEXT | NOT NULL | Nombre del producto |
-| `precio` | REAL | NOT NULL, CHECK > 0 | Precio en la moneda configurada |
+| `precio` | REAL | NOT NULL, CHECK > 0 | Precio |
 | `capacidad` | TEXT | — | Array serializado como JSON (ej: `["128GB","256GB"]`) |
 | `descripcion` | TEXT | — | Descripción libre |
 | `imagen_url` | TEXT | — | Array de URLs serializado como JSON |
 | `categoria` | TEXT | NOT NULL | Ver [categorías válidas](#categorías-válidas) |
 | `condicion` | TEXT | NOT NULL, CHECK | `'nuevo'`, `'reacondicionado'` o `'usado'` |
-| `activo` | INTEGER | DEFAULT `1` | Borrado lógico: `0` = eliminado |
+| `activo` | INTEGER | DEFAULT `1` | Borrado lógico |
 | `fecha_creacion` | — | DEFAULT CURRENT_TIMESTAMP | Fecha de alta |
-| `bateria` | INTEGER | DEFAULT NULL | Porcentaje de batería (solo para `celulares` y `tablets`) |
+| `bateria` | INTEGER | DEFAULT NULL | Porcentaje de batería (solo celulares y tablets) |
 
-> **Columnas JSON:** `capacidad` e `imagen_url` se almacenan como strings JSON. El controller se encarga de serializar con `JSON.stringify()` al escribir y deserializar con `JSON.parse()` al leer, antes de devolver la respuesta.
+> **Columnas JSON:** `capacidad` e `imagen_url` se almacenan como strings JSON. El controller serializa con `JSON.stringify()` al escribir y deserializa con `JSON.parse()` al leer.
 
 ---
 
@@ -103,7 +103,7 @@ Cliente (React + Vite)          Servidor (Express)           Servicios externos
 | `producto_id` | INTEGER | FK → productos.id, ON DELETE CASCADE | Producto en el carrito |
 | `cantidad` | INTEGER | DEFAULT `1` | Unidades del producto |
 
-> Si se agrega un producto que ya existe en el carrito del mismo usuario, el modelo incrementa la `cantidad` existente en lugar de insertar una nueva fila.
+> Si se agrega un producto que ya existe en el carrito del mismo usuario, el modelo incrementa la `cantidad` existente (upsert).
 
 ---
 
@@ -129,7 +129,7 @@ Cliente (React + Vite)          Servidor (Express)           Servicios externos
 | `cantidad` | INTEGER | NOT NULL | Unidades compradas |
 | `precio_unitario` | REAL | NOT NULL | Precio al momento de la compra (snapshot) |
 
-> `precio_unitario` guarda el precio en el momento de la compra. Esto es importante porque si el precio del producto cambia en el futuro, la factura histórica conserva el valor correcto.
+> `precio_unitario` guarda el precio en el momento de la compra. Si el precio cambia en el futuro, la factura histórica conserva el valor correcto.
 
 ---
 
@@ -144,13 +144,28 @@ Cliente (React + Vite)          Servidor (Express)           Servicios externos
 
 ---
 
+#### `refresh_tokens` *(nuevo)*
+
+| Columna | Tipo | Restricción | Descripción |
+|---|---|---|---|
+| `id` | INTEGER | PK, AUTOINCREMENT | Identificador único |
+| `usuario_id` | INTEGER | FK → usuarios.id, ON DELETE CASCADE | Propietario del token |
+| `refresh_token` | TEXT | NOT NULL, UNIQUE | Token opaco de 80 caracteres hexadecimales |
+| `fecha_expiracion` | DATETIME | NOT NULL | Vigencia de 7 días desde la creación |
+| `revocado` | BOOLEAN | DEFAULT `0` | `1` = token quemado (soft delete) |
+| `fecha_creacion` | DATETIME | DEFAULT CURRENT_TIMESTAMP | Fecha de emisión |
+
+> Se crea un índice en `refresh_token` (`idx_refresh_token`) para optimizar las búsquedas por token en cada renovación de sesión.
+
+---
+
 ### Relaciones
 
 ```
-usuarios ──────────────────────┐
-    │ 1                         │ 1
-    │ N                         │ N
-  carrito                  facturas ──── N ──── detalles_factura
+usuarios ──────────────────────┬───────────────────────┐
+    │ 1                         │ 1                      │ 1
+    │ N                         │ N                      │ N
+  carrito                  facturas ──── N ──── detalles_factura   refresh_tokens
     │ N                         │ N                    │ N
     │ 1                         │                      │ 1
   productos ◄─────────────────── ┘                 productos
@@ -167,8 +182,9 @@ usuarios ──────────────────────┐
 ### Notas de Diseño
 
 - **Borrado lógico:** Productos y staff nunca se eliminan físicamente. Se marca `activo = 0`. Todas las queries filtran por `activo = 1`.
-- **Eliminación en cascada:** Si se elimina un usuario, su carrito y lista de deseados se eliminan automáticamente (`ON DELETE CASCADE`). Las facturas quedan huérfanas con `usuario_id = NULL` (`ON DELETE SET NULL`).
-- **Paginación:** Los endpoints de listado (`/productos`, `/facturas`) aceptan `page` y `limit` como query params. El modelo ejecuta dos queries en paralelo: una con `LIMIT / OFFSET` para los datos y otra con `COUNT(*)` para el total. Esto permite que el frontend construya la navegación.
+- **Eliminación en cascada:** Si se elimina un usuario, su carrito, lista de deseados y refresh tokens se eliminan automáticamente (`ON DELETE CASCADE`). Las facturas quedan con `usuario_id = NULL` (`ON DELETE SET NULL`).
+- **Paginación:** Los endpoints de listado aceptan `page` y `limit` como query params. El modelo ejecuta dos queries en paralelo con `Promise.all`: una con `LIMIT / OFFSET` y otra con `COUNT(*)`.
+- **Refresh token opaco:** A diferencia del access token (JWT firmado y auto-verificable), el refresh token es un string hexadecimal aleatorio que solo puede validarse consultando la base de datos. Esto permite revocarlo en cualquier momento.
 
 ---
 
@@ -207,9 +223,9 @@ Request HTTP
 
 Intercepta todas las rutas protegidas. Extrae el token del header `Authorization: Bearer <token>`, lo verifica con `jwt.verify()` usando la `SECRET_KEY` del entorno y adjunta el payload decodificado en `req.user`.
 
-Si el header está ausente, tiene formato incorrecto, o el token expiró / fue manipulado, responde con `401` o `403` respectivamente sin continuar la cadena.
+> **Cambio respecto a la versión anterior:** ahora responde `401` (en lugar de `403`) cuando el token es inválido o expiró, para que el interceptor del frontend pueda distinguirlo correctamente y activar el flujo de renovación.
 
-Payload que se almacena en `req.user`:
+Payload almacenado en `req.user`:
 ```json
 {
   "id": 1,
@@ -219,7 +235,7 @@ Payload que se almacena en `req.user`:
 }
 ```
 
-Los tokens tienen una expiración de **1 hora** (`expiresIn: '1h'`).
+Los access tokens tienen una expiración de **15 minutos** (reducida desde 1 hora para mayor seguridad).
 
 ---
 
@@ -227,227 +243,199 @@ Los tokens tienen una expiración de **1 hora** (`expiresIn: '1h'`).
 
 **Archivo:** `backend/src/middlewares/verificarAdmin.js`
 
-Debe ejecutarse **siempre después** de `verificarToken` (que ya garantiza que `req.user` existe). Comprueba que `req.user.rol === 'admin'`. Si no es admin, responde con `403`. Si lo es, pasa al siguiente handler.
-
-```
-router.post('/registrar', verificarToken, verificarAdmin, registrarStaff);
-//                              ↑               ↑
-//                         1. autentica    2. autoriza
-```
+Debe ejecutarse siempre después de `verificarToken`. Comprueba que `req.user.rol === 'admin'`. Si no es admin, responde con `403`.
 
 ---
 
-#### `uploadImg` (multer + Cloudinary)
+#### `uploadImg` / `uploadMiddleware`
 
-**Archivo:** `backend/src/middlewares/fileFilter.js`
-
-Middleware de Multer configurado con `memoryStorage` (no guarda en disco) y un filtro de tipo MIME que acepta únicamente imágenes (`image/*`). Las rutas de creación de productos usan `uploadImg.array('imagen_url', 3)` para aceptar hasta 3 imágenes por producto.
-
----
-
-#### `uploadMiddleware` (carga masiva)
-
-**Archivo:** `backend/src/middlewares/multer.js`
-
-Multer para un único archivo (`single`). Acepta `.csv`, `.xlsx` y `.json`. Usado exclusivamente por el endpoint de carga masiva.
+Sin cambios respecto a la versión anterior. Ver documentación previa.
 
 ---
 
 ### Modelos
 
-Todos los modelos son clases con métodos estáticos. La conexión a la base de datos (`db`) se obtiene al inicio del módulo de forma asíncrona con `await obtenerDb()`.
+#### `UsuarioModel` — sin cambios relevantes
 
-#### `UsuarioModel`
+#### `ModelProductos` — sin cambios relevantes
 
-| Método | Descripción |
-|---|---|
-| `getAll()` | Devuelve todos los usuarios activos |
-| `getbyId(id)` | Usuario por ID (activo) |
-| `buscarEmail(email)` | Busca usuario por email (activo) |
-| `createUser(data)` | Inserta nuevo usuario con código de verificación |
-| `updateUserPassword(id, hash)` | Actualiza la contraseña por ID |
-| `updatePasswordClearCodeVerificate(email, password, codigo)` | Actualiza contraseña + marca verificado + limpia el código en una sola query |
-| `guardarCodigoVerificacion(id, codigo)` | Guarda un código de reseteo en el usuario |
-| `actualizarVerificado(id)` | Marca `verificado = 1` y limpia el código |
-| `getRol(id)` | Devuelve solo el rol del usuario |
-| `actualizarNombre(id, nombre)` | Actualiza el nombre visible del usuario |
+#### `ModelCarrito` — sin cambios relevantes
+
+#### `ModelFactura` — sin cambios relevantes
 
 ---
 
-#### `ModelProductos`
+#### `ModelDetalleFactura` *(nuevo)*
+
+**Archivo:** `backend/src/models/modelDetalleFactura.js`
+
+Separado del `ModelFactura` en su propio archivo para una mejor separación de responsabilidades.
 
 | Método | Descripción |
 |---|---|
-| `getAll(filtros, limit, offset)` | Listado paginado con filtros dinámicos |
-| `countProductos(filtros)` | Cuenta total de productos para la paginación |
-| `getById(id)` | Producto único por ID (activo) |
-| `createProduct(data)` | Inserta producto; serializa `capacidad` e `imagen_url` a JSON |
-| `updateProduct(id, data)` | Actualiza campos dinámicamente (construye el SET con las keys del objeto) |
-| `deleteProduct(id)` | Borrado lógico (`activo = 0`) + limpia registros en `carrito` |
-| `insertMany(array)` | Inserta múltiples productos usando `db.batch()` (transacción Turso) |
-
-**Sistema de filtros:** `getAll` y `countProductos` construyen la query SQL dinámicamente. Cada filtro opcional agrega un `AND` a la cláusula `WHERE` con su parámetro correspondiente:
-
-| Filtro | Query generada |
-|---|---|
-| `categoria` | `AND categoria LIKE '%valor%'` |
-| `condicion` | `AND condicion LIKE '%valor%'` |
-| `capacidad` | `AND capacidad LIKE '%"valor"%'` (busca dentro del JSON) |
-| `precioMin` | `AND precio >= valor` |
-| `precioMax` | `AND precio <= valor` |
-| `busqueda` | `AND nombre_producto LIKE '%valor%'` |
-| `bateriaMin` | `AND bateria >= valor` |
-| `orden` | `ORDER BY fecha_creacion ASC/DESC` |
+| `createDetalleFactura(facturaId, productoId, cantidad, precioUnitario)` | Inserta una línea de detalle en `detalles_factura` |
+| `getDetallesFacturaByFacturaId(facturaId)` | JOIN entre `detalles_factura`, `productos` y `facturas`. Devuelve cantidad, precio unitario, nombre y imagen del producto, fecha y usuario_id de la factura |
 
 ---
 
-#### `ModelCarrito`
+#### `TokenModel` *(nuevo)*
+
+**Archivo:** `backend/src/models/modelToken.js`
+
+Gestiona el ciclo de vida completo de los refresh tokens en la tabla `refresh_tokens`.
 
 | Método | Descripción |
 |---|---|
-| `getCarrito(usuarioId)` | JOIN con `productos`, devuelve items con nombre, precio e imagen |
-| `addCarrito(usuarioId, productoId, cantidad)` | Upsert: si existe incrementa cantidad, si no inserta |
-| `deleteProductFromCarrito(usuarioId, productoId)` | Reduce cantidad en 1; si llega a 0 elimina la fila |
-| `deleteAWholeProductFromCarrito(usuarioId, productoId)` | Elimina la fila completa sin importar la cantidad |
-| `emptyCarrito(usuarioId)` | Elimina todos los registros del usuario |
-
----
-
-#### `ModelFactura`
-
-| Método | Descripción |
-|---|---|
-| `createFactura(usuarioId, total)` | Inserta factura y devuelve el `lastInsertRowid` |
-| `getFacturaById(id)` | Factura por ID |
-| `getFacturas(limit, offset)` | Todas las facturas paginadas (uso admin) |
-| `countFacturas()` | Total de facturas para la paginación admin |
-| `getFacturasDeUsuario(usuarioId, limit, offset)` | Facturas del usuario, paginadas |
-| `countFacturasDeUsuario(usuarioId)` | Total de facturas del usuario |
-| `updateEstadoFactura(facturaId, nuevoEstado)` | Cambia el estado de una factura |
-
----
-
-#### `ModelListaDeseados`
-
-| Método | Descripción |
-|---|---|
-| `addWishList(usuarioId, productoId)` | Usa `INSERT OR IGNORE` para evitar duplicados silenciosamente |
-| `getWishListByUserId(usuarioId)` | JOIN con `productos`, devuelve nombre, precio, condición, imágenes |
-| `removeWishList(usuarioId, productoId)` | Elimina el registro; devuelve `true/false` |
-| `countWishListByUserId(usuarioId)` | Cuenta productos en la lista |
-| `isProductInWishList(usuarioId, productoId)` | Verifica si un producto específico ya está en la lista (`SELECT 1`) |
-
----
-
-#### `ModelStaff`
-
-Trabaja sobre la tabla `usuarios` filtrando siempre por `rol = 'admin'` (usando la constante `ROLES.ADMIN`).
-
-| Método | Descripción |
-|---|---|
-| `obtenerStaff()` | Lista todos los admins |
-| `actualizarDatosBasicos(id, data)` | Update dinámico (mismo patrón que `ModelProductos.updateProduct`) |
-| `verificarEmailExistente(email)` | Verifica si el email ya existe antes de crear un nuevo admin |
-| `crearStaff(nombre, email, passwordHash)` | Crea usuario con `rol = 'admin'` hardcodeado |
-| `darBajaStaff(id)` | Borrado lógico (`activo = 0`), solo si es admin |
-| `restaurarStaff(id)` | Reactiva admin (`activo = 1`) |
-| `obtenerDatosBasicosPorId(id)` | Devuelve solo `nombre` y `email` del admin |
-| `actualizarPassword(id, hash)` | Blanqueo de contraseña, solo admins activos |
+| `guardarRefreshToken(refreshToken, idUsuario, fechaExpiracionStr)` | Inserta un nuevo refresh token activo |
+| `buscarRefreshToken(refreshToken)` | Busca el token por su valor; devuelve la fila completa o `null` |
+| `revocarRefreshToken(refreshToken)` | Soft delete: setea `revocado = 1` |
+| `revocarTokenEspecifico(refreshToken)` | Ídem, con valor de `revocado` como string `'1'` (para compatibilidad con Turso BOOLEAN) |
 
 ---
 
 ### Controllers
 
-#### `controllerProductos`
+#### `controlerUsuario` — cambios y nuevas funciones
 
-- **`obtenerProductos`:** Valida query params con `schemaFiltrosProductos`, ejecuta `getAll` y `countProductos` en paralelo con `Promise.all`, parsea los campos JSON de cada producto antes de responder.
-- **`obtenerProducto`:** Obtiene producto por ID, parsea `imagen_url` y `capacidad`.
-- **`crearProducto`:** Sube imágenes a Cloudinary en paralelo → valida con `schemaProductos` → si la validación falla, elimina las imágenes ya subidas de Cloudinary para evitar archivos huérfanos.
-- **`actualizarProducto`:** Valida con `schemaActualizarProducto` → serializa `capacidad` a JSON si viene en el body → llama a `updateProduct`.
-- **`eliminarProducto`:** Borrado lógico vía `deleteProduct`.
-- **`bulkUpload`:** Lee el archivo en memoria → detecta extensión (csv/xlsx/json) → parsea con `procesarArchivo` → mapea y normaliza campos → valida el array completo con Joi → inserta con `insertMany`.
+##### `login` (actualizado)
+
+Además de generar el JWT, ahora:
+1. Genera un refresh token opaco con `crypto.randomBytes(40).toString('hex')` (80 caracteres hex).
+2. Calcula la fecha de expiración a 7 días.
+3. Valida ambos datos con `insertarTokenSchema` (Joi) antes de tocar la base de datos.
+4. Llama a `TokenModel.guardarRefreshToken()` para persistir el token.
+5. Devuelve `{ token, refreshToken, data }` en la respuesta.
+
+El access token ahora expira en **15 minutos** (antes era 1 hora).
 
 ---
 
-#### `controlerUsuario`
+##### `renovarSesion` *(nuevo)*
 
-- **`registro`:** Valida body → verifica email único → hashea contraseña con bcrypt (salt 10) → genera código de 6 dígitos con `crypto.randomInt` → crea usuario → envía email de verificación de forma asíncrona (`.catch` para no bloquear la respuesta).
-- **`login`:** Valida body → busca usuario por email → compara contraseña con `bcrypt.compare` → genera JWT con payload `{id, rol, email, nombre}`, expiración 1h → devuelve el token y datos básicos del usuario.
-- **`verificar`:** Extrae `id` de `req.user` → compara el código enviado con el almacenado → llama a `actualizarVerificado`.
-- **`obtenerPerfil`:** Devuelve `{id, nombre, email, rol}` del usuario autenticado.
-- **`actualizarNombreUsuario`:** Valida el nuevo nombre → llama a `actualizarNombre`.
+Endpoint: `POST /api/usuarios/refresh`
+
+Implementa el flujo de **rotación de refresh tokens**:
+
+```
+1. Valida el body con renovarTokenRequestSchema
+2. Busca el token en la BD → 401 si no existe
+3. Verifica que no esté revocado → 401 si revocado
+4. Verifica que no haya expirado por fecha → 401 si expirado
+5. Busca los datos del usuario por usuario_id
+6. Genera un nuevo access token (15 min)
+7. Revoca el refresh token entrante (revocarRefreshToken)
+8. Genera y guarda un nuevo refresh token (7 días)
+9. Responde con { token, refreshToken }
+```
+
+El paso 7-8 garantiza que cada refresh token solo puede usarse **una vez**. Si un token ya usado es presentado de nuevo, se detecta como revocado y se rechaza, lo que indica un posible robo del token.
+
+---
+
+##### `cerrarSesion` *(nuevo)*
+
+Endpoint: `POST /api/usuarios/logout`
+
+No requiere autenticación JWT. Recibe el `refreshToken` en el body y llama a `TokenModel.revocarTokenEspecifico()` para marcarlo como revocado. Si el servidor no puede ser contactado, el frontend igualmente limpia el estado local.
+
+---
+
+#### `controllerFactura` (actualizado)
+
+- `crearFactura`: ahora usa `ModelDetalleFactura.createDetalleFactura()` (modelo separado) en lugar de tener la lógica de inserción embebida.
+- `obtenerFacturasDeUsuario`: incorpora **formateo de fechas** antes de devolver la respuesta. Convierte `fecha` de UTC a zona horaria `America/Argentina/Buenos_Aires` con formato corto (`"14 may. 2026"`), añadiendo el campo `fecha_formateada` a cada factura.
+- `actualizarEstadoFactura`: nuevo endpoint para que los admins puedan cambiar el estado de una factura. Valida que el estado sea uno de los valores del objeto `ESTADOS`.
 
 ---
 
 ### Schemas de Validación
 
-Todos los schemas usan **Joi**. Las rutas validan antes de ejecutar cualquier lógica de negocio.
+#### Schemas nuevos
 
-#### Schema de Producto (`schemaProductos`)
+##### `schemaRefreshToken.js`
 
-| Campo | Regla |
-|---|---|
-| `nombre_producto` | string, 3-50 chars, requerido |
-| `precio` | number positivo, requerido |
-| `capacidad` | array de strings, valores permitidos: `16GB`, `32GB`, `64GB`, `128GB`, `256GB`, `512GB`, `1TB`, `2TB` |
-| `descripcion` | string, máx 500 chars, opcional |
-| `imagen_url` | array de URLs válidas (Joi.uri()) |
-| `categoria` | string, debe ser una de las [categorías válidas](#categorías-válidas) |
-| `condicion` | `'nuevo'`, `'reacondicionado'` o `'usado'` |
-| `bateria` | integer 70-100, solo si `categoria` es `'celulares'` o `'tablets'`; se stripea en cualquier otro caso |
+Dos schemas exportados con nombre:
 
-#### Schema de Registro
+| Schema | Uso | Campos |
+|---|---|---|
+| `insertarTokenSchema` | Valida datos antes de guardar en la BD | `idUsuario` (integer positivo), `refreshToken` (string min 20), `fechaExpiracionStr` (ISO 8601) |
+| `renovarTokenRequestSchema` | Valida el body del endpoint `POST /refresh` | `refreshToken` (string requerido) |
 
-| Campo | Regla |
-|---|---|
-| `nombre` | string, 3-50 chars |
-| `email` | email válido, dominios permitidos: `.com`, `.net`, `.ar` |
-| `password` | string, 6-30 chars |
+---
 
-#### Schema de Login
+##### `schemaVerificacion.js`
+
+Valida el body del endpoint `POST /verificar`:
 
 | Campo | Regla |
 |---|---|
-| `email` | email válido |
-| `password` | string no vacío |
+| `codigo` | string de exactamente 6 caracteres, requerido |
+
+---
+
+##### `schemaResetPassword.js`
+
+Valida el body del endpoint `POST /reset-password`:
+
+| Campo | Regla |
+|---|---|
+| `email` | email válido, dominios `.com`, `.net`, `.ar` |
+| `codigo` | string de exactamente 6 caracteres |
+| `nuevaPassword` | string 6-30 caracteres |
+
+---
+
+##### `schemaStaff.js`
+
+Dos schemas exportados con nombre:
+
+| Schema | Uso |
+|---|---|
+| `schemaRegistroStaff` | Alta de nuevo admin: `nombre` (3-50), `email`, `password` (mín 8 caracteres) |
+| `schemaActualizarStaff` | Actualización parcial: `nombre` y `email` opcionales |
+
+---
+
+##### `schemaUpdateUsuario.js`
+
+Tres schemas exportados:
+
+| Schema | Uso |
+|---|---|
+| `schemaUpdateUsuario` | Actualización de perfil: `email` requerido, `password` opcional |
+| `schemaActualizarPassword` | Cambio de contraseña: `password` de 8-30 caracteres |
+| `schemaActualizarNombre` | Cambio de nombre: `nombre` de 2-50 caracteres con `.trim()` |
+
+---
+
+##### `schemaUpdateProducto.js`
+
+Schema para la actualización parcial de productos (`.min(1)` obliga a enviar al menos un campo). Todos los campos son opcionales. Reutiliza las constantes `CAPACIDADES_PERMITIDAS` y `CONDICIONES_PERMITIDAS` del schema principal de productos.
+
+---
+
+##### `schemaQueriesFiltros.js`
+
+Valida los query params del endpoint `GET /productos`. Incluye todos los filtros del sistema:
+
+| Param | Tipo | Descripción |
+|---|---|---|
+| `categoria` | string trim, máx 50 | Filtro por categoría |
+| `precioMin` / `precioMax` | number ≥ 0 | Rango de precio |
+| `busqueda` | string trim, máx 100 | Búsqueda por nombre |
+| `condicion` | enum CONDICIONES_PERMITIDAS | Filtro por condición |
+| `page` | integer ≥ 1, default 1 | Página de resultados |
+| `limit` | integer 1-100, default 10 | Resultados por página |
+| `offset` | integer ≥ 0 | Desplazamiento manual (alternativo a `page`) |
+| `orden` | `'asc'` o `'desc'`, default `'desc'` | Orden por fecha de creación |
+| `bateriaMin` | number 70-100, múltiplo de 10 | Filtro de batería mínima |
+| `capacidad` | enum CAPACIDADES_PERMITIDAS | Filtro por capacidad |
 
 ---
 
 ### Utilidades
 
-#### `mailer.js`
-
-Configura un transporter de Nodemailer con Gmail. Expone dos funciones:
-- `enviarCorreoVerificacion(email, codigo)` — Email de bienvenida con el código de activación.
-- `enviarCorreoRecuperacion(email, codigo)` — Email con código para resetear la contraseña.
-
-#### `manejarImagenes.js`
-
-- `subirACloudinary(buffer, categoria, nombre)` — Sube un buffer de imagen a Cloudinary en una carpeta organizada por `categoria/nombre`. Devuelve la URL pública.
-- `eliminarDeCloudinary(url)` — Extrae el `public_id` desde la URL y elimina la imagen. Se usa como rollback si la validación falla después de subir.
-
-#### `leerArchivos.js`
-
-- `procesarArchivo(buffer, extension, separador)` — Función router que delega según la extensión:
-  - `.csv` → parsea con `csv-parser`
-  - `.xlsx` → parsea con `exceljs`
-  - `.json` → `JSON.parse`
-
-#### `descargarFacturaPDF.js`
-
-Genera un PDF con `pdfkit` a partir del detalle de una factura. Incluye información del usuario, fecha, listado de productos con cantidades y precios unitarios, y el total. Envía el PDF como stream directamente en la respuesta HTTP.
-
-#### `roles.js` / `estados.js`
-
-Constantes del sistema congeladas con `Object.freeze`:
-
-```js
-// roles.js
-ROLES = { CLIENTE: "cliente", ADMIN: "admin" }
-
-// estados.js
-ESTADOS = { PENDIENTE, COMPLETADO, ENVIADO, CANCELADO, REEMBOLSADO }
-```
+Sin cambios respecto a la versión anterior.
 
 ---
 
@@ -459,15 +447,11 @@ ESTADOS = { PENDIENTE, COMPLETADO, ENVIADO, CANCELADO, REEMBOLSADO }
 celulares | tablets | relojes | auriculares | cargadores | cables | powerbanks | fundas | protectores | accesorios
 ```
 
-Solo `celulares` y `tablets` admiten los campos `bateria` y `capacidad`.
-
 #### Estados de factura
 
 ```
 Pendiente | Completado | Enviado | Cancelado | Reembolsado
 ```
-
-El estado por defecto al crear una factura es `'Completado'`.
 
 ---
 
@@ -475,147 +459,83 @@ El estado por defecto al crear una factura es `'Completado'`.
 
 ### Páginas
 
-| Ruta | Componente | Descripción |
-|---|---|---|
-| `/` | `Home.jsx` | Landing con hero, productos destacados y secciones informativas |
-| `/catalogo` | `CatalogoDeProductos.jsx` | Listado con filtros, búsqueda y paginación |
-| `/producto/:id` | `Product.jsx` | Detalle de producto, galería, selección de capacidad y productos relacionados |
-| `/carrito` | `Carrito.jsx` | Gestión del carrito y proceso de compra (solo autenticado) |
-| `/inicio-sesion` | `InicioSesion.jsx` | Formulario de login |
-| `/registro` | `Registro.jsx` | Formulario de registro con medidor de fortaleza de contraseña |
-| `/recuperar-password` | `RecuperarContraseña.jsx` | Solicitud y validación de código de recuperación |
-| `/perfil-usuario` | `PerfilUsuario.jsx` | Perfil, historial de facturas, lista de deseados, edición de datos |
-| `/admin` | `GestionAdmin.jsx` | Panel admin: productos, carga masiva, staff, facturas |
-
-> La ruta `/carrito` solo se registra en el router si `estaAutenticado === true` (condición en `App.jsx`). Las rutas `/admin` no muestran `Navbar` ni `Footer`.
+Sin cambios en las rutas disponibles respecto a la versión anterior.
 
 ---
 
 ### Componentes
 
-#### `components/layout/`
-- **`Navbar`** — Barra de navegación. Muestra links según el estado de autenticación. Incluye contador del carrito.
-- **`Footer`** — Pie de página global.
-
-#### `components/admin/`
-- **`TablaDeProductos`** — Tabla con listado paginado de productos del panel admin.
-- **`ProductosFila`** — Fila individual de la tabla de productos.
-- **`ModalNuevoProducto`** / **`ModaleNuevoProducto`** — Modal para dar de alta un nuevo producto con subida de imágenes.
-- **`CargaMasiva`** — Formulario para subir archivo CSV/Excel de productos.
-- **`SidebarAdmin`** — Navegación lateral del panel admin.
-- **`HeaderAdmin`** — Cabecera del panel admin.
-- **`SkeletonFilaLoader`** / **`SkeletonFilaProducto`** — Skeletons de carga para la tabla.
-
-#### `components/productos/`
-- **`CartaDeProductos`** — Tarjeta de producto para el catálogo.
-- **`ImageGallery`** — Galería de imágenes en el detalle de producto.
-- **`CapacitySelector`** — Selector de capacidad (ej: 128GB / 256GB).
-- **`DescripcionProducto`** — Sección de descripción en el detalle.
-- **`ProductosRelacionados`** — Grilla de productos de la misma categoría.
-- **`BotonDeseados`** — Botón con estado para agregar/quitar de la lista de deseados.
-- **`FiltroRadioGroup`** — Grupo de filtros radio para el catálogo.
-- **`Condition`** — Badge de condición (nuevo/usado/reacondicionado).
-- **`ProductSearchCard`** — Tarjeta compacta para resultados de búsqueda.
-
-#### `components/chat/`
-- **`N8nChat`** — Componente flotante del chatbot. Mantiene el historial de mensajes en estado local. Usa el hook `useN8nChat` para comunicarse con el webhook de N8N.
-- **`ChatInput`** — Input de texto del chat.
-
-#### `components/common/`
-Componentes reutilizables sin lógica de negocio:
-
-| Componente | Descripción |
-|---|---|
-| `InputGenerico` | Input estilizado para formularios |
-| `InputPassword` | Input con toggle de visibilidad |
-| `BtnForm` | Botón de submit para formularios |
-| `BtnAccion` | Botón genérico de acción |
-| `ErrorCard` | Tarjeta de error |
-| `SuccessCard` | Tarjeta de éxito |
-| `LoadingCard` | Spinner de carga |
-| `SkeletonLoader` | Skeleton genérico de carga |
-| `Paginacion` | Controles de paginación |
-| `BadgeEstado` | Badge del estado de una factura |
-| `BadgeSeguro` | Badge de garantía |
-| `MensajeSinResultado` | Mensaje vacío cuando no hay datos |
-| `PasswordStrengthBar` | Barra visual de fortaleza de contraseña |
-
-#### `components/cuenta/`
-- **`HistorialFacturas`** — Lista paginada de facturas del usuario con link para descargar PDF.
+Sin cambios en los componentes respecto a la versión anterior.
 
 ---
 
 ### Contextos Globales
 
-#### `AuthContext`
+#### `AuthContext` (actualizado)
 
 **Archivo:** `frontend/src/context/AuthContext.jsx`
 
-Maneja el estado de autenticación en toda la aplicación.
+Maneja el estado de autenticación en toda la aplicación. Ahora gestiona también el refresh token y el objeto completo del usuario.
 
 | Valor expuesto | Tipo | Descripción |
 |---|---|---|
-| `token` | string \| null | JWT almacenado en `localStorage` |
-| `estaAutenticado` | boolean | `true` si hay token |
-| `login(token)` | función | Guarda el token en estado y `localStorage` |
-| `logout()` | función | Limpia el token y redirige a `/` |
+| `token` | string \| null | Access JWT almacenado en `localStorage` |
+| `refreshToken` | string \| null | Refresh token almacenado en `localStorage` |
+| `estaAutenticado` | boolean | `true` si hay access token |
+| `usuario` | object \| null | Datos del perfil (`id`, `nombre`, `email`, `rol`) |
+| `setUsuario` | función | Permite actualizar el objeto usuario desde fuera (usado por `useApi` tras renovar sesión) |
+| `login(token, refreshToken)` | función | Guarda ambos tokens en estado y `localStorage` |
+| `logout()` | función | Revoca el refresh token en el backend, limpia estado y redirige a `/` |
 
-El token se inicializa leyendo `localStorage` una sola vez. Un `useEffect` sincroniza el estado con `localStorage` cada vez que el token cambia.
+**Comportamiento del `logout`:** primero intenta llamar a `POST /api/usuarios/logout` con el refresh token para revocarlo en el servidor. Si el servidor no responde, igual limpia el estado local (fail-safe).
 
-```jsx
-// Uso en cualquier componente
-const { estaAutenticado, token, login, logout } = useAuth();
-```
-
----
-
-#### `CarritoContext`
-
-**Archivo:** `frontend/src/context/CarritoContext.jsx`
-
-Maneja el estado local del carrito de compras (sincronizado con `localStorage`).
-
-| Valor expuesto | Tipo | Descripción |
-|---|---|---|
-| `cartItems` | array | Productos en el carrito |
-| `cartCount` | number | Total de unidades |
-| `subtotal` | number | Suma de `precio × cantidad` |
-| `addToCart(product)` | función | Agrega o incrementa cantidad |
-| `removeFromCart(id)` | función | Elimina el producto del array |
-| `increaseQuantity(id)` | función | +1 unidad |
-| `decreaseQuantity(id)` | función | -1 unidad (mínimo 1) |
-
-> El carrito del contexto es **local** (localStorage). Al confirmar la compra se sincroniza con el backend vía el endpoint `/api/carrito` y `/api/facturas/crear-factura`.
+**Carga del perfil:** un `useEffect` observa el `token` y llama automáticamente a `GET /api/usuarios/mi-perfil` para hidratar el objeto `usuario` cuando hay un token activo.
 
 ---
 
 ### Hooks Personalizados
 
-#### `useApi`
+#### `useApi` (actualizado)
 
 **Archivo:** `frontend/src/hooks/useApi.js`
 
-Abstrae todas las llamadas HTTP al backend. Maneja `isLoading`, `error` y la URL base.
+Incluye un **interceptor automático de renovación de sesión**. Cuando cualquier petición recibe un `401`, el hook intenta renovar los tokens antes de reintentar la petición original de forma transparente.
 
-```js
-const { ejecutarPeticion, isLoading, error } = useApi();
+**Variable global `promesaRenovacion`:**
 
-// Ejemplo de uso
-const resultado = await ejecutarPeticion('productos/productos', {
-  method: 'GET',
-  headers: { Authorization: `Bearer ${token}` }
-});
+Se declara fuera del hook (en el módulo), actúa como semáforo global. Si múltiples peticiones fallan con `401` al mismo tiempo, solo la primera llama a `/refresh`; las demás esperan a la misma promesa. Esto evita múltiples llamadas simultáneas de renovación con el mismo refresh token.
+
+**Flujo del interceptor:**
+
+```
+Petición recibe 401 y no está reintentando y hay refreshToken
+    │
+    ├─ Si promesaRenovacion === null (soy el primero)
+    │       └─ POST /api/usuarios/refresh → guarda la promesa
+    │
+    └─ Si promesaRenovacion !== null (alguien más está renovando)
+            └─ Espero la misma promesa
+    │
+    ▼
+await promesaRenovacion → { token, refreshToken }
+    │
+    ├─ Éxito: login(token, refreshToken), setUsuario(data)
+    │          Reintenta la petición original con el nuevo token (reintentando=true)
+    │
+    └─ Fallo: logout() → redirige al login
 ```
 
-Detecta automáticamente si el body es `FormData` y omite el header `Content-Type` en ese caso (necesario para que el browser establezca el boundary correcto en multipart).
+**Parámetro `reintentando`:**
+
+El tercer parámetro de `ejecutarPeticion` evita loops infinitos: si una petición ya es un reintento y recibe otro `401`, no vuelve a intentar renovar, sino que lanza el error directamente.
+
+**Lectura del token:**
+
+El token se lee en cada petición desde `localStorage` (no solo desde el estado de React) para garantizar que siempre se usa el valor más reciente, incluso si el estado de React aún no se actualizó.
 
 ---
 
-#### `useN8nChat`
-
-**Archivo:** `frontend/src/hooks/useN8nChat.js`
-
-Maneja la comunicación con el webhook de N8N. Envía el mensaje del usuario y el historial completo de la conversación en cada petición, de forma que el modelo tenga contexto del hilo.
+#### `useN8nChat` — sin cambios
 
 ---
 
@@ -623,53 +543,68 @@ Maneja la comunicación con el webhook de N8N. Envía el mensaje del usuario y e
 
 ### Registro y Verificación de Cuenta
 
-```
-Usuario rellena formulario
-    │
-    ▼
-POST /api/usuarios/registro
-    │  Valida schema (Joi)
-    │  Verifica email único
-    │  Hash de contraseña (bcrypt, salt 10)
-    │  Genera código 6 dígitos (crypto.randomInt)
-    │  Crea usuario (verificado = 'falso')
-    │  Envía email async (no bloquea respuesta)
-    │
-    ▼
-Respuesta 201 → "Revisa tu correo"
-    │
-    ▼
-Usuario ingresa código desde el email
-    │
-    ▼
-POST /api/usuarios/verificar  (requiere token JWT)
-    │  Compara código ingresado con codigo_verificacion
-    │  UPDATE: verificado = 1, codigo_verificacion = NULL
-    │
-    ▼
-Cuenta activada
-```
+Sin cambios respecto a la versión anterior.
 
 ---
 
-### Autenticación (Login)
+### Autenticación y Refresh Token
+
+#### Login
 
 ```
 POST /api/usuarios/login
+    │  Valida body (schemaLoginUsuarios)
     │  Busca usuario por email
     │  bcrypt.compare(password, hash)
-    │  Genera JWT { id, rol, email, nombre }, expiresIn: '1h'
+    │  Genera refreshToken = crypto.randomBytes(40).hex() 
+    │  Calcula fecha expiración (+7 días)
+    │  Valida con insertarTokenSchema (Joi)
+    │  TokenModel.guardarRefreshToken() → INSERT refresh_tokens
+    │  jwt.sign({ id, rol, email, nombre }, SECRET_KEY, { expiresIn: '15m' })
     │
     ▼
-Respuesta: { token, data: { id, nombre, rol } }
+Respuesta: { token (15min), refreshToken (7 días), data }
     │
     ▼
-AuthContext.login(token)
-    │  Guarda en estado React + localStorage
+AuthContext.login(token, refreshToken)
+    │  Guarda ambos en estado React + localStorage
+```
+
+#### Renovación automática (interceptor)
+
+```
+useApi.ejecutarPeticion() recibe 401
     │
     ▼
-Todas las requests siguientes incluyen:
-Authorization: Bearer <token>
+promesaRenovacion === null → POST /api/usuarios/refresh { refreshToken }
+    │  Busca token en BD
+    │  Verifica: no revocado, no expirado
+    │  Obtiene datos del usuario
+    │  jwt.sign(..., { expiresIn: '15m' }) → nuevo access token
+    │  TokenModel.revocarRefreshToken(viejo)
+    │  TokenModel.guardarRefreshToken(nuevo, +7 días)
+    │
+    ▼
+{ token, refreshToken } → AuthContext.login(token, refreshToken)
+    │
+    ▼
+Reintento de la petición original con el nuevo token
+```
+
+#### Cierre de sesión
+
+```
+AuthContext.logout()
+    │
+    ▼
+POST /api/usuarios/logout { refreshToken }
+    │  TokenModel.revocarTokenEspecifico() → UPDATE revocado = '1'
+    │
+    ▼
+localStorage.removeItem('token')
+localStorage.removeItem('refreshToken')
+setToken(null) / setRefreshToken(null) / setUsuario(null)
+window.location = "/"
 ```
 
 ---
@@ -677,81 +612,42 @@ Authorization: Bearer <token>
 ### Ciclo de Compra
 
 ```
-1. Usuario agrega productos al carrito
+1. Usuario agrega productos
    POST /api/carrito/agregar-carrito/:id
-   (upsert: incrementa si ya existe)
 
 2. Usuario revisa el carrito
    GET /api/carrito/
 
-3. Usuario confirma compra
+3. Confirma compra
    POST /api/facturas/crear-factura
-       │  Lee el carrito del usuario en la BD
-       │  Crea registro en `facturas` con el total
-       │  Inserta filas en `detalles_factura` (snapshot de precios)
-       │  Vacía el carrito
-       │
+       │  Lee carrito del usuario
+       │  Calcula total (.toFixed(2))
+       │  ModelFactura.createFactura() → INSERT facturas
+       │  Por cada item: ModelDetalleFactura.createDetalleFactura()
+       │  ModelCarrito.emptyCarrito()
        ▼
-   Respuesta: { factura_id, total }
+   { idFactura, total }
 
-4. Usuario descarga el PDF
+4. Admin puede cambiar el estado
+   PATCH /api/facturas/:id/estado
+       │  Valida nuevo estado contra objeto ESTADOS
+       │  ModelFactura.updateEstadoFactura()
+
+5. Usuario descarga PDF
    GET /api/facturas/detalle-factura/:id/pdf
-   (Genera PDF on-the-fly con PDFKit y lo envía como stream)
 ```
 
 ---
 
 ### Carga Masiva de Productos
 
-```
-Admin sube archivo CSV / XLSX / JSON
-    │
-    ▼
-POST /api/productos/carga-masiva
-    │  Multer lee el archivo en memoria (buffer)
-    │  procesarArchivo() detecta extensión y parsea
-    │  Mapea campos al esquema interno
-    │  Valida el array completo con Joi
-    │  ModelProductos.insertMany() → db.batch() (Turso)
-    │
-    ▼
-Respuesta: { cantidadInsertada }
-```
-
-**Formato esperado del archivo:**
-
-| Campo CSV/Excel | Campo interno | Notas |
-|---|---|---|
-| `nombre_producto` o `nombre` | `nombre_producto` | Alias aceptado |
-| `categoria` | `categoria` | Ver categorías válidas |
-| `precio` | `precio` | Se convierte a Number |
-| `capacidad` | `capacidad` | Se convierte a array de strings |
-| `descripcion` | `descripcion` | Opcional |
-| `imagen` o `imagen_url` | `imagen_url` | Alias aceptado |
-| `condicion` o `estado` | `condicion` | Alias aceptado |
+Sin cambios respecto a la versión anterior.
 
 ---
 
 ### Recuperación de Contraseña
 
-```
-POST /api/recuperar-password
-    │  Busca usuario por email
-    │  Genera código 6 dígitos
-    │  Guarda código en `codigo_verificacion`
-    │  Envía email con el código
-    │
-    ▼
-Usuario recibe email y envía el código + nueva contraseña
-
-POST /api/reset-password
-    │  Hashea la nueva contraseña
-    │  UPDATE: password = hash, verificado = 'verdadero', codigo_verificacion = NULL
-    │  (todo en una sola query atómica)
-    │
-    ▼
-Contraseña actualizada
-```
+Sin cambios respecto a la versión anterior.
 
 ---
 
@@ -759,73 +655,21 @@ Contraseña actualizada
 
 | Aspecto | Implementación |
 |---|---|
-| **Contraseñas** | Nunca se almacenan en texto plano. Se hashean con `bcrypt` usando salt 10 |
-| **Autenticación** | JWT firmados con `SECRET_KEY` del entorno, expiración de 1 hora |
-| **Autorización** | Doble middleware: `verificarToken` (autenticación) + `verificarAdmin` (autorización por rol) |
-| **Validación de entrada** | Todos los endpoints usan schemas Joi antes de ejecutar lógica de negocio |
-| **SQL Injection** | Todas las queries usan parámetros preparados (`args: [...]`), nunca interpolación directa |
-| **CORS** | Configurado explícitamente en `index.js`: solo acepta `localhost:5173` y el dominio de producción |
-| **Subida de archivos** | Multer filtra por MIME type. Las imágenes se procesan en memoria (no se escriben al disco) |
-| **Borrado de imágenes** | Si la validación falla después de subir a Cloudinary, las imágenes se eliminan como rollback |
-| **Variables de entorno** | Todas las credenciales se leen desde `.env` vía `dotenv`. Nunca hardcodeadas (salvo la URL de Turso que es pública) |
-| **Rol hardcodeado** | En `ModelStaff.crearStaff` el rol `'admin'` está hardcodeado en el modelo, no en el body de la request |
+| **Contraseñas** | Hash con `bcrypt`, salt 10 |
+| **Access token** | JWT firmado con `SECRET_KEY`, expiración **15 minutos** (reducida desde 1h) |
+| **Refresh token** | String opaco de 80 caracteres hex (`crypto.randomBytes(40)`), nunca un JWT |
+| **Rotación de tokens** | Cada uso del refresh token lo invalida y genera uno nuevo. Un token reutilizado es rechazado inmediatamente |
+| **Revocación explícita** | El logout revoca el refresh token en la BD. El token queda marcado como `revocado = 1` |
+| **Semáforo anti-race** | La variable global `promesaRenovacion` en `useApi` evita múltiples renovaciones simultáneas con el mismo token |
+| **Validación Joi previa a la BD** | El refresh token se valida con `insertarTokenSchema` antes de insertarse. El body de `/refresh` se valida con `renovarTokenRequestSchema` |
+| **Autorización** | Doble middleware: `verificarToken` + `verificarAdmin` |
+| **SQL Injection** | Todas las queries usan parámetros preparados (`args: [...]`) |
+| **CORS** | Solo acepta `localhost:5173` y el dominio de producción |
+| **Subida de archivos** | Multer filtra por MIME type, almacenamiento en memoria |
+| **Variables de entorno** | Todas las credenciales en `.env` vía `dotenv` |
 
 ---
 
 ## 7. Asistente Virtual
 
-El chatbot de AirMobile conecta el frontend con un workflow de N8N que usa el modelo Ollama `qwen3:8b`.
-
-### Flujo de una consulta
-
-```
-Usuario escribe mensaje en N8nChat
-    │
-    ▼
-useN8nChat.js
-    │  Envía POST al webhook de N8N con:
-    │  { mensaje, historial_conversacion }
-    │
-    ▼
-N8N Workflow
-    │
-    ├─► Nodo AI Agent (qwen3:8b vía Ollama)
-    │       │  Interpreta la intención del usuario
-    │       │  Decide qué tool usar
-    │       │
-    │       ├─► Tool: "Buscar Producto"
-    │       │   Si menciona categoría o modelo específico
-    │       │   → GET /api/productos/productos?busqueda=...&categoria=...
-    │       │
-    │       └─► Tool: "Consultar Catálogo General"
-    │           Si pregunta de forma genérica
-    │           → GET /api/productos/productos (hasta 50 resultados)
-    │
-    ▼
-Respuesta con productos, precios y links en formato Markdown
-    │
-    ▼
-N8nChat.jsx
-    │  react-markdown renderiza la respuesta
-    │  Los links [Ver detalles](/producto/ID) navegan dentro de la SPA
-```
-
-### Archivos de configuración del agente
-
-| Archivo | Contenido |
-|---|---|
-| `system_prompt.txt` | Personalidad, reglas de comportamiento, formato de respuesta obligatorio, categorías de productos |
-| `tool_busqueda.txt` | Descripción del tool "Buscar Producto": cuándo usarlo, parámetros `busqueda` y `categoria`, valores válidos de categoría |
-| `tool_catalogo.txt` | Descripción del tool "Consultar Catálogo General": cuándo usarlo, instrucciones de agrupado y formato de respuesta |
-
-### Formato de respuesta del agente
-
-El agente está instruido para **siempre** incluir el precio con `$` y un link en Markdown usando el `id` del producto devuelto por la base de datos:
-
-```markdown
-**iPhone 13 Pro Max** - $850.50
-En stock y disponible.
-[Ver detalles](/producto/3)
-```
-
-El link usa rutas relativas que React Router resuelve internamente sin recargar la página.
+Sin cambios respecto a la versión anterior. Ver documentación previa para el flujo completo de N8N + Ollama.
