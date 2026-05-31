@@ -9,13 +9,13 @@ import ModalConfirmarEliminar from "./ModalConfirmarEliminar";
 import ModalEditarProducto from "./ModalEditarProducto";
 
 const TablaProductos = () => {
- 
+
     // Paginación
     const [paginaActual, setPaginaActual] = useState(1);
- 
+
     // Token para autenticación
     const { token } = useAuth();
- 
+
     // Una sola instancia de useApi para todo
     const { ejecutarPeticion, isLoading, error } = useApi();
     const [productos, setProductos] = useState([]);
@@ -28,7 +28,7 @@ const TablaProductos = () => {
     const [modalEditar, setModalEditar] = useState(false);
     const [productoAEditar, setProductoAEditar] = useState(null);
 
- 
+
     // Carga de productos
     useEffect(() => {
         const cargarProductos = async () => {
@@ -37,12 +37,11 @@ const TablaProductos = () => {
             });
             if (respuesta.exito) {
                 setProductos(respuesta.data);
-                console.log("Productos cargados:", respuesta.data);
             }
         };
         cargarProductos();
     }, [paginaActual]);
- 
+
     // Abre el modal en vez del window.confirm
     const abrirModalEliminar = (id, nombre) => {
         setProductoAEliminar({ id, nombre });
@@ -51,22 +50,22 @@ const TablaProductos = () => {
 
     // Se ejecuta cuando el admin confirma en el modal
     const confirmarEliminar = async () => {
-    const result = await ejecutarPeticion(`productos/eliminar-producto/${productoAEliminar.id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` }
-    });
+        const result = await ejecutarPeticion(`productos/eliminar-producto/${productoAEliminar.id}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` }
+        });
 
-    if (result.exito) {
-        setProductos(prev => ({
-            ...prev,
-            data: prev.data.filter(p => p.id !== productoAEliminar.id)
-        }));
-    } else {
-        alert("No se pudo eliminar el producto. Intentá de nuevo.");
-    }
+        if (result.exito) {
+            setProductos(prev => ({
+                ...prev,
+                data: prev.data.filter(p => p.id !== productoAEliminar.id)
+            }));
+        } else {
+            alert("No se pudo eliminar el producto. Intentá de nuevo.");
+        }
 
-    setModalEliminar(false);
-    setProductoAEliminar(null);
+        setModalEliminar(false);
+        setProductoAEliminar(null);
     };
 
     // Función abrir modal editar
@@ -77,12 +76,27 @@ const TablaProductos = () => {
     };
     // Función actualizar lista sin recargar
     const actualizarProductoEnLista = (id, datosActualizados) => {
-        setProductos(prev => ({
-            ...prev,
-            data: prev.data.map(p =>
-                p.id === id ? { ...p, ...datosActualizados } : p
-            )
-        }));
+        
+        setProductos(prev => {
+            // 1. Verificamos si tu estado es directamente un Array o si está adentro de "data"
+            const esArrayDirecto = Array.isArray(prev);
+            const listaOriginal = esArrayDirecto ? prev : prev?.data || [];
+
+            // 2. Mapeamos usando doble igual (==) por si hay diferencias entre String y Number
+            const nuevaLista = listaOriginal.map(p =>
+                p.id == id ? { ...p, ...datosActualizados } : p
+            );
+
+            // 3. Devolvemos el estado respetando su estructura original
+            if (esArrayDirecto) {
+                return nuevaLista;
+            } else {
+                return {
+                    ...prev,
+                    data: nuevaLista
+                };
+            }
+        });
     };
 
 
@@ -91,7 +105,7 @@ const TablaProductos = () => {
         setPaginaActual(pagina);
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
- 
+
     if (error) {
         return (
             <div className="tabla-card p-4">
@@ -99,10 +113,10 @@ const TablaProductos = () => {
             </div>
         );
     }
- 
+
     return (
         <div className="tabla-card">
- 
+
             {/* Encabezado */}
             <div className="tabla-header d-flex align-items-center justify-content-between">
                 <h2 className="tabla-titulo">Productos Activos</h2>
@@ -115,7 +129,7 @@ const TablaProductos = () => {
                     </button>
                 </div>
             </div>
- 
+
             {/* Columnas */}
             <div className="tabla-columnas d-flex">
                 <span className="tabla-col-nombre">NOMBRE DEL PRODUCTO</span>
@@ -123,7 +137,7 @@ const TablaProductos = () => {
                 <span className="tabla-col-precio">PRECIO</span>
                 <span className="tabla-col-acciones"></span>
             </div>
- 
+
             {/* Filas */}
             {(isLoading || !productos) ? (
                 <SkeletonFilaProducto cantidad={3} />
@@ -141,7 +155,7 @@ const TablaProductos = () => {
                     />
                 ))
             )}
- 
+
             {/* Paginación */}
             <div className="tabla-footer">
                 <Paginacion
@@ -156,23 +170,23 @@ const TablaProductos = () => {
                 nombreProducto={productoAEliminar?.nombre}
                 onConfirmar={confirmarEliminar}
                 onCancelar={() => {
-                setModalEliminar(false);
-                setProductoAEliminar(null);
-            }}
+                    setModalEliminar(false);
+                    setProductoAEliminar(null);
+                }}
             />
 
             <ModalEditarProducto
                 isOpen={modalEditar}
                 producto={productoAEditar}
                 onClose={() => {
-                setModalEditar(false);
-                setProductoAEditar(null);
-            }}
-            onProductoActualizado={actualizarProductoEnLista}
+                    setModalEditar(false);
+                    setProductoAEditar(null);
+                }}
+                onProductoActualizado={actualizarProductoEnLista}
             />
-            
+
         </div>
     );
 };
- 
+
 export default TablaProductos;

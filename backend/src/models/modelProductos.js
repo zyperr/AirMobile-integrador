@@ -194,9 +194,10 @@ class ModelProductos {
             });
 
             if (result.rowsAffected === 0) {
+                console.log("no cambio nada ")
                 return { success: false, message: "No se ha encontrado el producto" }
             }
-
+            console.log("si cambio algo")
             return { success: true, message: "Producto actualizado correctamente" };
 
         } catch (err) {
