@@ -6,7 +6,8 @@ import { SkeletonFilaProducto } from "./SkeletonFilaLoader";
 import { ProductosFila } from "./ProductoFila";
 import BagdeEstado from "../common/BadgeEstado";
 import ModalConfirmarEliminar from "./ModalConfirmarEliminar";
- 
+import ModalEditarProducto from "./ModalEditarProducto";
+
 const TablaProductos = () => {
  
     // Paginación
@@ -22,6 +23,11 @@ const TablaProductos = () => {
     // Modal de confirmación para eliminar producto
     const [modalEliminar, setModalEliminar] = useState(false);
     const [productoAEliminar, setProductoAEliminar] = useState(null);
+
+    // Modal para editar producto
+    const [modalEditar, setModalEditar] = useState(false);
+    const [productoAEditar, setProductoAEditar] = useState(null);
+
  
     // Carga de productos
     useEffect(() => {
@@ -62,7 +68,24 @@ const TablaProductos = () => {
     setModalEliminar(false);
     setProductoAEliminar(null);
     };
- 
+
+    // Función abrir modal editar
+    const abrirModalEditar = (id) => {
+        const producto = productos.data.find(p => p.id === id);
+        setProductoAEditar(producto);
+        setModalEditar(true);
+    };
+    // Función actualizar lista sin recargar
+    const actualizarProductoEnLista = (id, datosActualizados) => {
+        setProductos(prev => ({
+            ...prev,
+            data: prev.data.map(p =>
+                p.id === id ? { ...p, ...datosActualizados } : p
+            )
+        }));
+    };
+
+
     // Cambiar página
     const cambiarPagina = (pagina) => {
         setPaginaActual(pagina);
@@ -114,6 +137,7 @@ const TablaProductos = () => {
                         nombre_producto={producto.nombre_producto}
                         precio={producto.precio}
                         onEliminar={(id) => abrirModalEliminar(id, producto.nombre_producto)}
+                        onEditar={abrirModalEditar}
                     />
                 ))
             )}
@@ -136,6 +160,17 @@ const TablaProductos = () => {
                 setProductoAEliminar(null);
             }}
             />
+
+            <ModalEditarProducto
+                isOpen={modalEditar}
+                producto={productoAEditar}
+                onClose={() => {
+                setModalEditar(false);
+                setProductoAEditar(null);
+            }}
+            onProductoActualizado={actualizarProductoEnLista}
+            />
+            
         </div>
     );
 };

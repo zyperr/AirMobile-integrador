@@ -1,6 +1,6 @@
 import BadgeEstado from "../common/BadgeEstado";
 
-export const ProductosFila = ({ id, imagen_url, nombre_producto, condicion, precio, onEliminar }) => {
+export const ProductosFila = ({ id, imagen_url, nombre_producto, condicion, precio, onEliminar, onEditar }) => {
     return (
         <>
             {/* Borramos el key de acá adentro porque ya se lo pasamos desde el map en TablaProductos */}
@@ -28,8 +28,15 @@ export const ProductosFila = ({ id, imagen_url, nombre_producto, condicion, prec
                     <span className="tabla-precio">${precio.toFixed(2)}</span>
                 </div>
 
-                {/* Botón eliminar */}
-                <div className="tabla-col-acciones">
+                {/* Botones de Acciones */}
+                <div className="tabla-col-acciones d-flex gap-2">
+                    <button
+                        className="tabla-btn-editar"
+                        onClick={() => onEditar(id)}
+                        title="Editar producto"
+                    >
+                    <i className="bi bi-pencil" />
+                    </button>
                     <button
                         className="tabla-btn-eliminar"
                         onClick={() => onEliminar(id)}
@@ -38,6 +45,7 @@ export const ProductosFila = ({ id, imagen_url, nombre_producto, condicion, prec
                     <i className="bi bi-trash" />
                     </button>
                 </div>
+
             </div>
         </>
     );

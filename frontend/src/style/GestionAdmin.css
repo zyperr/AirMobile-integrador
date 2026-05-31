@@ -502,6 +502,21 @@
     color: #ffffff;
 }
 
+.tabla-btn-editar {
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    transition: color 0.2s, background 0.2s;
+}
+
+.tabla-btn-editar:hover {
+    color: #1a3a6b;
+    background-color: #e0e7ff;
+}
 /*---CARGA MASIVA DE PRODUCTOS---*/
 
 .carga-card {

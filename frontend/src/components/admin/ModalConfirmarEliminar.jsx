@@ -18,7 +18,6 @@ const ModalConfirmarEliminar = ({ isOpen, onConfirmar, onCancelar, nombreProduct
 
                     {/* HEADER */}
                     <div className="modal-header border-0 pb-0">
-
                         <button
                             type="button"
                             className="btn-close"
