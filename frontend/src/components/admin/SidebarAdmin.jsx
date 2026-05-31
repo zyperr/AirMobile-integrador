@@ -16,14 +16,9 @@ const SidebarAdmin = () => {
 
     return (  
         <aside className="sidebar-admin d-flex flex-column">
-            {/*Logo*/}
-            <div className="sidebar-logo">
-                <span className="sidebar-logo-texto">Air Mobile</span>
-            </div>
-
             {/* Navegacion Principal */}
             <nav className="sidebar-nav flex-grow-1">
-                <ul className="list-unstyled m-0">
+                <ul className="list-unstyled" style={{marginTop:"60px"}}>
                     {menuitems.map((item) => (
                         <li key={item.nombre}>
                             <button
@@ -47,11 +42,6 @@ const SidebarAdmin = () => {
                     <li>
                         <button className="sidebar-link">
                             <i className="bi bi-question-circle me-2" />Centro de Ayuda
-                        </button>
-                    </li>
-                    <li>
-                        <button className="sidebar-link sidebar-link-danger">
-                            <i className="bi bi-box-arrow-right me-2" />Cerrar Cuenta
                         </button>
                     </li>
                 </ul>
