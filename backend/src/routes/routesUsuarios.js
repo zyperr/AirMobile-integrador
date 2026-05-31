@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { obtenerUsuarios,registro,login,verificar, obtenerPerfil, actualizarNombreUsuario} from "../controllers/controlerUsuario.js";
+import { obtenerUsuarios,registro,login,verificar, obtenerPerfil, actualizarNombreUsuario, cerrarSesion} from "../controllers/controlerUsuario.js";
 import { verificarToken } from "../middlewares/authMiddleware.js";
 import { actualizarContrasena } from "../controllers/controllerPassword.js";
-
+import { renovarSesion } from "../controllers/controlerUsuario.js";
 
 const router = Router();
 
@@ -24,7 +24,8 @@ router.put("/actualizar",verificarToken,actualizarContrasena);
 router.put("/actualizar-nombre",verificarToken,actualizarNombreUsuario);
 
 
-
+router.post('/logout', cerrarSesion);
+router.post('/refresh', renovarSesion);
 
 // Esta función intercepta las peticiones antes de que lleguen a la ruta protegida
 router.get('/perfil', verificarToken, (req, res) => {
