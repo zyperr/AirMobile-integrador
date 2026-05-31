@@ -40,7 +40,7 @@ const GestionAdmin = () => {
                     {/*  Tabla de productos utiliza el componente Badge de Estados */}
                     <TablaDeProductos />
                     <CargaMasiva />
-                    < ModaleNuevoProducto  isOpen={modaleNuevoProducto} onClose={setModaleNuevoProducto (false)} />
+                    < ModaleNuevoProducto  isOpen={modaleNuevoProducto} onClose={() => setModaleNuevoProducto (false)} />
 
                 </main>
             </div>
