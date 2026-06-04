@@ -1,44 +1,41 @@
-import SidebarAdmin from "../components/admin/SidebarAdmin";
-import TablaDeProductos from "../components/admin/TablaDeProductos";
-import "../style/GestionAdmin.css";
-import CargaMasiva from "../components/admin/CargaMasiva";
-import ModalNuevoProducto from "../components/admin/ModalNuevoProducto";
 import { useState } from "react";
+import { Inventario } from "../components/admin/Inventario";
+import SidebarAdmin from "../components/admin/SidebarAdmin";
+import "../style/GestionAdmin.css";
+import { Administracion } from "../components/admin/Administracion";
+import { Facturas } from "../components/admin/Facturas";
+
+const menuitems = [
+    { id: 1, nombre: "Administracion", icono: "bi-grid" },
+    { id: 2, nombre: "inventario", icono: "bi-archive" },
+    { id: 3, nombre: "Facturas", icono: "bi-cart3" },
+];
 
 const GestionAdmin = () => {
+    const [tabs, setTabs] = useState(1);
 
-    const [modaleNuevoProducto, setModaleNuevoProducto] = useState(false);
+
 
     return (
         <div className="admin-layout bg-light">
-            <SidebarAdmin />
+            <SidebarAdmin menuitems={menuitems} setTabs={setTabs} />
             <div className="admin-contenido">
                 <main className="admin-main">
-                    {/* ENCABEZADO DE LA PÁGINA */}
-                    <div className="d-flex align-items-center justify-content-between mb-4">
-                        <div>
-                            <h1 className="admin-page-titulo">Inventario</h1>
-                            <p className="admin-page-subtitulo">
-                                Gestiona tu catálogo de dispositivos, niveles de
-                                existencias y precios para el ecosistema Air Mobile.
-                            </p>
-                        </div>
-
-                        <div className="d-flex gap-2">
-                            <button className="admin-btn-exportar">Exportar CSV</button>
-
-                            <button className="admin-btn-nuevo" onClick={() => setModaleNuevoProducto(!modaleNuevoProducto)}>
-                                <i className="bi bi-plus me-1" />Nuevo Producto
-                            </button>
-                        </div>
-
-                    </div>
-
-                    {/*  Tabla de productos utiliza el componente Badge de Estados */}
-                    <TablaDeProductos />
-                    <CargaMasiva />
-                    < ModalNuevoProducto isOpen={modaleNuevoProducto} onClose={() => setModaleNuevoProducto(false)} />
-
+                    {
+                        tabs === 1 && (
+                            <><Administracion/></>
+                        )
+                    }
+                    {
+                        tabs === 2 && (
+                            <Inventario />
+                        )
+                    }
+                    {
+                        tabs === 3 && (
+                            <><Facturas/></>
+                        )
+                    }
                 </main>
             </div>
         </div>

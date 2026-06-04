@@ -2,31 +2,26 @@
 import { useState } from "react";
 
 
-const SidebarAdmin = () => {
+const SidebarAdmin = ({menuitems,setTabs}) => {
 
-    const [activo,setActivo ] = useState("Inventario");
+    const [activo, setActivo] = useState(1);
 
-     // Lista de items del menu principal con su iconos.
+    // Lista de items del menu principal con su iconos.
 
-    const menuitems = [
-        {nombre: "Administracion", icono: "bi-grid" },
-        {nombre: "inventario", icono: "bi-archive"},
-        {nombre: "Ordenes", icono: "bi-cart3"},
-    ];
 
-    return (  
+    return (
         <aside className="sidebar-admin d-flex flex-column">
             {/* Navegacion Principal */}
             <nav className="sidebar-nav flex-grow-1">
-                <ul className="list-unstyled" style={{marginTop:"60px"}}>
-                    {menuitems.map((item) => (
-                        <li key={item.nombre}>
+                <ul className="list-unstyled" style={{ marginTop: "60px" }}>
+                    {menuitems.map(({ nombre, icono, id }) => (
+                        <li key={`${id}-${nombre}`}>
                             <button
-                                className={`sidebar-item ${activo === item.nombre ? "sidebar-item-activo" : ""}`}
-                                onClick={() => setActivo(item.nombre)}
+                                className={`sidebar-item ${activo === id ? "sidebar-item-activo" : ""}`}
+                                onClick={() => {setActivo(id),setTabs(id)}}
                             >
-                                <i className={`bi ${item.icono} sidebar-icono`} />
-                                {item.nombre}
+                                <i className={`bi ${icono} sidebar-icono`} />
+                                {nombre}
                             </button>
                         </li>
                     ))}
@@ -35,7 +30,7 @@ const SidebarAdmin = () => {
 
             {/* Boton de nuevo Producto */}
             <div className="sidebar-footer">
-    
+
 
                 {/* Links de abajo */}
                 <ul className="list-unstyled mt-3 m-0">

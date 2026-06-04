@@ -5,8 +5,10 @@ import Paginacion from "../common/Paginacion";
 import { SkeletonFilaProducto } from "./SkeletonFilaLoader";
 import { ProductosFila } from "./ProductoFila";
 import BagdeEstado from "../common/BadgeEstado";
-import ModalConfirmarEliminar from "./ModalConfirmarEliminar";
-import ModalEditarProducto from "./ModalEditarProducto";
+import ModalConfirmarEliminar from "./forms/ModalConfirmarEliminar";
+import ModalEditarProducto from "./forms/ModalEditarProducto";
+
+
 
 const TablaProductos = () => {
 
@@ -27,7 +29,7 @@ const TablaProductos = () => {
     // Modal para editar producto
     const [modalEditar, setModalEditar] = useState(false);
     const [productoAEditar, setProductoAEditar] = useState(null);
-
+  
 
     // Carga de productos
     useEffect(() => {
@@ -115,6 +117,7 @@ const TablaProductos = () => {
     }
 
     return (
+        
         <div className="tabla-card">
 
             {/* Encabezado */}
