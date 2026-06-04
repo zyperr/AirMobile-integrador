@@ -1,104 +1,133 @@
 import { createContext, useEffect, useState } from "react";
+import { useAuth } from "./AuthContext";
 
 export const CarritoContext = createContext();
 
 export function CartProvider({ children }) {
 
-  const [cartItems, setCartItems] = useState(() => {
+  const { token, estaAutenticado } = useAuth();
 
-  const carritoGuardado =
-    localStorage.getItem("carrito");
+  const [cartItems, setCartItems] = useState([]);
 
-  return carritoGuardado
-    ? JSON.parse(carritoGuardado)
-    : [];
+  const cargarCarrito = async () => {
 
-});
-useEffect(() => {
+    if (!token) {
+      setCartItems([]);
+      return;
+    }
 
-  localStorage.setItem(
-    "carrito",
-    JSON.stringify(cartItems)
-  );
+    try {
 
-}, [cartItems]);
-
-  const addToCart = (product) => {
-
-    const existingProduct = cartItems.find(
-      (item) => item.id === product.id
-    );
-
-    if (existingProduct) {
-
-      setCartItems(
-        cartItems.map((item) =>
-          item.id === product.id
-            ? {
-                ...item,
-                quantity: item.quantity + 1
-              }
-            : item
-        )
+      const response = await fetch(
+        "http://localhost:3000/api/carrito",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
       );
 
-    } else {
+      const resultado = await response.json();
 
-      setCartItems([
-        ...cartItems,
-        {
-          ...product,
-          quantity: 1
-        }
-      ]);
+      if (resultado?.data) {
+
+        const carritoFormateado =
+          resultado.data.map(item => ({
+            id: item.producto_id,
+            carritoId: item.carrito_id,
+            nombreDeProducto: item.nombre_producto,
+            quantity: item.cantidad,
+            precio: item.precio,
+            imagen: JSON.parse(item.imagen_url)[0]
+          }));
+
+        setCartItems(carritoFormateado);
+
+      }
+
+    } catch (error) {
+
+      console.error(
+        "Error cargando carrito:",
+        error
+      );
 
     }
 
   };
 
-  const removeFromCart = (id) => {
+  useEffect(() => {
 
-    setCartItems(
-      cartItems.filter((item) => item.id !== id)
+    if (estaAutenticado) {
+      cargarCarrito();
+    } else {
+      setCartItems([]);
+    }
+
+  }, [token]);
+
+  const agregarProducto = async (idProducto) => {
+
+    await fetch(
+      `http://localhost:3000/api/carrito/agregar-carrito/${idProducto}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          cantidad: 1
+        })
+      }
     );
+
+    await cargarCarrito();
 
   };
 
-  const increaseQuantity = (id) => {
+  const increaseQuantity = async (idProducto) => {
 
-    setCartItems(
-      cartItems.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              quantity: item.quantity + 1
-            }
-          : item
-      )
-    );
+    await agregarProducto(idProducto);
 
   };
 
-  const decreaseQuantity = (id) => {
+  const decreaseQuantity = async (idProducto) => {
 
-    setCartItems(
-      cartItems.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              quantity:
-                item.quantity > 1
-                  ? item.quantity - 1
-                  : 1
-            }
-          : item
-      )
+    await fetch(
+      `http://localhost:3000/api/carrito/eliminar-carrito/${idProducto}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
     );
+
+    await cargarCarrito();
+
+  };
+
+  const removeFromCart = async (idProducto) => {
+
+    await fetch(
+      `http://localhost:3000/api/carrito/eliminar-producto-completo/${idProducto}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+
+    await cargarCarrito();
 
   };
 
   const cartCount = cartItems.reduce(
-    (total, item) => total + item.quantity,
+    (total, item) =>
+      total + item.quantity,
     0
   );
 
@@ -109,23 +138,19 @@ useEffect(() => {
   );
 
   return (
-
     <CarritoContext.Provider
       value={{
         cartItems,
-        addToCart,
-        removeFromCart,
+        cartCount,
+        subtotal,
+        cargarCarrito,
+        agregarProducto,
         increaseQuantity,
         decreaseQuantity,
-        cartCount,
-        subtotal
+        removeFromCart
       }}
     >
-
       {children}
-
     </CarritoContext.Provider>
-
   );
-
 }
