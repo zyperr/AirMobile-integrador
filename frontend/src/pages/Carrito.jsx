@@ -1,16 +1,116 @@
 import { useContext } from "react";
 import { CarritoContext } from "../context/CarritoContext";
 import "../style/carrito.css";
+//temporales
+
+import { useEffect,useState } from "react";
+import { useApi } from "../hooks/useApi";
+import { useAuth } from "../context/AuthContext";
+
 
 export default function Carrito() {
 
   const {
-    cartItems: carrito,
     removeFromCart: eliminarDelCarrito,
     increaseQuantity: aumentarCantidad,
     decreaseQuantity: disminuirCantidad,
-    subtotal
   } = useContext(CarritoContext);
+
+  //temporal
+  const { ejecutarPeticion } = useApi();
+  const { token } = useAuth();
+  console.log("TOKEN:", token);
+  const [carrito, setCarrito] = useState([]);
+  const cargarCarrito = async () => {
+
+  const resultado = await ejecutarPeticion(
+    "carrito",
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  );
+
+  if (resultado?.data?.data) {
+
+    const carritoFormateado = resultado.data.data.map(item => ({
+      id: item.producto_id,
+      carritoId: item.carrito_id,
+      nombreDeProducto: item.nombre_producto,
+      quantity: item.cantidad,
+      precio: item.precio,
+      imagen: JSON.parse(item.imagen_url)[0]
+    }));
+
+    setCarrito(carritoFormateado);
+  }
+};
+
+const aumentarCantidadApi = async (id) => {
+
+  await ejecutarPeticion(
+    `carrito/agregar-carrito/${id}`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        cantidad: 1
+      })
+    }
+  );
+
+  await cargarCarrito();
+};
+
+const disminuirCantidadApi = async (id) => {
+
+  await ejecutarPeticion(
+    `carrito/eliminar-carrito/${id}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  );
+
+  await cargarCarrito();
+};
+
+const eliminarProductoApi = async (id) => {
+
+  await ejecutarPeticion(
+    `carrito/eliminar-producto-completo/${id}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  );
+
+  await cargarCarrito();
+};
+
+
+   useEffect(() => {  
+
+  cargarCarrito();
+
+  }, [token]);
+    console.log("carrito actual:", carrito);
+
+    const subtotalApi = carrito.reduce(
+      (total, item) =>
+        total + item.precio * item.quantity,
+       0
+    );
+
+  
 
   return (
 
@@ -66,7 +166,7 @@ export default function Carrito() {
                       <button
                         className="btn btn-light"
                         onClick={() =>
-                          disminuirCantidad(item.id)
+                          disminuirCantidadApi(item.id)
                         }
                       >
                         -
@@ -79,7 +179,7 @@ export default function Carrito() {
                       <button
                         className="btn btn-light"
                         onClick={() =>
-                          aumentarCantidad(item.id)
+                          aumentarCantidadApi(item.id)
                         }
                       >
                         +
@@ -91,7 +191,7 @@ export default function Carrito() {
                     <button
                       className="btn btn-link text-danger p-0 mt-3"
                       onClick={() =>
-                        eliminarDelCarrito(item.id)
+                        eliminarProductoApi(item.id)
                       }
                     >
                       Eliminar
@@ -134,7 +234,7 @@ export default function Carrito() {
                 </span>
 
                 <span className="fw-bold">
-                  ${subtotal.toFixed(2)}
+                  ${subtotalApi.toFixed(2)}
                 </span>
 
               </div>

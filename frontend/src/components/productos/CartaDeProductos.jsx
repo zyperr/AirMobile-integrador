@@ -6,16 +6,36 @@ import '../../style/CartaDeProductos.css';
 import BotonDeseados from '../productos/BotonDeseados'; // Asegúrate de que la ruta sea la correcta
 
 import { useAuth } from '../../context/AuthContext'; // Importamos el hook para acceder al estado de autenticación
+import { useApi } from '../../hooks/useApi';
 
 const ProductCard = ({ id, nombreDeProducto, condicion, precio, capacidad = [], imagen_url ,onRemover}) => {
-  const { addToCart } = useContext(CarritoContext);
+  //const { agregarProducto } = useContext(CarritoContext);
   // Validación por si capacidad viene como texto (string) desde la base de datos
   const capacidadFormateada = Array.isArray(capacidad) ? capacidad.join(', ') : capacidad;
+  
+  const { estaAutenticado, token } = useAuth();
+  const { ejecutarPeticion } = useApi();
+  const agregarProducto = async (idProducto) => {
 
+    const resultado = await ejecutarPeticion(
+      `carrito/agregar-carrito/${idProducto}`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          cantidad: 1
+        })
+      }
+    );
 
-  const { estaAutenticado } = useAuth();
+    console.log(
+      "Respuesta carrito:",
+      JSON.stringify(resultado, null, 2));
 
-  console.log("Estado de autenticación en ProductCard:", estaAutenticado);
+  };
+
 
   return (
     // Agregamos 'position-relative' aquí para que el botón flote relativo a la tarjeta
@@ -85,10 +105,10 @@ const ProductCard = ({ id, nombreDeProducto, condicion, precio, capacidad = [], 
             {estaAutenticado && (
               <button
                 className="btn btn-primary fw-semibold custom-view-btn btn-sm text-nowrap px-2 py-1"
-                onClick={(e) => {
+                onClick={async (e) => {
 
                   e.preventDefault();
-
+                  /*
                   addToCart({
                     id,
                     nombreDeProducto,
@@ -97,7 +117,9 @@ const ProductCard = ({ id, nombreDeProducto, condicion, precio, capacidad = [], 
                     condicion,
                     capacidad: capacidadFormateada
                   });
+                  */
 
+                  await agregarProducto(id);
                 }}
               >
                 Añadir

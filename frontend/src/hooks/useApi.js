@@ -14,7 +14,6 @@ export const useApi = () => {
         try {
             const esFormData = options.body instanceof FormData;
             const headersBase = esFormData ? {} : { 'Content-Type': 'application/json' };
-
             const response = await fetch(URL, {
                 headers: {
                     ...headersBase,
