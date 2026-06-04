@@ -10,7 +10,8 @@ export const inicializarBaseDeDatos = async () => {
         password TEXT NOT NULL,
         rol TEXT DEFAULT 'cliente',
         verificado TEXT DEFAULT 'falso',
-        codigo_verificacion TEXT
+        codigo_verificacion TEXT,
+        activo INTEGER DEFAULT 1
     )`;
 
 
@@ -63,6 +64,23 @@ export const inicializarBaseDeDatos = async () => {
     FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE,
     UNIQUE(usuario_id, producto_id) 
     )`;
+
+    const queryRefreshToken = `
+    CREATE TABLE IF NOT EXISTS refresh_tokens (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        usuario_id INTEGER NOT NULL,
+        refresh_token TEXT NOT NULL UNIQUE,
+        fecha_expiracion DATETIME NOT NULL,
+        revocado BOOLEAN DEFAULT 0,
+        fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+        
+        FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+    );
+    `;
+    
+    const queryIndexRefreshToken = `
+    CREATE INDEX IF NOT EXISTS idx_refresh_token ON refresh_tokens(refresh_token);
+    `;
     try {
         await db.execute(queryUsuarios);
         await db.execute(queryProductos);
@@ -70,7 +88,8 @@ export const inicializarBaseDeDatos = async () => {
         await db.execute(queryFacturas);
         await db.execute(queryDetallesFactura);
         await db.execute(queryListaDeseados);
-        
+        await db.execute(queryRefreshToken);
+        await db.execute(queryIndexRefreshToken);
 
         console.log("✅ Base de datos y tablas inicializadas correctamente.");
         return true;

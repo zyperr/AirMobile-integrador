@@ -2,13 +2,15 @@ import UsuarioModel from "../models/modelUsuario.js"
 import { generarCodigo } from "../middlewares/authMiddleware.js"
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
+import crypto from 'crypto';
 import schemaRegistroUsuarios from '../schemas/schemaRegistroUsuario.js';
 import schemaLoginUsuarios from "../schemas/schemaLoginUsuarios.js"
 import schemaVerificar from "../schemas/schemaVerificacion.js";
 import { enviarCorreoVerificacion } from "../utils/mailer.js";
 import jwt from "jsonwebtoken"
 import { schemaActualizarNombre } from "../schemas/schemaUpdateUsuario.js";
-
+import TokenModel from "../models/modelToken.js";
+import { insertarTokenSchema, renovarTokenRequestSchema } from "../schemas/schemaRefreshToken.js";
 
 dotenv.config();
 
@@ -37,61 +39,94 @@ export const obtenerUsuarios = async (req, res) => {
 
 
 export const login = async (req, res) => {
-
-    const { error, value } = schemaLoginUsuarios.validate(req.body, { abortEarly: false })
+    // 1. Validación inicial de credenciales
+    const { error, value } = schemaLoginUsuarios.validate(req.body, { abortEarly: false });
     if (error) {
+        // Corrección: Mapeamos los errores para que erroresLimpios exista
+        const erroresLimpios = error.details.map(err => err.message);
         return res.status(400).json({
             exito: false,
             mensaje: "Errores en el formulario:",
             errores: erroresLimpios
         });
-    };
-
+    }
 
     try {
         const { email, password } = value;
 
+        // 2. Búsqueda y verificación
         const usuarioEncontrado = await UsuarioModel.buscarEmail(email);
         if (!usuarioEncontrado) {
             return res.status(401).json({ exito: false, message: "Credenciales incorrectas" });
         }
 
         const passwordCorrecta = await bcrypt.compare(password, usuarioEncontrado.password);
-
         if (!passwordCorrecta) {
             return res.status(401).json({ exito: false, message: "Credenciales incorrectas" });
         }
 
+        console.log("ID del usuario que intentamos guardar:", usuarioEncontrado.id);
+        // --- INICIO LÓGICA REFRESH TOKEN ---
+        // Generamos un string hexadecimal de 80 caracteres
+        const refreshToken = crypto.randomBytes(40).toString('hex');
 
+        // Calculamos la vigencia (ej. 7 días)
+        const diasVigencia = 7;
+        const fechaExpiracion = new Date();
+        fechaExpiracion.setDate(fechaExpiracion.getDate() + diasVigencia);
+        const fechaExpiracionStr = fechaExpiracion.toISOString();
+
+        // Blindamos los datos con Joi antes de tocar la base de datos
+        const { error: errorToken, value: valueToken } = insertarTokenSchema.validate({
+            idUsuario: usuarioEncontrado.id,
+            refreshToken,
+            fechaExpiracionStr
+        });
+
+        if (errorToken) {
+            console.error("Error al validar schema de Refresh Token:", errorToken.details[0].message);
+            return res.status(500).json({ exito: false, message: "Error interno al generar la sesión segura." });
+        }
+
+        // Delegamos la inserción a la capa de datos (Turso)
+        await TokenModel.guardarRefreshToken(valueToken.refreshToken,valueToken.idUsuario, valueToken.fechaExpiracionStr);
+        // --- FIN LÓGICA REFRESH TOKEN ---
+
+        // --- LÓGICA ACCESS TOKEN ---
         const tokenPayload = {
             id: usuarioEncontrado.id,
-            rol: usuarioEncontrado.rol
+            rol: usuarioEncontrado.rol,
+            email: usuarioEncontrado.email,
+            nombre: usuarioEncontrado.nombre
         };
 
         const token = jwt.sign(
             tokenPayload,
             SECRET_KEY,
-            { expiresIn: '1h' } // La pulsera caduca en 1 hora por seguridad
-        )
+            { expiresIn: '15m' } // Bajamos de '1h' a '15m' por seguridad
+        );
 
         const datosUsuario = {
             id: usuarioEncontrado.id,
             nombre: usuarioEncontrado.nombre,
-            rol: usuarioEncontrado.rol
-        }
+            rol: usuarioEncontrado.rol,
+            email: usuarioEncontrado.email
+        };
 
+        // 3. Respuesta al cliente
         res.status(200).json({
+            exito: true,
             message: "Login exitoso",
-            token: token,
+            token: token,               // Llave de uso diario (15 min)
+            refreshToken: refreshToken, // Llave maestra (7 días)
             data: datosUsuario
-        })
+        });
+
     } catch (err) {
-        console.error(err);
+        console.error("Error en login:", err);
         res.status(500).json({ exito: false, message: "Error interno al iniciar sesión" });
     }
-
-
-}
+};
 
 export const verificar = async (req, res) => {
     const { error, value } = schemaVerificar.validate(req.body, { abortEarly: false })
@@ -204,10 +239,16 @@ export const obtenerPerfil = async (req, res) => {
             return res.status(404).json({ exito: false, message: "Usuario no encontrado" });
         }
 
+        const payload = {
+            id: usuario.id,
+            nombre: usuario.nombre,
+            email: usuario.email,
+            rol: usuario.rol
+        }
 
         res.status(200).json({
             exito: true,
-            data: { id: usuario.id, nombre: usuario.nombre, email: usuario.email },
+            data: payload,
             message: "Perfil del usuario"
         });
 
@@ -274,3 +315,95 @@ export const actualizarNombreUsuario = async (req, res) => {
         });
     }
 }
+
+export const renovarSesion = async (req, res) => {
+    // 1. Validar cuerpo de la petición
+    const { error, value } = renovarTokenRequestSchema.validate(req.body);
+    if (error) {
+        return res.status(400).json({ exito: false, message: error.details[0].message });
+    }
+
+    const tokenEntrante = value.refreshToken;
+
+    try {
+        // 2. Buscar en la base de datos
+        const tokenDB = await TokenModel.buscarRefreshToken(tokenEntrante);
+
+        // Guard Clause 1: El token no existe
+        if (!tokenDB) {
+            return res.status(401).json({ exito: false, message: "Sesión inválida." });
+        }
+
+        // Guard Clause 2: El token fue revocado previamente (posible robo)
+        if (tokenDB.revocado === 1) {
+            return res.status(401).json({ exito: false, message: "Sesión revocada. Vuelva a iniciar sesión." });
+        }
+
+        // Guard Clause 3: El token caducó por tiempo (ej. pasaron más de 7 días)
+        const ahora = new Date();
+        const expiracion = new Date(tokenDB.fecha_expiracion);
+        if (expiracion < ahora) {
+            return res.status(401).json({ exito: false, message: "Sesión expirada. Vuelva a iniciar sesión." });
+        }
+
+        // 3. Buscar datos del usuario para el nuevo JWT
+        const usuarioEncontrado = await UsuarioModel.getbyId(tokenDB.usuario_id);
+        if (!usuarioEncontrado) {
+            return res.status(401).json({ exito: false, message: "Usuario no encontrado." });
+        }
+
+        // 4. Generar NUEVO Access Token (15 min)
+        const tokenPayload = {
+            id: usuarioEncontrado.id,
+            rol: usuarioEncontrado.rol,
+            email: usuarioEncontrado.email,
+            nombre: usuarioEncontrado.nombre
+        };
+
+        const nuevoAccessToken = jwt.sign(tokenPayload, SECRET_KEY, { expiresIn: '15m' });
+
+        // 5. ROTACIÓN: Revocar el viejo y crear uno nuevo
+        await TokenModel.revocarRefreshToken(tokenEntrante);
+
+        const nuevoRefreshToken = crypto.randomBytes(40).toString('hex');
+        const nuevaFechaExpiracion = new Date();
+        nuevaFechaExpiracion.setDate(nuevaFechaExpiracion.getDate() + 7);
+
+        await TokenModel.guardarRefreshToken(nuevoRefreshToken,usuarioEncontrado.id, nuevaFechaExpiracion.toISOString());
+
+        // 6. Enviar nuevas credenciales al cliente
+        res.status(200).json({
+            exito: true,
+            message: "Sesión renovada con éxito",
+            token: nuevoAccessToken,
+            refreshToken: nuevoRefreshToken
+        });
+
+    } catch (err) {
+        console.error("Error al renovar la sesión:", err);
+        res.status(500).json({ exito: false, message: "Error interno del servidor." });
+    }
+};
+
+
+export const cerrarSesion = async (req, res) => {
+    try {
+        const { refreshToken } = req.body;
+
+        if (!refreshToken) {
+            return res.status(400).json({ error: "No se proporcionó un token para revocar" });
+        }
+
+        // Llamamos al modelo para aplicar el Soft Delete (revocado = 1)
+        await TokenModel.revocarTokenEspecifico(refreshToken);
+
+        return res.status(200).json({ 
+            exito: true, 
+            message: "Sesión cerrada y token revocado correctamente" 
+        });
+
+    } catch (error) {
+        console.error("Error al cerrar sesión:", error);
+        return res.status(500).json({ error: "Error interno del servidor al cerrar sesión" });
+    }
+};

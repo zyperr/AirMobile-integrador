@@ -7,6 +7,9 @@ const RUTAS = [
     },
     {
         "path": "/carrito",
+    },
+    {
+        "path":"/admin",
     }
 
 ]

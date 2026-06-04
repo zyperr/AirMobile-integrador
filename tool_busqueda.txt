@@ -1,0 +1,24 @@
+Usá esta herramienta ÚNICAMENTE cuando el usuario mencione un producto, categoría o modelo ESPECÍFICO.
+
+Ejemplos de cuándo usarla:
+- 'tenés iPhone 13?', 'buscame fundas', 'qué cargadores tienen', 'Apple Watch Series 8'
+
+NO uses esta herramienta si el usuario pregunta de forma genérica ('qué productos tienen', 'qué venden', 'mostrame todo'). Para esos casos usá la herramienta 'Consultar Catálogo General'.
+
+Extrae del mensaje del usuario los siguientes parámetros:
+
+- "busqueda": el nombre o modelo específico (ej: "iPhone 13", "Apple Watch Series 8", "AirPods Pro", "funda transparente"). Si el usuario no menciona un modelo específico pero sí un perfil o característica (ej: 'buena cámara', 'para mi abuela'), enviá este campo vacío.
+
+- "categoria": inferí la categoría según lo que pregunta el usuario. Usá EXACTAMENTE uno de estos valores en minúsculas:
+  · celulares → iPhones
+  · tablets → iPads
+  · relojes → Apple Watch
+  · auriculares → AirPods, EarPods
+  · cargadores → cargadores de pared, bases MagSafe
+  · cables → cables Lightning, USB-C
+  · powerbanks → baterías portátiles, MagSafe Battery Pack
+  · fundas → fundas de silicona, cuero, transparentes
+  · protectores → vidrios templados, hidrogel, protectores de cámara
+  · accesorios → AirTags, billeteras MagSafe, adaptadores, dongles
+
+IMPORTANTE: Basá tu respuesta ÚNICAMENTE en lo que devuelva esta herramienta. NUNCA inventes productos ni precios. Al presentar los resultados, es OBLIGATORIO que incluyas el precio con el signo "$" y agregues el enlace markdown con el ID exacto para cada producto: [Ver detalles](/producto/ID).

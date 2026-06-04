@@ -26,11 +26,12 @@ export const verificarToken = (req, res, next) => {
         const user = jwt.verify(token, SECRET_KEY);
         console.log("TOKEN VALIDO:", user);
         req.user = user; // Guardamos el payload (id, email) en la request
+        console.log(user)
         next();
     } catch (error) {
         console.log("ERROR JWT:", error);
         // Si el token expiró o fue manipulado, cae directamente aquí
-        return res.status(403).json({ error: "Token inválido o expirado." });
+        return res.status(401).json({ error: "Token inválido o expirado." });
     }
 }
 

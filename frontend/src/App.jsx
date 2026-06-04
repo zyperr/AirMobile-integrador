@@ -21,7 +21,7 @@ function Layout() {
 
   return (
     <>
-      {!esAdmin && <Navbar />}
+      <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/producto/:id" element={<Product />} />
@@ -34,7 +34,6 @@ function Layout() {
         {
           estaAutenticado && <Route path="/carrito" element={<Carrito />} />
         }
-        
       </Routes>
         <N8nChat/>
       {!esAdmin && <Footer />}

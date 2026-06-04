@@ -1,9 +1,33 @@
 import { useState } from "react";
 
-const webhookUrl = "http://localhost:5678/webhook/dfff64e4-9189-477f-91c1-61a901a87dd6";
+const webhookUrl = import.meta.env.VITE_TEST_N8N;
 
-export const useN8nChat = () => {
-    console.log(webhookUrl)
+
+const getSessionData = (usuarioPerfil) => {
+    // 1. Si el usuario está logueado y tenemos su perfil
+    if (usuarioPerfil && usuarioPerfil.id) {
+        return {
+            sessionId: `auth_${usuarioPerfil.id}`,
+            nombreCliente: usuarioPerfil.nombre
+        };
+    }
+
+    // 2. Si es invitado, usamos localStorage
+    let guestId = localStorage.getItem('airmobile_session');
+    if (!guestId) {
+        guestId = crypto.randomUUID();
+        localStorage.setItem('airmobile_session', guestId);
+    }
+    
+    return {
+        sessionId: `guest_${guestId}`,
+        nombreCliente: "Invitado"
+    };
+};
+
+
+export const useN8nChat = (usuarioPerfil) => {
+
     const [messages, setMessages] = useState([
         { sender: 'bot', text: '¡Hola! 👋 Bienvenido a AirMobile.' },
         { sender: 'bot', text: '¿En qué puedo ayudarte hoy?' }
@@ -12,9 +36,17 @@ export const useN8nChat = () => {
     const [isLoading, setIsLoading] = useState(false);
 
     const sendMessage = async (userMessage) => {
+        // Armamos los datos dinámicos justo antes de enviar
+        const sessionData = getSessionData(usuarioPerfil);
+        const payload = {
+            chatInput: userMessage,
+            sessionId: sessionData.sessionId,
+            nombreCliente: sessionData.nombreCliente
+        };
+        
+
         if (!userMessage.trim() || isLoading) return;
 
-        // Agregamos el mensaje del usuario inmediatamente para que la UI reaccione
         setMessages((prev) => [...prev, { sender: 'user', text: userMessage }]);
         setIsLoading(true);
 
@@ -22,7 +54,7 @@ export const useN8nChat = () => {
             const response = await fetch(webhookUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chatInput: userMessage }),
+                body: JSON.stringify(payload),
             });
 
             if (!response.ok) throw new Error('Error en la respuesta del servidor');
@@ -56,4 +88,4 @@ export const useN8nChat = () => {
     };
 
     return { messages, isLoading, sendMessage };
-}
+};

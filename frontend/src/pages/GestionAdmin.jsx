@@ -1,9 +1,8 @@
 import SidebarAdmin from "../components/admin/SidebarAdmin";
-import HeaderAdmin from "../components/admin/HeaderAdmin";
 import TablaDeProductos from "../components/admin/TablaDeProductos";
 import "../style/GestionAdmin.css";
 import CargaMasiva from "../components/admin/CargaMasiva";
-import ModaleNuevoProducto from "../components/admin/ModaleNuevoProducto";
+import ModalNuevoProducto from "../components/admin/ModalNuevoProducto";
 import { useState } from "react";
 
 const GestionAdmin = () => {
@@ -11,10 +10,9 @@ const GestionAdmin = () => {
     const [modaleNuevoProducto, setModaleNuevoProducto] = useState(false);
 
     return (
-        <div className="admin-layout">
+        <div className="admin-layout bg-light">
             <SidebarAdmin />
             <div className="admin-contenido">
-                <HeaderAdmin />
                 <main className="admin-main">
                     {/* ENCABEZADO DE LA PÁGINA */}
                     <div className="d-flex align-items-center justify-content-between mb-4">
@@ -29,8 +27,8 @@ const GestionAdmin = () => {
                         <div className="d-flex gap-2">
                             <button className="admin-btn-exportar">Exportar CSV</button>
 
-                            <button className="admin-btn-nuevo" onClick={()=> setModaleNuevoProducto(!modaleNuevoProducto)}>
-                            <i className="bi bi-plus me-1" />Nuevo Producto
+                            <button className="admin-btn-nuevo" onClick={() => setModaleNuevoProducto(!modaleNuevoProducto)}>
+                                <i className="bi bi-plus me-1" />Nuevo Producto
                             </button>
                         </div>
 
@@ -39,7 +37,8 @@ const GestionAdmin = () => {
                     {/*  Tabla de productos utiliza el componente Badge de Estados */}
                     <TablaDeProductos />
                     <CargaMasiva />
-                    < ModaleNuevoProducto  isOpen={modaleNuevoProducto} onClose={() => setModaleNuevoProducto (false)} />
+                    < ModalNuevoProducto isOpen={modaleNuevoProducto} onClose={() => setModaleNuevoProducto(false)} />
+
                 </main>
             </div>
         </div>

@@ -433,6 +433,90 @@
     text-decoration: underline;
 }
 
+.tabla-col-acciones {
+    flex: 0 0 50px;
+    display: flex;
+    justify-content: center;
+}
+
+.tabla-btn-eliminar {
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    transition: color 0.2s, background 0.2s;
+}
+
+.tabla-btn-eliminar:hover {
+    color: #dc2626;
+    background-color: #fee2e2;
+}
+
+/*MODAL CONFIRMAR ELIMINAR */
+
+.modal-eliminar-icono {
+    width: 52px;
+    height: 52px;
+    background-color: #fee2e2;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    font-size: 1.4rem;
+    color: #dc2626;
+}
+
+.modal-eliminar-titulo {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 8px;
+}
+
+.modal-eliminar-subtitulo {
+    font-size: 0.88rem;
+    color: #6b7280;
+    margin: 0;
+}
+
+.modal-eliminar-btn-cancelar {
+    min-width: 120px;
+    font-weight: 500;
+    color: rgb(0, 0, 0) !important;
+}
+
+.modal-eliminar-btn-confirmar {
+    min-width: 120px;
+    background-color: #ac2e2e !important;
+    color: #ffffff !important;
+    font-weight: 500;
+    border: none;
+}
+
+.modal-eliminar-btn-confirmar:hover {
+    background-color: #c72c2c !important;
+    color: #ffffff;
+}
+
+.tabla-btn-editar {
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    transition: color 0.2s, background 0.2s;
+}
+
+.tabla-btn-editar:hover {
+    color: #1a3a6b;
+    background-color: #e0e7ff;
+}
 /*---CARGA MASIVA DE PRODUCTOS---*/
 
 .carga-card {

@@ -13,7 +13,6 @@ const PerfilUsuario = () => {
 
     const [datosUsuario, setDatosUsuario] = useState(null);
     const [nombre, setNuevoNombre] = useState("");
-
     const [listaDeseos, setListaDeseos] = useState({ data: [], total: 0 });
 
     // ESTADO: Controla qué pestaña está visible
@@ -74,7 +73,6 @@ const PerfilUsuario = () => {
 
             if (responseDeseos.exito) {
                 setListaDeseos(responseDeseos.data);
-                console.log("Lista de deseos:", responseDeseos.data);
             }
         }
 
@@ -181,7 +179,6 @@ const PerfilUsuario = () => {
         );
     }
 
-    console.log(datosUsuario)
     return (
         <>
             {/* OVERLAY DE NOTIFICACIÓN (Se renderiza por encima de todo) */}
@@ -245,7 +242,7 @@ const PerfilUsuario = () => {
                                         </div>
                                         <div>
                                             <h5 className="m-0 fw-bold fs-6">{datosUsuario.nombre}</h5>
-                                            <span className="badge bg-primary mt-1">Usuario</span>
+                                            <span className="badge bg-primary mt-1">{datosUsuario.rol}</span>
                                         </div>
                                     </div>
                                     <form>
