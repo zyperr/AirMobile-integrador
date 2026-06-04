@@ -2,40 +2,28 @@ import { Link } from 'react-router-dom';
 import { useContext } from 'react';
 import '../../style/CartaDeProductos.css';
 import { CarritoContext } from '../../context/CarritoContext';
-import '../../style/CartaDeProductos.css';
 import BotonDeseados from '../productos/BotonDeseados'; // Asegúrate de que la ruta sea la correcta
-
 import { useAuth } from '../../context/AuthContext'; // Importamos el hook para acceder al estado de autenticación
-import { useApi } from '../../hooks/useApi';
 
-const ProductCard = ({ id, nombreDeProducto, condicion, precio, capacidad = [], imagen_url ,onRemover}) => {
-  //const { agregarProducto } = useContext(CarritoContext);
-  // Validación por si capacidad viene como texto (string) desde la base de datos
-  const capacidadFormateada = Array.isArray(capacidad) ? capacidad.join(', ') : capacidad;
-  
-  const { estaAutenticado, token } = useAuth();
-  const { ejecutarPeticion } = useApi();
-  const agregarProducto = async (idProducto) => {
 
-    const resultado = await ejecutarPeticion(
-      `carrito/agregar-carrito/${idProducto}`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          cantidad: 1
-        })
-      }
-    );
+const ProductCard = ({
+  id,
+  nombreDeProducto,
+  condicion,
+  precio,
+  capacidad = [],
+  imagen_url,
+  onRemover
+}) => {
 
-    console.log(
-      "Respuesta carrito:",
-      JSON.stringify(resultado, null, 2));
+  const { agregarProducto } = useContext(CarritoContext);
 
-  };
+  const capacidadFormateada =
+    Array.isArray(capacidad)
+      ? capacidad.join(', ')
+      : capacidad;
 
+  const { estaAutenticado } = useAuth();
 
   return (
     // Agregamos 'position-relative' aquí para que el botón flote relativo a la tarjeta
@@ -108,16 +96,6 @@ const ProductCard = ({ id, nombreDeProducto, condicion, precio, capacidad = [], 
                 onClick={async (e) => {
 
                   e.preventDefault();
-                  /*
-                  addToCart({
-                    id,
-                    nombreDeProducto,
-                    precio,
-                    imagen: imagen_url[0],
-                    condicion,
-                    capacidad: capacidadFormateada
-                  });
-                  */
 
                   await agregarProducto(id);
                 }}
