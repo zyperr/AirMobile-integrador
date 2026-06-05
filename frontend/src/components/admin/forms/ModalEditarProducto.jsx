@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useApi } from "../../hooks/useApi";
-import { useAuth } from "../../context/AuthContext";
+import { useApi } from "../../../hooks/useApi";
+import { useAuth } from "../../../context/AuthContext";
 import {
     categoriasValidas,
     CONDICIONES_PERMITIDAS,
     CAPACIDADES_PERMITIDAS
-} from "../../../../backend/src/schemas/schemaProductos.js";
-import { InputGenerico } from "../common/InputGenerico.jsx";
-import { BtnAccion } from "../common/BtnAccion.jsx";
+} from "../../../../../backend/src/schemas/schemaProductos.js";
+import { InputGenerico } from "../../common/InputGenerico.jsx";
+import { BtnAccion } from "../../common/BtnAccion.jsx";
 
 const ModalEditarProducto = ({ isOpen, onClose, producto, onProductoActualizado }) => {
     const { token } = useAuth();

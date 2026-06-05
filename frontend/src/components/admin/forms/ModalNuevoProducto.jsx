@@ -1,13 +1,13 @@
-import { useApi } from "../../hooks/useApi";
+import { useApi } from "../../../hooks/useApi";
 import { useForm } from "react-hook-form"; // Importamos React Hook Form
 import {
     categoriasValidas,
     CONDICIONES_PERMITIDAS,
     CAPACIDADES_PERMITIDAS
-} from "../../../../backend/src/schemas/schemaProductos.js";
-import { InputGenerico } from "../common/InputGenerico.jsx";
-import { BtnAccion } from "../common/BtnAccion.jsx";
-import { useAuth } from "../../context/AuthContext.jsx";
+} from "../../../../../backend/src/schemas/schemaProductos.js";
+import { InputGenerico } from "../../common/InputGenerico.jsx";
+import { BtnAccion } from "../../common/BtnAccion.jsx";
+import { useAuth } from "../../../context/AuthContext.jsx";
 
 const ModalNuevoProducto = ({ isOpen, onClose }) => {
     const { ejecutarPeticion, isLoading, error: apiError, setError: setApiError } = useApi();

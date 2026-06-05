@@ -4,8 +4,11 @@ import { useAuth } from "../../context/AuthContext";
 import Paginacion from "../common/Paginacion";
 import { SkeletonFilaProducto } from "./SkeletonFilaLoader";
 import { ProductosFila } from "./ProductoFila";
-import ModalConfirmarEliminar from "./ModalConfirmarEliminar";
-import ModalEditarProducto from "./ModalEditarProducto";
+import BagdeEstado from "../common/BadgeEstado";
+import ModalConfirmarEliminar from "./forms/ModalConfirmarEliminar";
+import ModalEditarProducto from "./forms/ModalEditarProducto";
+
+
 
 // Valores válidos según el backend (schemaProductos.js)
 const CONDICIONES = ["nuevo", "usado", "reacondicionado"];
