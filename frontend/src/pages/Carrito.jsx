@@ -14,9 +14,10 @@ export default function Carrito() {
     removeFromCart: eliminarProducto,
     cartCount: cantidadItems,
     procesarPago,
+    vaciarCarrito,
     isProcessing
   } = useCarrito();
-  console.log(carrito)
+
   return (
     <div className="carrito-container container py-5">
 
@@ -62,7 +63,14 @@ export default function Carrito() {
 
         </div>
       )}
+      <div className="d-flex justify-content-center mt-4 gap-2">
 
+        {carrito.length > 0 && (
+          <button onClick={vaciarCarrito} className="btn btn-outline-danger">
+            <i className="bi bi-trash me-2"></i> Vaciar Carrito
+          </button>
+        )}
+      </div>
     </div>
   );
 

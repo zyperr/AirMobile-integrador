@@ -11,7 +11,7 @@ export function CartProvider({ children }) {
     const [cartItems, setCartItems] = useState([]);
     const [loadingId, setLoadingId] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
-
+    const [toastVisible, setToastVisible] = useState(false);
     // ─── 1. CARGAR CARRITO ────────────────────────────────────────────────────
     const cargarCarrito = async () => {
         if (!estaAutenticado) {
@@ -56,20 +56,41 @@ export function CartProvider({ children }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [estaAutenticado]);
 
-    // ─── 3. AGREGAR PRODUCTO ─────────────────────────────────────────────────
+    // ── 3. VACIAR CARRITO ─────────────────────────────────────────────────────
+    const vaciarCarrito = async () => {
+        // Guardamos el respaldo por si el servidor falla
+        const carritoOriginal = [...cartItems];
+
+        // ¡Actualización optimista! Vaciamos la pantalla al instante
+        setCartItems([]);
+
+        // Le avisamos al backend
+        const response = await ejecutarPeticion(`carrito/vaciar-carrito`, {
+            method: "DELETE"
+        });
+
+        // Si falló por algún motivo (ej. se cortó internet), deshacemos el cambio
+        if (!response.exito) {
+            console.error("Error al vaciar el carrito. Revirtiendo...");
+            setCartItems(carritoOriginal);
+        }
+    };
+
+    // ─── 4. AGREGAR PRODUCTO ─────────────────────────────────────────────────
     const agregarProducto = async (idProducto) => {
         setLoadingId(idProducto);
 
         const productoExistente = cartItems.find(item => item.id === idProducto);
         const carritoOriginal = [...cartItems];
 
-    
+
         if (productoExistente) {
             setCartItems(prev => prev.map(item =>
                 item.id === idProducto
                     ? { ...item, cantidad: item.cantidad + 1 }
                     : item
             ));
+            setToastVisible(true);
         }
 
         const response = await ejecutarPeticion(`carrito/agregar-carrito/${idProducto}`, {
@@ -102,6 +123,7 @@ export function CartProvider({ children }) {
                         capacidad: p.capacidad,
                         imagen,
                     }]);
+                    setToastVisible(true);
                 } else {
                     // Si por alguna razón falla la carga del producto,
                     // recurrimos al fetch completo como fallback
@@ -116,7 +138,7 @@ export function CartProvider({ children }) {
         setLoadingId(null);
     };
 
-    // ─── 4. AUMENTAR CANTIDAD ────────────────────────────────────────────────
+    // ─── 5. AUMENTAR CANTIDAD ────────────────────────────────────────────────
     const increaseQuantity = async (idProducto) => {
         setLoadingId(idProducto);
         const carritoOriginal = [...cartItems];
@@ -141,7 +163,7 @@ export function CartProvider({ children }) {
         setLoadingId(null);
     };
 
-    // ─── 5. DISMINUIR CANTIDAD ───────────────────────────────────────────────
+    // ─── 6. DISMINUIR CANTIDAD ───────────────────────────────────────────────
     const decreaseQuantity = async (idProducto) => {
         setLoadingId(idProducto);
         const carritoOriginal = [...cartItems];
@@ -165,7 +187,7 @@ export function CartProvider({ children }) {
         setLoadingId(null);
     };
 
-    // ─── 6. ELIMINAR PRODUCTO ────────────────────────────────────────────────
+    // ─── 7. ELIMINAR PRODUCTO ────────────────────────────────────────────────
     const removeFromCart = async (idProducto) => {
         setLoadingId(idProducto);
         const carritoOriginal = [...cartItems];
@@ -183,14 +205,14 @@ export function CartProvider({ children }) {
         setLoadingId(null);
     };
 
-    // ─── 7. PROCESAR PAGO ────────────────────────────────────────────────────
+    // ─── 8. PROCESAR PAGO ────────────────────────────────────────────────────
     const procesarPago = async () => {
         setIsProcessing(true);
         await new Promise((r) => setTimeout(r, 1500));
         setIsProcessing(false);
     };
 
-    // ─── 8. CÁLCULOS DERIVADOS ───────────────────────────────────────────────
+    // ─── 9. CÁLCULOS DERIVADOS ───────────────────────────────────────────────
     // FIX 2: "cantidad" en lugar de "quantity"
     const cartCount = cartItems.reduce((total, item) => total + item.cantidad, 0);
     const subtotal = cartItems.reduce((total, item) => total + item.precio * item.cantidad, 0);
@@ -204,12 +226,15 @@ export function CartProvider({ children }) {
                 cartCount,
                 subtotal,
                 isProcessing,
+                toastVisible,
+                setToastVisible,
                 procesarPago,
                 cargarCarrito,
                 agregarProducto,
                 increaseQuantity,
                 decreaseQuantity,
                 removeFromCart,
+                vaciarCarrito,
             }}
         >
             {children}

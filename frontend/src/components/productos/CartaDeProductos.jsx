@@ -1,10 +1,9 @@
 import { Link } from 'react-router-dom';
 import { useContext } from 'react';
 import '../../style/CartaDeProductos.css';
-import { CarritoContext } from '../../context/CarritoContext';
-import BotonDeseados from '../productos/BotonDeseados'; // Asegúrate de que la ruta sea la correcta
-import { useAuth } from '../../context/AuthContext'; // Importamos el hook para acceder al estado de autenticación
-
+import BotonDeseados from '../productos/BotonDeseados';
+import { useAuth } from '../../context/AuthContext';
+import { useCarrito } from '../../context/CarritoContext'; 
 
 const ProductCard = ({
   id,
@@ -13,10 +12,11 @@ const ProductCard = ({
   precio,
   capacidad = [],
   imagen_url,
-  onRemover
+  onRemover,
+  setToastDeseadosVisible
 }) => {
 
-  const { agregarProducto } = useContext(CarritoContext);
+  const { agregarProducto, loadingId, isLoading } = useCarrito();
 
   const capacidadFormateada =
     Array.isArray(capacidad)
@@ -36,7 +36,7 @@ const ProductCard = ({
 
 
       {estaAutenticado && (
-        <BotonDeseados idProducto={id} onRemover={onRemover} />
+        <BotonDeseados idProducto={id} onRemover={onRemover} setToastDeseadosVisible={setToastDeseadosVisible} />
       )}
 
       {/* Todo lo demás envuelto en el Link, como lo tenías */}
@@ -96,11 +96,11 @@ const ProductCard = ({
                 onClick={async (e) => {
 
                   e.preventDefault();
-
+                  
                   await agregarProducto(id);
                 }}
               >
-                Añadir
+                {loadingId === id && isLoading ? (<i class="bi bi-cart-check"> añadido</i>): (<i class="bi bi-cart-plus"> Añadir</i>)}
               </button>
             )}
           </div >

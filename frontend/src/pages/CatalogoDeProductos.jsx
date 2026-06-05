@@ -10,11 +10,14 @@ import FiltroRadioGroup from "../components/productos/FiltroRadioGroup";
 import MensajeSinResultados from "../components/common/MensajeSinResultado";
 import { useApi } from "../hooks/useApi";
 import { SkeletonLoader } from "../components/common/SkeletonLoader";
-
-
+import { useCarrito } from "../context/CarritoContext";
+import ToastCarrito from "../components/common/Toast";
+import ToastDeseados from "../components/common/Toast";
+import { Link } from "react-router-dom";
 
 export default function CatalogoDeProductos() {
-    
+    const { toastVisible, cartCount, setToastVisible } = useCarrito();
+    const [toastDeseadosVisible, setToastDeseadosVisible] = useState(false);
     const [producto, setProducto] = useState(null);
     const [paginaActual, setPaginaActual] = useState(1);
 
@@ -436,11 +439,11 @@ export default function CatalogoDeProductos() {
                                                 precio={item.precio}
                                                 capacidad={item.capacidad}
                                                 imagen_url={item.imagen_url}
+                                                setToastDeseadosVisible={setToastDeseadosVisible}
                                             />
                                         </div>
                                     ))
                                 ) : (
-
                                     // PASO 3: Terminó de cargar y NO hay productos
                                     <MensajeSinResultados
                                         onLimpiarFiltros={limpiarTodosLosFiltros}
@@ -449,7 +452,6 @@ export default function CatalogoDeProductos() {
                                     />
                                 )
                             )}
-
                         </div>
                         {!isLoading && producto?.data?.length > 0 && (
                             <div className="">
@@ -461,13 +463,22 @@ export default function CatalogoDeProductos() {
                                 />
                             </div>
                         )}
-
                     </section>
-
-
                 </div>
-
             </div>
+            <ToastCarrito
+                visible={toastVisible}
+                cantidad={cartCount}
+                mensaje="productos en el carrito"
+                onClose={() => setToastVisible(false)}
+            />
+            <ToastDeseados
+                icono={<i className="bi bi-heart-fill text-danger"></i>}
+                mensaje="Producto agregado a favoritos"
+                visible={toastDeseadosVisible}
+                onClose={() => setToastDeseadosVisible(false)}
+            />
         </main>
+
     );
 };
