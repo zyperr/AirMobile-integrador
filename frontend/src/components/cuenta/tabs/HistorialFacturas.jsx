@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { useApi } from '../../hooks/useApi';
-import Paginacion from "../common/Paginacion";
+import { useApi } from "../../../hooks/useApi";
+import Paginacion from "../../common/Paginacion";
 
 
+const HistorialFacturas = () => {
 
-// Recibimos 'endpointFetch' como propiedad para que sea dinámico
-const HistorialFacturas = ({ endpointFetch }) => {
+    const endpointFetch = "facturas/obtener-facturas-usuario";
     
     // 1. Estados exclusivos de la facturación
     const [facturas, setFacturas] = useState([]);
@@ -17,21 +17,18 @@ const HistorialFacturas = ({ endpointFetch }) => {
     const [pdfUrl, setPdfUrl] = useState(null);
     const [cargandoPdf, setCargandoPdf] = useState(false);
 
+    // Solo necesitamos ejecutarPeticion para la lista
     const { ejecutarPeticion, isLoading: loadingFacturas } = useApi();
 
     // 3. Efecto para cargar las facturas
     useEffect(() => {
         const fetchFacturas = async () => {
-            const token = localStorage.getItem('token');
-            
             // Lógica inteligente: Si el endpoint ya tiene un '?', usamos '&' para la página
             const separador = endpointFetch.includes('?') ? '&' : '?';
             const urlFinal = `${endpointFetch}${separador}page=${paginaActual}`;
 
-            const response = await ejecutarPeticion(urlFinal, {
-                method: 'GET',
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            // ¡Chau token y headers manuales! useApi se encarga de todo.
+            const response = await ejecutarPeticion(urlFinal, { method: 'GET' });
 
             if (response.exito) {
                 setFacturas(response.data.facturas || response.data);
@@ -40,12 +37,12 @@ const HistorialFacturas = ({ endpointFetch }) => {
         };
 
         fetchFacturas();
-    }, [paginaActual, endpointFetch]); // Se vuelve a ejecutar si cambias de página o de endpoint
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [paginaActual, endpointFetch]); 
 
     // 4. Funciones de Paginación y Modal
     const cambiarPagina = (pagina) => {
         setPaginaActual(pagina);
-        // Desplazamiento suave hacia arriba al cambiar de página
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -53,6 +50,8 @@ const HistorialFacturas = ({ endpointFetch }) => {
         setCargandoPdf(true);
         setMostrarModal(true);
 
+        // Para descargar archivos (Blobs), mantenemos el fetch nativo 
+        // ya que nuestro useApi asume que todo es JSON.
         const token = localStorage.getItem('token');
 
         try {
@@ -63,7 +62,7 @@ const HistorialFacturas = ({ endpointFetch }) => {
             });
 
             if (response.ok) {
-                const blob = await response.blob();
+                const blob = await response.blob(); // Convertimos la respuesta a binario
                 if (blob.type !== 'application/pdf') {
                     throw new Error("Formato de archivo incorrecto");
                 }
@@ -83,7 +82,7 @@ const HistorialFacturas = ({ endpointFetch }) => {
     const cerrarModal = () => {
         setMostrarModal(false);
         if (pdfUrl) {
-            URL.revokeObjectURL(pdfUrl);
+            URL.revokeObjectURL(pdfUrl); // Limpiamos la memoria del navegador
             setPdfUrl(null);
         }
     };
@@ -124,11 +123,11 @@ const HistorialFacturas = ({ endpointFetch }) => {
                         </div>
                     ))}
                     <div className="mt-4">
-                        <Paginacion 
-                            paginaActual={paginacion.paginaActual || 1} 
-                            tienePaginaAnterior={paginacion.tienePaginaAnterior} 
-                            tienePaginaSiguiente={paginacion.tienePaginaSiguiente} 
-                            cambiarPagina={cambiarPagina} 
+                        <Paginacion
+                            paginaActual={paginacion.paginaActual || 1}
+                            tienePaginaAnterior={paginacion.tienePaginaAnterior}
+                            tienePaginaSiguiente={paginacion.tienePaginaSiguiente}
+                            cambiarPagina={cambiarPagina}
                         />
                     </div>
                 </>
