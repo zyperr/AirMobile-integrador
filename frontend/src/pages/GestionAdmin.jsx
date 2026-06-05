@@ -1,41 +1,25 @@
-import { useState } from "react";
-import { Inventario } from "../components/admin/Inventario";
+import { Outlet } from "react-router-dom";
 import SidebarAdmin from "../components/admin/SidebarAdmin";
 import "../style/GestionAdmin.css";
-import { Administracion } from "../components/admin/Administracion";
-import { Facturas } from "../components/admin/Facturas";
+
+// Ya no necesitamos importar los componentes de las vistas acá,
+// porque React Router se encarga de inyectarlos.
 
 const menuitems = [
-    { id: 1, nombre: "Administracion", icono: "bi-grid" },
-    { id: 2, nombre: "inventario", icono: "bi-archive" },
-    { id: 3, nombre: "Facturas", icono: "bi-cart3" },
+    { path: "administracion", nombre: "Administracion", icono: "bi-grid" },
+    { path: "inventario", nombre: "Inventario", icono: "bi-archive" },
+    { path: "facturas", nombre: "Facturas", icono: "bi-cart3" },
 ];
 
 const GestionAdmin = () => {
-    const [tabs, setTabs] = useState(1);
-
-
+    // ¡Chau useState! La URL manda ahora.
 
     return (
         <div className="admin-layout bg-light">
-            <SidebarAdmin menuitems={menuitems} setTabs={setTabs} />
+            <SidebarAdmin menuitems={menuitems} />
             <div className="admin-contenido">
                 <main className="admin-main">
-                    {
-                        tabs === 1 && (
-                            <><Administracion/></>
-                        )
-                    }
-                    {
-                        tabs === 2 && (
-                            <Inventario />
-                        )
-                    }
-                    {
-                        tabs === 3 && (
-                            <><Facturas/></>
-                        )
-                    }
+                    <Outlet />
                 </main>
             </div>
         </div>

@@ -9,15 +9,20 @@ import InicioSesion from "./pages/InicioSesion";
 import Registro from "./pages/Registro";
 import { RecuperarContraseña } from "./pages/RecuperarContraseña";
 import PerfilUsuario from "./pages/PerfilUsuario";
-import {N8nChat} from "./components/chat/N8nChat.jsx";
+import { N8nChat } from "./components/chat/N8nChat.jsx";
 import GestionAdmin from "./pages/GestionAdmin";
 import { useAuth } from "./context/AuthContext.jsx";
+import {Administracion} from "./components/admin/Administracion";
+import {Inventario} from "./components/admin/Inventario";
+import {Facturas} from "./components/admin/Facturas";
+import { Navigate } from "react-router-dom";
+
 function Layout() {
 
   const location = useLocation();
-    const {estaAutenticado} = useAuth();
-    // Páginas donde no se usa Navbar ni Footer
-    const esAdmin = location.pathname === "/admin";
+  const { estaAutenticado } = useAuth();
+  // Páginas donde no se usa Navbar ni Footer
+  const esAdmin = location.pathname === "/admin";
 
   return (
     <>
@@ -30,22 +35,27 @@ function Layout() {
         <Route path="/registro" element={<Registro />} />
         <Route path="/recuperar-password" element={<RecuperarContraseña />} />
         <Route path="/perfil-usuario/" element={<PerfilUsuario />} />
-        <Route path="/admin" element={<GestionAdmin />} />
+        <Route path="/admin" element={<GestionAdmin />} >
+          <Route index element={<Navigate to="administracion" replace />} />
+          <Route path="administracion" element={<Administracion />} />
+          <Route path="inventario" element={<Inventario />} />
+          <Route path="facturas" element={<Facturas />} />
+        </Route>
         {
           estaAutenticado && <Route path="/carrito" element={<Carrito />} />
         }
       </Routes>
-        <N8nChat/>
+      <N8nChat />
       {!esAdmin && <Footer />}
     </>
   );
 }
 function App() {
-    return (
-        <BrowserRouter>
-            <Layout />
-        </BrowserRouter>
-    );
+  return (
+    <BrowserRouter>
+      <Layout />
+    </BrowserRouter>
+  );
 }
 
 export default App;

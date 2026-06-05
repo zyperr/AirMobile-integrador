@@ -1,41 +1,31 @@
-//Componente de la barra lateral de la izquierda de Administrador
-import { useState } from "react";
+import { NavLink } from "react-router-dom";
 
-
-const SidebarAdmin = ({menuitems,setTabs}) => {
-
-    const [activo, setActivo] = useState(1);
-
-    // Lista de items del menu principal con su iconos.
-
+const SidebarAdmin = ({ menuitems }) => {
 
     return (
         <aside className="sidebar-admin d-flex flex-column">
-            {/* Navegacion Principal */}
             <nav className="sidebar-nav flex-grow-1">
                 <ul className="list-unstyled" style={{ marginTop: "60px" }}>
-                    {menuitems.map(({ nombre, icono, id }) => (
-                        <li key={`${id}-${nombre}`}>
-                            <button
-                                className={`sidebar-item ${activo === id ? "sidebar-item-activo" : ""}`}
-                                onClick={() => {setActivo(id),setTabs(id)}}
+                    {menuitems.map(({ nombre, icono, path }) => (
+                        <li key={`${path}-${nombre}`}>
+                            <NavLink
+                                to={`/admin/${path}`}
+                                className={({ isActive }) => 
+                                    `sidebar-item text-decoration-none d-block ${isActive ? "sidebar-item-activo" : ""}`
+                                }
                             >
                                 <i className={`bi ${icono} sidebar-icono`} />
                                 {nombre}
-                            </button>
+                            </NavLink>
                         </li>
                     ))}
                 </ul>
             </nav>
 
-            {/* Boton de nuevo Producto */}
             <div className="sidebar-footer">
-
-
-                {/* Links de abajo */}
                 <ul className="list-unstyled mt-3 m-0">
                     <li>
-                        <button className="sidebar-link">
+                        <button className="sidebar-link bg-transparent border-0">
                             <i className="bi bi-question-circle me-2" />Centro de Ayuda
                         </button>
                     </li>
