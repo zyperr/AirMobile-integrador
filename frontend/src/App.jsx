@@ -9,15 +9,22 @@ import InicioSesion from "./pages/InicioSesion";
 import Registro from "./pages/Registro";
 import { RecuperarContraseña } from "./pages/RecuperarContraseña";
 import PerfilUsuario from "./pages/PerfilUsuario";
-import {N8nChat} from "./components/chat/N8nChat.jsx";
+import { N8nChat } from "./components/chat/N8nChat.jsx";
 import GestionAdmin from "./pages/GestionAdmin";
 import { useAuth } from "./context/AuthContext.jsx";
+import { Navigate } from "react-router-dom";
+import InformacionGeneral from "./components/cuenta/tabs/InformacionGeneral.jsx";
+import FacturacionPerfil from "./components/cuenta/tabs/FacturacionPerfil.jsx";
+import Seguridad from "./components/cuenta/tabs/Seguridad.jsx";
+import ListaDeseosPerfil from "./components/cuenta/tabs/ListaDeseosPerfil.jsx";
+
+
 function Layout() {
 
   const location = useLocation();
-    const {estaAutenticado} = useAuth();
-    // Páginas donde no se usa Navbar ni Footer
-    const esAdmin = location.pathname === "/admin";
+  const { estaAutenticado } = useAuth();
+  // Páginas donde no se usa Navbar ni Footer
+  const esAdmin = location.pathname === "/admin";
 
   return (
     <>
@@ -29,23 +36,31 @@ function Layout() {
         <Route path="/inicio-sesion" element={<InicioSesion />} />
         <Route path="/registro" element={<Registro />} />
         <Route path="/recuperar-password" element={<RecuperarContraseña />} />
-        <Route path="/perfil-usuario/" element={<PerfilUsuario />} />
+
+        <Route path="/perfil-usuario/" element={<PerfilUsuario />} >
+          <Route index element={<Navigate to="informacion" replace />} />
+          <Route path="informacion" element={<InformacionGeneral />} />
+          <Route path="seguridad" element={<Seguridad />} />
+          <Route path="facturacion" element={<FacturacionPerfil />} />
+          <Route path="deseos" element={<ListaDeseosPerfil />} />
+        </Route>
+
         <Route path="/admin" element={<GestionAdmin />} />
         {
           estaAutenticado && <Route path="/carrito" element={<Carrito />} />
         }
       </Routes>
-        <N8nChat/>
+      <N8nChat />
       {!esAdmin && <Footer />}
     </>
   );
 }
 function App() {
-    return (
-        <BrowserRouter>
-            <Layout />
-        </BrowserRouter>
-    );
+  return (
+    <BrowserRouter>
+      <Layout />
+    </BrowserRouter>
+  );
 }
 
 export default App;
