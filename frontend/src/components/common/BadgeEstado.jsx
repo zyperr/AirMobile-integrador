@@ -7,8 +7,13 @@ const BadgeEstado = ({estado}) => {
         "Usado": "badge-usado",
     };
 
-    //si el estado no existe usamos una clase por defecto
-    const clase = clases[estado] || "badge-desconocido";
+    // Normalizamos: primera letra mayúscula, resto minúscula
+    const estadoNormalizado = estado
+        ? estado.charAt(0).toUpperCase() + estado.slice(1).toLowerCase()
+        : "";
+
+    const clase = clases[estadoNormalizado] || "badge-desconocido";
+
 
     return (
         <span className={`badge-estado ${clase}`}>

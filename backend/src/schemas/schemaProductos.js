@@ -27,14 +27,14 @@ export const categoriasValidasParaCapacidad = [
     "tablets"
 ]
 export const CAPACIDADES_PERMITIDAS = [
-  '16GB', 
-  '32GB', 
-  '64GB', 
-  '128GB', 
-  '256GB', 
-  '512GB', 
-  '1TB', 
-  '2TB'
+    '16GB',
+    '32GB',
+    '64GB',
+    '128GB',
+    '256GB',
+    '512GB',
+    '1TB',
+    '2TB'
 ];
 
 export const CONDICIONES_PERMITIDAS = ['nuevo', 'reacondicionado', 'usado'];
@@ -45,7 +45,10 @@ export const schemaProductos = Joi.object({
     //.positive() o .min(0) para evitar precios negativos
     precio: Joi.number().positive().required(),
 
-    capacidad: Joi.array().items(Joi.string()).valid(...CAPACIDADES_PERMITIDAS).optional(),
+    capacidad: Joi.alternatives().try(
+        Joi.array().items(Joi.string().valid(...CAPACIDADES_PERMITIDAS)),
+        Joi.string().valid(...CAPACIDADES_PERMITIDAS)
+    ).optional(),
 
 
     // Una descripción para detallar el modelo, etc.
@@ -64,5 +67,5 @@ export const schemaProductos = Joi.object({
         then: Joi.number().integer().min(70).max(100).optional(),
         otherwise: Joi.any().strip()
     }),
-    
+
 })
