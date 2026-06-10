@@ -44,23 +44,23 @@ class UsuarioModel {
     }
 
 
-   static async updateUserPassword(id, passwordHash) {
-    try {
-        const query = `UPDATE usuarios SET password = ? WHERE id = ?`;
-        
-        const result = await db.execute({
-            sql: query,
-            args: [passwordHash, id] // IMPORTANTE: Este debe ser el hash, no la contraseña plana
-        });
+    static async updateUserPassword(id, passwordHash) {
+        try {
+            const query = `UPDATE usuarios SET password = ? WHERE id = ?`;
 
-        // Retorna true si modificó la fila, false si no encontró el ID
-        return result.rowsAffected > 0; 
-        
-    } catch (error) {
-        console.error("Error al actualizar la contraseña en la BD:", error);
-        throw error; // Lanzamos el error para que el controlador lo atrape y envíe el status 500
+            const result = await db.execute({
+                sql: query,
+                args: [passwordHash, id] // IMPORTANTE: Este debe ser el hash, no la contraseña plana
+            });
+
+            // Retorna true si modificó la fila, false si no encontró el ID
+            return result.rowsAffected > 0;
+
+        } catch (error) {
+            console.error("Error al actualizar la contraseña en la BD:", error);
+            throw error; // Lanzamos el error para que el controlador lo atrape y envíe el status 500
+        }
     }
-}
     static async updatePasswordClearCodeVerificate(email, nuevaPassword, codigoIngresado) {
         const queryActualizar = `
             UPDATE usuarios 
@@ -84,7 +84,8 @@ class UsuarioModel {
     }
 
     static async guardarCodigoVerificacion(id, codigoReseteo) {
-        const query = `UPDATE usuarios SET codigo_verificacion = ? WHERE id = ?`
+        // Agregamos "verificado = 0" a la consulta SQL
+        const query = `UPDATE usuarios SET codigo_verificacion = ?, verificado = 0 WHERE id = ?`
         const result = await db.execute({
             sql: query,
             args: [codigoReseteo, id]
@@ -114,20 +115,35 @@ class UsuarioModel {
     }
 
     static async actualizarNombre(id, nuevoNombre) {
-    try {
-        const query = `UPDATE usuarios SET nombre = ? WHERE id = ?`;
-        const result = await db.execute({
-            sql: query,
-            args: [nuevoNombre, id]
-        });
-        
-        // rowsAffected nos dirá si realmente se modificó alguna fila
-        return result.rowsAffected > 0; 
-    } catch (error) {
-        console.error("Error al actualizar el nombre en la BD:", error);
-        throw error;
+        try {
+            const query = `UPDATE usuarios SET nombre = ? WHERE id = ?`;
+            const result = await db.execute({
+                sql: query,
+                args: [nuevoNombre, id]
+            });
+
+            // rowsAffected nos dirá si realmente se modificó alguna fila
+            return result.rowsAffected > 0;
+        } catch (error) {
+            console.error("Error al actualizar el nombre en la BD:", error);
+            throw error;
+        }
     }
-}
+
+    static async actualizarCorreo(id, nuevoCorreo) {
+        try {
+            const query = `UPDATE usuarios SET email = ? WHERE id =?`;
+            const result = await db.execute({
+                sql: query,
+                args: [nuevoCorreo, id]
+            })
+            return result.rowsAffected > 0;
+        } catch (error) {
+            console.error("Error al actualizar el correo en la BD:", error);
+            throw error;
+        }
+
+    }
 
 }
 

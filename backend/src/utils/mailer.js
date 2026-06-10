@@ -13,19 +13,36 @@ export const transporter = nodemailer.createTransport({
 
 export const enviarCorreoVerificacion = async (emailDestino, codigo) => {
     const mailOptions = {
-        from: `"AirMobile TIenda" ${process.env.MAILER_EMAIL}`,
+        // Asegúrate de que el formato del remitente coincida con el otro correo (los corchetes angulares < >)
+        from: `"AirMobile Tienda" <${process.env.MAILER_EMAIL}>`,
         to: emailDestino,
         subject: "Verifica tu cuenta en AirMobile 📱",
         html: ` 
-            <h1>¡Bienvenido a AirMobile!</h1>
-            <p>Tu código de verificación es: <strong>${codigo}</strong></p>
-            <p>Ingresa este código en la aplicación para activar tu cuenta.</p>
+            <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; padding: 30px 20px; border-radius: 8px;">
+                <h2 style="color: #2c3e50; text-align: center; margin-bottom: 25px;">¡Bienvenido a AirMobile!</h2>
+                
+                <p style="font-size: 16px; line-height: 1.5;">Hola,</p>
+                <p style="font-size: 16px; line-height: 1.5;">Gracias por registrarte o actualizar tu correo. Para continuar y asegurar tu cuenta, por favor ingresa el siguiente código de verificación en la aplicación:</p>
+                
+                <div style="background-color: #f4f7fa; border: 2px dashed #bcdcff; padding: 20px; text-align: center; border-radius: 12px; margin: 30px 0;">
+                    <span style="font-size: 32px; font-weight: bold; color: #0d6efd; letter-spacing: 6px;">${codigo}</span>
+                </div>
+                
+                <p style="font-size: 16px; line-height: 1.5;">Si no solicitaste este código, puedes ignorar este mensaje de forma segura.</p>
+
+                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
+
+                <p style="margin-top: 20px; font-size: 14px; color: #666; text-align: center;">
+                    Saludos,<br>
+                    <strong>El equipo de AirMobile 📱</strong>
+                </p>
+            </div>
         `
     }
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log(`Codigo de verificacion enviado  a: ${emailDestino}`);
+        console.log(`Codigo de verificacion enviado a: ${emailDestino}`);
         return true;
     } catch (error) {
         console.error("Error al enviar el email de verificacion:", error);

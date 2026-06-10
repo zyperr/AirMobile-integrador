@@ -8,7 +8,7 @@ import schemaLoginUsuarios from "../schemas/schemaLoginUsuarios.js"
 import schemaVerificar from "../schemas/schemaVerificacion.js";
 import { enviarCorreoVerificacion } from "../utils/mailer.js";
 import jwt from "jsonwebtoken"
-import { schemaActualizarNombre } from "../schemas/schemaUpdateUsuario.js";
+import { schemaActualizarNombre, schemaActualizarCorreo } from "../schemas/schemaUpdateUsuario.js";
 import TokenModel from "../models/modelToken.js";
 import { insertarTokenSchema, renovarTokenRequestSchema } from "../schemas/schemaRefreshToken.js";
 
@@ -89,7 +89,7 @@ export const login = async (req, res) => {
         }
 
         // Delegamos la inserción a la capa de datos (Turso)
-        await TokenModel.guardarRefreshToken(valueToken.refreshToken,valueToken.idUsuario, valueToken.fechaExpiracionStr);
+        await TokenModel.guardarRefreshToken(valueToken.refreshToken, valueToken.idUsuario, valueToken.fechaExpiracionStr);
         // --- FIN LÓGICA REFRESH TOKEN ---
 
         // --- LÓGICA ACCESS TOKEN ---
@@ -209,7 +209,7 @@ export const registro = async (req, res) => {
         const nuevoUser = { nombre, email };
 
         // Envío asíncrono para no bloquear la respuesta
-        enviarCorreoVerificacion(email, codigoVerificacion).catch(console.error);
+        await enviarCorreoVerificacion(email, codigoVerificacion).catch(console.error);
 
         // ¡CORRECCIÓN: exito pasa a true!
         res.status(201).json({
@@ -239,11 +239,13 @@ export const obtenerPerfil = async (req, res) => {
             return res.status(404).json({ exito: false, message: "Usuario no encontrado" });
         }
 
+        console.log("Usuario encontrado en obtenerPerfil:", usuario);
         const payload = {
             id: usuario.id,
             nombre: usuario.nombre,
             email: usuario.email,
-            rol: usuario.rol
+            rol: usuario.rol,
+            verificado: usuario.verificado
         }
 
         res.status(200).json({
@@ -316,6 +318,67 @@ export const actualizarNombreUsuario = async (req, res) => {
     }
 }
 
+
+export const actualizarCorreoUsuario = async (req, res) => {
+    const { error, value } = schemaActualizarCorreo.validate(req.body, { abortEarly: false });
+    if (error) {
+        return res.status(400).json({
+            exito: false,
+            message: "Por favor, corrige los siguientes errores:",
+            errores: error.details.map(detalle => detalle.message)
+        });
+    }
+
+
+    try {
+
+
+        const id = req.user.id;
+        const { email } = value;
+
+        if (!email || email.trim() === '') {
+            return res.status(400).json({
+                exito: false,
+                message: "El correo no puede estar vacío"
+            });
+        }
+
+
+        const actualizado = await UsuarioModel.actualizarCorreo(id, email.trim());
+
+        if (!actualizado) {
+            return res.status(404).json({
+                exito: false,
+                message: "No se encontró el usuario para actualizar"
+            });
+        }
+
+
+
+
+        const nuevoCodigoVerificacion = generarCodigo();
+        await UsuarioModel.guardarCodigoVerificacion(id, nuevoCodigoVerificacion);
+
+        await enviarCorreoVerificacion(email, nuevoCodigoVerificacion).catch(console.error);
+
+        return res.status(200).json({
+            exito: true,
+            message: "Correo actualizado correctamente",
+            data: {
+                email: email,
+                correo_verificado: false // Le avisamos a React que volvió a 0
+            }
+        });
+
+    } catch (error) {
+        console.error("Error en actualizarCorreoUsuario:", error);
+        return res.status(500).json({
+            exito: false,
+            message: "Error interno al actualizar el correo"
+        });
+    }
+}
+
 export const renovarSesion = async (req, res) => {
     // 1. Validar cuerpo de la petición
     const { error, value } = renovarTokenRequestSchema.validate(req.body);
@@ -369,7 +432,7 @@ export const renovarSesion = async (req, res) => {
         const nuevaFechaExpiracion = new Date();
         nuevaFechaExpiracion.setDate(nuevaFechaExpiracion.getDate() + 7);
 
-        await TokenModel.guardarRefreshToken(nuevoRefreshToken,usuarioEncontrado.id, nuevaFechaExpiracion.toISOString());
+        await TokenModel.guardarRefreshToken(nuevoRefreshToken, usuarioEncontrado.id, nuevaFechaExpiracion.toISOString());
 
         // 6. Enviar nuevas credenciales al cliente
         res.status(200).json({
@@ -397,9 +460,9 @@ export const cerrarSesion = async (req, res) => {
         // Llamamos al modelo para aplicar el Soft Delete (revocado = 1)
         await TokenModel.revocarTokenEspecifico(refreshToken);
 
-        return res.status(200).json({ 
-            exito: true, 
-            message: "Sesión cerrada y token revocado correctamente" 
+        return res.status(200).json({
+            exito: true,
+            message: "Sesión cerrada y token revocado correctamente"
         });
 
     } catch (error) {

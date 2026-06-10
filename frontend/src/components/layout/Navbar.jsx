@@ -1,9 +1,9 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect } from "react";
+import { useCarrito } from "../../context/CarritoContext";
 import { Link, useNavigate } from "react-router-dom";
 import "../../style/home.css";
 import "../../style/navbar.css";
 import { useAuth } from "../../context/AuthContext";
-import { CarritoContext } from "../../context/CarritoContext";
 import { useApi } from "../../hooks/useApi";
 import { ProductSearchCard } from "../productos/ProductSearchCard";
 
@@ -13,9 +13,9 @@ export default function Navbar() {
     const [search, setSearch] = useState("");
     const [products, setProducts] = useState([]);
 
-    // Cambiamos "user" por "usuario" para que coincida con tu contexto
+    
     const { estaAutenticado, logout, usuario } = useAuth();
-    const { cartItems, cartCount } = useContext(CarritoContext);
+    const { cartItems, cartCount } = useCarrito();
     const navigate = useNavigate();
 
     const manejarCerrarSesion = async () => {
