@@ -5,15 +5,33 @@ const db = await obtenerDb()
 
 
 class ModelStaff {
-    static async obtenerStaff() {
+    static async obtenerStaff(filtros = {}) {
         try {
-            const query = "SELECT * FROM usuarios WHERE rol = ?"
+            let query = "SELECT * FROM usuarios WHERE rol = ?";
+            const args = [ROLES.ADMIN]; // ROLES.ADMIN o el string que estés usando
+
+            // Búsqueda Universal (Nombre o Email)
+            if (filtros.buscar) {
+                // Abrimos paréntesis para que el OR no rompa el WHERE principal
+                query += " AND (nombre LIKE ? OR email LIKE ?)";
+
+                const terminoBusqueda = `%${filtros.buscar}%`;
+                // Empujamos el término dos veces (una para nombre, otra para email)
+                args.push(terminoBusqueda, terminoBusqueda);
+            }
+
+            if (filtros.activo !== undefined) {
+                const activoVal = (filtros.activo === 'true' || filtros.activo === '1') ? 1 : 0;
+                query += " AND activo = ?";
+                args.push(activoVal);
+            }
+
             const { rows } = await db.execute({
                 sql: query,
-                args: [ROLES.ADMIN]
-            })
+                args: args
+            });
 
-            return rows
+            return rows;
         } catch (error) {
             console.error("Error al obtener el staff desde turso:", error);
             throw error;
