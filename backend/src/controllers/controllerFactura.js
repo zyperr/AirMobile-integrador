@@ -7,7 +7,7 @@ import ModelDetalleFactura from "../models/modelDetalleFactura.js";
 import UsuarioModel from "../models/modelUsuario.js";
 import { ROLES } from "../utils/roles.js";
 import { ESTADOS } from "../utils/estados.js";
-
+import { filtrosFacturasSchema } from "../schemas/schemaFacturas.js";
 
 
 export const crearFactura = async (req, res) => {
@@ -63,32 +63,30 @@ export const crearFactura = async (req, res) => {
 
 export const obtenerTodasLasFacturas = async (req, res) => {
     try {
-        const idUsuarioActual = req?.user?.id;
 
-        if (!idUsuarioActual) {
-            return res.status(401).json({exito:false, message: "Credenciales inválidas" });
+        // 1. VALIDACIÓN JOI: Validamos y extraemos todos los filtros, límite y página
+        const { error, value: filtrosValidados } = filtrosFacturasSchema.validate(req.query, {
+            abortEarly: false,
+            stripUnknown: true 
+        });
+
+        if (error) {
+            return res.status(400).json({
+                exito: false,
+                message: "Filtros de búsqueda inválidos.",
+                errores: error.details.map(err => err.message)
+            });
         }
 
-        // SEGURIDAD: Esta ruta es exclusiva para Administradores
-        const rolUsuario = await UsuarioModel.getRol(idUsuarioActual);
-        if (rolUsuario !== ROLES.ADMIN) {
-            return res.status(403).json({ exito:false,message: "Solo los administradores pueden ver todas las facturas del sistema" });
-        }
 
-        // PAGINACIÓN: Leer la página y el límite de la URL (con valores por defecto)
-        // Ejemplo de URL en Postman: /api/facturas?page=2&limit=5
-        const page = Math.max(1, parseInt(req.query.page) || 1);
-        const limit = Math.max(1, parseInt(req.query.limit) || 10);
+        const { page, limit, ...filtrosPuros } = filtrosValidados; 
         const offset = (page - 1) * limit;
 
-        // Le pasamos el límite y el offset a tu modelo
-
-
+        // 3. CONSULTAS A LA DB EN PARALELO (Ambas reciben los filtros)
         const [facturas, totalResultados] = await Promise.all([
-            ModelFactura.getFacturas(limit, offset),
-            ModelFactura.countFacturas()
+            ModelFactura.getFacturas(filtrosPuros, limit, offset),
+            ModelFactura.countFacturas(filtrosPuros)
         ]);
-
 
         const totalPaginas = Math.ceil(totalResultados / limit);
 
@@ -106,7 +104,7 @@ export const obtenerTodasLasFacturas = async (req, res) => {
 
     } catch (err) {
         console.error("Error al obtener las facturas:", err);
-        return res.status(500).json({exito:false, message: "Error interno al obtener las facturas" });
+        return res.status(500).json({ exito: false, message: "Error interno al obtener las facturas" });
     }
 };
 
@@ -213,46 +211,42 @@ export const obtenerFactura = async (req, res) => {
 
 export const actualizarEstadoFactura = async (req, res) => {
     try {
-        const idUsuario = req?.user?.id;
-        if (!idUsuario) {
-            return res.status(401).json({exito:false, message: "Credenciales inválidas" });
-        }
-
-        const rol = await UsuarioModel.getRol(idUsuario);
-        if (rol !== ROLES.ADMIN) {
-            return res.status(403).json({ exito:false,message: "No tienes permisos para alterar facturas" });
-        }
-
 
         const idFactura = req.params.id;
         const { estado } = req.body;
 
+        // 1. Validamos que el estado exista y sea válido
         if (!estado || !Object.values(ESTADOS).includes(estado)) {
             return res.status(400).json({
-                exito:false,
+                exito: false,
                 message: `Estado no válido. Debe ser uno de: ${Object.values(ESTADOS).join(', ')}`
             });
         }
 
-
+        // 2. Verificamos que la factura realmente exista en la DB
         const factura = await ModelFactura.getFacturaById(idFactura);
         if (!factura) {
-            return res.status(404).json({exito:false, message: "No se ha encontrado la factura" });
+            return res.status(404).json({ exito: false, message: "No se ha encontrado la factura" });
         }
 
+        // 3. Ejecutamos la actualización
         await ModelFactura.updateEstadoFactura(idFactura, estado);
 
         return res.status(200).json({
             exito: true,
+            message: "Se actualizó la factura con éxito",
             factura: {
                 ...factura,
                 estado: estado
-            },
-            message: "Se actualizo la factura con exito"
+            }
         });
 
     } catch (err) {
-        console.log(err); return res.status(500).json({ exito:false,message: "Error al actualizar el estado de la factura" });
+        console.error("Error al actualizar el estado de la factura:", err);
+        return res.status(500).json({ 
+            exito: false, 
+            message: "Error interno al actualizar el estado de la factura" 
+        });
     }
 }
 
