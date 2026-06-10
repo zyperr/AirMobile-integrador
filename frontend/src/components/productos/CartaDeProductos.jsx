@@ -1,20 +1,29 @@
 import { Link } from 'react-router-dom';
 import { useContext } from 'react';
 import '../../style/CartaDeProductos.css';
-import { CarritoContext } from '../../context/CarritoContext';
-import '../../style/CartaDeProductos.css';
-import BotonDeseados from '../productos/BotonDeseados'; // Asegúrate de que la ruta sea la correcta
+import BotonDeseados from '../productos/BotonDeseados';
+import { useAuth } from '../../context/AuthContext';
+import { useCarrito } from '../../context/CarritoContext'; 
 
-import { useAuth } from '../../context/AuthContext'; // Importamos el hook para acceder al estado de autenticación
+const ProductCard = ({
+  id,
+  nombreDeProducto,
+  condicion,
+  precio,
+  capacidad = [],
+  imagen_url,
+  onRemover,
+  setToastDeseadosVisible
+}) => {
 
-const ProductCard = ({ id, nombreDeProducto, condicion, precio, capacidad = [], imagen_url ,onRemover}) => {
-  const { addToCart } = useContext(CarritoContext);
-  // Validación por si capacidad viene como texto (string) desde la base de datos
-  const capacidadFormateada = Array.isArray(capacidad) ? capacidad.join(', ') : capacidad;
+  const { agregarProducto, loadingId, isLoading } = useCarrito();
 
+  const capacidadFormateada =
+    Array.isArray(capacidad)
+      ? capacidad.join(', ')
+      : capacidad;
 
   const { estaAutenticado } = useAuth();
-
 
   return (
     // Agregamos 'position-relative' aquí para que el botón flote relativo a la tarjeta
@@ -27,7 +36,7 @@ const ProductCard = ({ id, nombreDeProducto, condicion, precio, capacidad = [], 
 
 
       {estaAutenticado && (
-        <BotonDeseados idProducto={id} onRemover={onRemover} />
+        <BotonDeseados idProducto={id} onRemover={onRemover} setToastDeseadosVisible={setToastDeseadosVisible} />
       )}
 
       {/* Todo lo demás envuelto en el Link, como lo tenías */}
@@ -84,22 +93,14 @@ const ProductCard = ({ id, nombreDeProducto, condicion, precio, capacidad = [], 
             {estaAutenticado && (
               <button
                 className="btn btn-primary fw-semibold custom-view-btn btn-sm text-nowrap px-2 py-1"
-                onClick={(e) => {
+                onClick={async (e) => {
 
                   e.preventDefault();
-
-                  addToCart({
-                    id,
-                    nombreDeProducto,
-                    precio,
-                    imagen: imagen_url[0],
-                    condicion,
-                    capacidad: capacidadFormateada
-                  });
-
+                  
+                  await agregarProducto(id);
                 }}
               >
-                Añadir
+                {loadingId === id && isLoading ? (<i class="bi bi-cart-check"> añadido</i>): (<i class="bi bi-cart-plus"> Añadir</i>)}
               </button>
             )}
           </div >
