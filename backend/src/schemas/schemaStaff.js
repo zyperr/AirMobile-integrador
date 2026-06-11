@@ -31,3 +31,10 @@ export const schemaActaulizarStaff = Joi.object({
         'string.max': 'El nombre no puede superar los 50 caracteres.',
     }),
 })
+
+
+export const filtrosStaffSchema = Joi.object({
+    // 'buscar' reemplaza a 'nombre'
+    buscar: Joi.string().trim().max(100).optional().allow(''),
+    activo: Joi.string().valid('true', 'false', '1', '0').optional()
+});

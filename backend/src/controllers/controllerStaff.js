@@ -1,5 +1,5 @@
 import ModelStaff from '../models/ModelStaff.js';
-import { schemaRegistroStaff, schemaActaulizarStaff } from '../schemas/schemaStaff.js';
+import { schemaRegistroStaff, schemaActaulizarStaff, filtrosStaffSchema } from '../schemas/schemaStaff.js';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { ROLES } from '../utils/roles.js';
@@ -8,7 +8,21 @@ import { enviarCorreoBlanqueo } from '../utils/mailer.js';
 
 export const obtenerStaff = async (req, res) => {
     try {
-        const staff = await ModelStaff.obtenerStaff();
+        const { error, value: filtrosValidados } = filtrosStaffSchema.validate(req.query, {
+            abortEarly: false,
+            stripUnknown: true
+        });
+
+        if (error) {
+            return res.status(400).json({
+                exito: false,
+                message: "Filtros de búsqueda inválidos.",
+                errores: error.details.map(err => err.message)
+            });
+        }
+
+        // Le pasamos el objeto con { buscar, activo }
+        const staff = await ModelStaff.obtenerStaff(filtrosValidados);
         const parsedStaff = staff.map((empleado) => {
             return {
                 id: empleado.id,
@@ -16,19 +30,19 @@ export const obtenerStaff = async (req, res) => {
                 email: empleado.email,
                 rol: empleado.rol,
                 activo: empleado.activo
-            }
-        })
+            };
+        });
 
         return res.status(200).json({ exito: true, data: parsedStaff });
 
     } catch (error) {
-        console.error("Error al traer el staff:", err);
+        console.error("Error al traer el staff:", error);
         return res.status(500).json({
             exito: false,
             message: "Error interno del servidor al intentar traer el staff."
         });
     }
-}
+};
 
 
 export const actualizarAdmin = async (req, res) => {
@@ -179,11 +193,11 @@ export const blanquearPasswordStaff = async (req, res) => {
 
         // 1. Obtener los datos del empleado para enviarle el correo
         const datosEmpleado = await ModelStaff.obtenerDatosBasicosPorId(idEmpleado);
-        
+
         if (!datosEmpleado) {
-            return res.status(404).json({ 
-                exito: false, 
-                message: "Administrador no encontrado." 
+            return res.status(404).json({
+                exito: false,
+                message: "Administrador no encontrado."
             });
         }
 
@@ -199,9 +213,9 @@ export const blanquearPasswordStaff = async (req, res) => {
         const passwordActualizada = await ModelStaff.actualizarPassword(idEmpleado, passwordEncriptada);
 
         if (!passwordActualizada) {
-            return res.status(400).json({ 
-                exito: false, 
-                message: "No se pudo actualizar la contraseña. Verifique que el usuario esté activo." 
+            return res.status(400).json({
+                exito: false,
+                message: "No se pudo actualizar la contraseña. Verifique que el usuario esté activo."
             });
         }
 
@@ -219,7 +233,7 @@ export const blanquearPasswordStaff = async (req, res) => {
         */
 
         // Nodemailer por el momento
-        await enviarCorreoBlanqueo(datosEmpleado.email, datosEmpleado.nombre, passwordTemporal);        
+        await enviarCorreoBlanqueo(datosEmpleado.email, datosEmpleado.nombre, passwordTemporal);
 
         return res.status(200).json({
             exito: true,
@@ -228,9 +242,9 @@ export const blanquearPasswordStaff = async (req, res) => {
 
     } catch (error) {
         console.error("Error en blanqueo de emergencia:", error);
-        return res.status(500).json({ 
-            exito: false, 
-            message: "Error interno del servidor al intentar blanquear la contraseña." 
+        return res.status(500).json({
+            exito: false,
+            message: "Error interno del servidor al intentar blanquear la contraseña."
         });
     }
 };
