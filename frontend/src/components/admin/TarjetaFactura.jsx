@@ -1,4 +1,3 @@
-import React from 'react';
 
 export const TarjetaFactura = ({ titulo, valor, extraTag, extraTagColor, iconoFooter, textoFooter }) => {
     return (
@@ -16,8 +15,8 @@ export const TarjetaFactura = ({ titulo, valor, extraTag, extraTagColor, iconoFo
                     {titulo}
                 </span>
 
-                <div className="d-flex align-items-baseline flex-wrap gap-2 mb-3 mb-lg-4">
-                    {/* fs-2 en móvil, fs-1 en grandes para evitar desbordamientos */}
+                {/* --- EL CAMBIO ESTÁ AQUÍ: Usamos flex-column para forzar que uno vaya debajo del otro --- */}
+                <div className="d-flex flex-column align-items-start gap-1 mb-3 mb-lg-4">
                     <h3 className="fw-bold mb-0 fs-2 fs-lg-1" style={{ color: '#111827' }}>
                         {valor}
                     </h3>

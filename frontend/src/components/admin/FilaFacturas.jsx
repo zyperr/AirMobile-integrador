@@ -5,10 +5,10 @@ import { useAuth } from '../../context/AuthContext';
 const ESTADOS = ['Pendiente', 'Completado', 'Enviado', 'Cancelado', 'Reembolsado'];
 
 const estadoConfig = {
-    Pendiente:   { bg: '#fffbeb', color: '#92400e', border: '#fcd34d' },
-    Completado:  { bg: '#f0fdf4', color: '#166534', border: '#86efac' },
-    Enviado:     { bg: '#eff6ff', color: '#1e40af', border: '#93c5fd' },
-    Cancelado:   { bg: '#fef2f2', color: '#991b1b', border: '#fca5a5' },
+    Pendiente: { bg: '#fffbeb', color: '#92400e', border: '#fcd34d' },
+    Completado: { bg: '#f0fdf4', color: '#166534', border: '#86efac' },
+    Enviado: { bg: '#eff6ff', color: '#1e40af', border: '#93c5fd' },
+    Cancelado: { bg: '#fef2f2', color: '#991b1b', border: '#fca5a5' },
     Reembolsado: { bg: '#f9fafb', color: '#374151', border: '#d1d5db' },
 };
 
@@ -48,7 +48,12 @@ export const FilaFactura = ({ factura, onEstadoActualizado }) => {
     };
 
     const cambiarEstado = async (nuevoEstado) => {
+        // 1. Cerramos el menú
         setMenuAbierto(false);
+
+        // Opcional: Podrías poner un estado local de "cargando..." aquí si quisieras
+
+        // 2. PRIMERO mandamos a guardar el cambio en la Base de Datos
         const respuesta = await ejecutarPeticion(`facturas/actualizar-estado/${factura.id}`, {
             method: 'PUT',
             headers: {
@@ -57,7 +62,15 @@ export const FilaFactura = ({ factura, onEstadoActualizado }) => {
             },
             body: JSON.stringify({ estado: nuevoEstado }),
         });
-        if (respuesta.exito) onEstadoActualizado(factura.id, nuevoEstado);
+
+        // 3. SEGUNDO (Y muy importante): Si se guardó correctamente, 
+        // AHORA SÍ le avisamos al padre.
+        // Como la BD ya se actualizó, el padre pedirá las estadísticas y traerá los números NUEVOS.
+        if (respuesta.exito) {
+            onEstadoActualizado(factura.id, nuevoEstado);
+        } else {
+            alert('Error al actualizar el estado de la factura.');
+        }
     };
 
     const descargarPDF = async () => {

@@ -74,8 +74,18 @@ export const Facturas = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    const onEstadoActualizado = (id, nuevoEstado) => {
+    const onEstadoActualizado = async (id, nuevoEstado) => {
+        // 1. Esto actualiza la pastilla de color en la tabla al instante
         setFacturas(prev => prev.map(f => f.id === id ? { ...f, estado: nuevoEstado } : f));
+
+        // 2. ¡AQUÍ ESTÁ LA MAGIA PARA LAS TARJETAS!
+        // Volvemos a pedir las estadísticas al backend de fondo
+        const response = await fetchStats('facturas/estadisticas', { method: 'GET' });
+
+        // 3. Al actualizar el estado 'stats', React empuja los nuevos valores a las Tarjetas
+        if (response.exito) {
+            setStats(response.data.data);
+        }
     };
 
     const handleBuscar = (e) => {
