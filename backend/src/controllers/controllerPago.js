@@ -7,7 +7,6 @@ import { MercadoPagoConfig, Preference, Payment } from 'mercadopago';
 import { enviarEmailCompra } from '../utils/mailer.js';
 import { ESTADOS } from '../utils/estados.js';
 
-dotenv.config();
 
 console.log("Token cargado:", process.env.MP_ACCESS_TOKEN ? "SÍ" : "NO");
 // Configuración del cliente (Asegúrate de que la variable de entorno esté bien escrita)
