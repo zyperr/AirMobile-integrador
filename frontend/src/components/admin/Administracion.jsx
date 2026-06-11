@@ -12,9 +12,11 @@ export const Administracion = () => {
     const [modalEditarAdmin, setModalEditarAdmin] = useState(false);
     const [adminAEditar, setAdminAEditar] = useState(null);
     const [modalAbierto, setModalAbierto] = useState(false);
-
-    // Toast — un solo estado para manejar ambos casos
     const [toast, setToast] = useState({ visible: false, mensaje: "" });
+
+    // --- NUEVOS ESTADOS PARA FILTROS ---
+    const [busqueda, setBusqueda] = useState("");
+    const [estadoFiltro, setEstadoFiltro] = useState(""); // "" = todos, "1" = activos, "0" = inactivos
 
     const { token } = useAuth();
     const { ejecutarPeticion, isLoading, error } = useApi();
@@ -27,16 +29,38 @@ export const Administracion = () => {
         roles: 0
     });
 
+    // --- EFECTO CON DEBOUNCE PARA LOS FILTROS ---
     useEffect(() => {
-        cargarAdmins();
-    }, []);
+        // Configuramos un temporizador. Solo llamará a la API si dejas de escribir por 300ms
+        const timer = setTimeout(() => {
+            cargarAdmins();
+        }, 300);
+
+        // Si el usuario sigue escribiendo, limpiamos el temporizador anterior
+        return () => clearTimeout(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [busqueda, estadoFiltro]); // Se vuelve a ejecutar si cambia el texto o el botón de estado
 
     const mostrarToast = (mensaje) => {
         setToast({ visible: true, mensaje });
     };
 
     const cargarAdmins = async () => {
-        const respuesta = await ejecutarPeticion("staff", {
+        // 1. Armamos los parámetros de la URL dinámicamente según los estados
+        const params = new URLSearchParams();
+        
+        if (busqueda.trim() !== "") {
+            params.append("buscar", busqueda.trim());
+        }
+        
+        if (estadoFiltro !== "") {
+            params.append("activo", estadoFiltro); // Tu Joi espera "1" o "0"
+        }
+
+        const url = `staff${params.toString() ? `?${params.toString()}` : ""}`;
+
+        // 2. Ejecutamos la petición con la URL filtrada
+        const respuesta = await ejecutarPeticion(url, {
             method: "GET",
             headers: { Authorization: `Bearer ${token}` }
         });
@@ -48,6 +72,8 @@ export const Administracion = () => {
 
             setAdmins(lista);
 
+            // Nota: Estas estadísticas ahora reflejarán los datos de la vista actual filtrada.
+            // Si buscas "Maxi", te dirá cuántos "Maxi" hay en total, cuántos activos, etc.
             const activos = lista.filter(a => a.activo === 1).length;
             const deshabilitados = lista.filter(a => a.activo === 0).length;
             const roles = [...new Set(lista.map(a => a.rol))].length;
@@ -56,6 +82,7 @@ export const Administracion = () => {
         }
     };
 
+    // ... (Mantén tus funciones actualizarAdminEnLista, deshabilitarAdmin, restaurarAdmin, resetearPassword exactamente igual) ...
     const actualizarAdminEnLista = (id, datosActualizados) => {
         setAdmins(prev => prev.map(a =>
             a.id === id ? { ...a, ...datosActualizados } : a
@@ -69,17 +96,9 @@ export const Administracion = () => {
         });
 
         if (result.exito) {
-            setAdmins(prev => prev.map(a =>
-                a.id === id ? { ...a, activo: 0 } : a
-            ));
-            setStats(prev => ({
-                ...prev,
-                activos: prev.activos - 1,
-                deshabilitados: prev.deshabilitados + 1
-            }));
-        } else {
-            alert("No se pudo deshabilitar el administrador.");
-        }
+            setAdmins(prev => prev.map(a => a.id === id ? { ...a, activo: 0 } : a));
+            setStats(prev => ({ ...prev, activos: prev.activos - 1, deshabilitados: prev.deshabilitados + 1 }));
+        } else alert("No se pudo deshabilitar el administrador.");
     };
 
     const restaurarAdmin = async (id) => {
@@ -89,17 +108,9 @@ export const Administracion = () => {
         });
 
         if (result.exito) {
-            setAdmins(prev => prev.map(a =>
-                a.id === id ? { ...a, activo: 1 } : a
-            ));
-            setStats(prev => ({
-                ...prev,
-                activos: prev.activos + 1,
-                deshabilitados: prev.deshabilitados - 1
-            }));
-        } else {
-            alert("No se pudo restaurar el administrador.");
-        }
+            setAdmins(prev => prev.map(a => a.id === id ? { ...a, activo: 1 } : a));
+            setStats(prev => ({ ...prev, activos: prev.activos + 1, deshabilitados: prev.deshabilitados - 1 }));
+        } else alert("No se pudo restaurar el administrador.");
     };
 
     const resetearPassword = async (id) => {
@@ -108,17 +119,14 @@ export const Administracion = () => {
             headers: { Authorization: `Bearer ${token}` }
         });
 
-        if (result.exito) {
-            mostrarToast("Contraseña reseteada con éxito");
-        } else {
-            alert("No se pudo resetear la contraseña.");
-        }
+        if (result.exito) mostrarToast("Contraseña reseteada con éxito");
+        else alert("No se pudo resetear la contraseña.");
     };
 
     return (
         <>
             {/* ENCABEZADO */}
-            <div className="d-flex align-items-start justify-content-between mb-5 text-start">
+            <div className="d-flex flex-column flex-md-row align-items-md-start justify-content-between mb-5 text-start gap-3">
                 <div style={{ maxWidth: '650px' }}>
                     <h1 className="fw-bold mb-2" style={{ color: '#111827', fontSize: '2.5rem' }}>
                         Administradores
@@ -130,7 +138,7 @@ export const Administracion = () => {
                 </div>
 
                 <button
-                    className="admin-btn-nuevo px-4 py-2"
+                    className="admin-btn-nuevo px-4 py-2 text-nowrap"
                     onClick={() => setModalAbierto(true)}
                 >
                     <i className="bi bi-person-plus-fill me-2" />
@@ -138,10 +146,10 @@ export const Administracion = () => {
                 </button>
             </div>
 
-            <div className="container-fluid py-4 px-4" style={{ backgroundColor: '#f8f9fc', minHeight: '100vh' }}>
+            <div className="container-fluid py-4 px-4" style={{ backgroundColor: '#f8f9fc', minHeight: '100vh', borderRadius: "1rem" }}>
 
                 {/* TARJETAS DE ESTADÍSTICAS */}
-                <div className="row g-4 mb-5">
+                <div className="row g-4 mb-4">
                     <div className="col-md-3">
                         <TarjetaEstadistica titulo="Total Usuarios" valor={stats.total} color="#0d6efd" />
                     </div>
@@ -156,22 +164,72 @@ export const Administracion = () => {
                     </div>
                 </div>
 
+                {/* --- BARRA DE FILTROS --- */}
+                <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 bg-white p-3 rounded-4 shadow-sm border-0">
+                    
+                    {/* Buscador de texto */}
+                    <div className="input-group" style={{ maxWidth: '400px' }}>
+                        <span className="input-group-text bg-light border-end-0 text-muted">
+                            <i className="bi bi-search"></i>
+                        </span>
+                        <input
+                            type="text"
+                            className="form-control bg-light border-start-0 ps-0"
+                            placeholder="Buscar por nombre o email..."
+                            value={busqueda}
+                            onChange={(e) => setBusqueda(e.target.value)}
+                        />
+                    </div>
+
+                    {/* Botones de estado (Píldoras) */}
+                    <div className="d-flex gap-2 overflow-x-auto pb-1 pb-md-0" style={{ whiteSpace: 'nowrap' }}>
+                        <button
+                            className={`btn rounded-pill px-4 py-1 fw-semibold ${estadoFiltro === "" ? "btn-dark text-white" : "btn-light text-muted border"}`}
+                            onClick={() => setEstadoFiltro("")}
+                        >
+                            Todos
+                        </button>
+                        <button
+                            className={`btn rounded-pill px-4 py-1 fw-semibold ${estadoFiltro === "1" ? "btn-success text-white" : "btn-light text-muted border"}`}
+                            onClick={() => setEstadoFiltro("1")}
+                        >
+                            Activos
+                        </button>
+                        <button
+                            className={`btn rounded-pill px-4 py-1 fw-semibold ${estadoFiltro === "0" ? "btn-secondary text-white" : "btn-light text-muted border"}`}
+                            onClick={() => setEstadoFiltro("0")}
+                        >
+                            Inactivos
+                        </button>
+                    </div>
+                </div>
+
                 {/* ESTADO DE CARGA */}
                 {isLoading && (
                     <div className="text-center py-5">
                         <div className="spinner-border text-primary" role="status" />
+                        <p className="text-muted mt-3">Buscando administradores...</p>
                     </div>
                 )}
 
                 {/* ERROR */}
                 {error && (
-                    <div className="alert alert-danger">
+                    <div className="alert alert-danger rounded-4 shadow-sm">
+                        <i className="bi bi-exclamation-triangle-fill me-2"></i>
                         Error al cargar los administradores: {error}
                     </div>
                 )}
 
-                {/* TABLA */}
-                {!isLoading && !error && (
+                {/* TABLA O MENSAJE DE VACÍO */}
+                {!isLoading && !error && admins.length === 0 && (
+                    <div className="text-center py-5 bg-white rounded-4 shadow-sm border-0">
+                        <i className="bi bi-person-x text-muted" style={{ fontSize: "3rem" }}></i>
+                        <h5 className="text-muted mt-3">No se encontraron resultados</h5>
+                        <p className="text-muted small">Intenta ajustar los filtros de búsqueda.</p>
+                    </div>
+                )}
+
+                {!isLoading && !error && admins.length > 0 && (
                     <ListaAdministradores
                         administradores={admins}
                         onDeshabilitar={deshabilitarAdmin}
@@ -186,7 +244,7 @@ export const Administracion = () => {
 
             </div>
 
-            {/* MODAL REGISTRAR */}
+            {/* MODALES Y TOAST (Igual que antes) */}
             <ModalRegistrarAdmin
                 isOpen={modalAbierto}
                 onClose={() => setModalAbierto(false)}
@@ -196,7 +254,6 @@ export const Administracion = () => {
                 }}
             />
 
-            {/* MODAL EDITAR */}
             <ModalEditarAdmin
                 isOpen={modalEditarAdmin}
                 admin={adminAEditar}
@@ -207,7 +264,6 @@ export const Administracion = () => {
                 onAdminActualizado={actualizarAdminEnLista}
             />
 
-            {/* TOAST — aparece abajo al centro para ambas acciones */}
             <Toast
                 visible={toast.visible}
                 mensaje={toast.mensaje}
