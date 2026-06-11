@@ -9,6 +9,7 @@ class ModelDetalleFactura {
 
 
     static async createDetalleFactura(facturaId, productoId, cantidad, precioUnitario) {
+        console.log("Valores para insertar:", { facturaId, productoId, cantidad, precioUnitario });
         try{
             const query = `INSERT INTO detalles_factura(factura_id, producto_id, cantidad, precio_unitario) VALUES (?, ?, ?, ?)`;
             const result = await db.execute({

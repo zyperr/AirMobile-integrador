@@ -40,7 +40,7 @@ const PagoExitoso = () => {
             )}
 
             <div className="d-flex gap-3">
-                <Link to="/perfil/facturacion" className="btn btn-outline-primary px-4 py-2 fw-semibold rounded-pill shadow-sm">
+                <Link to="/perfil-usuario/facturacion" className="btn btn-outline-primary px-4 py-2 fw-semibold rounded-pill shadow-sm">
                     <i className="bi bi-receipt me-2"></i> Ver Factura
                 </Link>
                 <Link to="/catalogo" className="btn btn-primary px-4 py-2 fw-semibold rounded-pill shadow-sm">

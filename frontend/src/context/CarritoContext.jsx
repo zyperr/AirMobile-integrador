@@ -21,24 +21,24 @@ export function CartProvider({ children }) {
         setIsProcessing(true);
 
         try {
-
             const response = await ejecutarPeticion('pagos/crear-preferencia', {
                 method: 'POST',
                 body: JSON.stringify({ items: cartItems })
             });
 
-
+            // --- AQUÍ ESTÁ EL CAMBIO ---
+            console.log("Respuesta de la API:", response); 
+            
             if (response.exito && response.data?.init_point) {
-                // Redirigimos al usuario a Mercado Pago
                 window.location.href = response.data.init_point;
             } else {
-                console.error("Error al generar el pago", response.message || "Error desconocido");
-                // Mostrar notificación al usuario
-                // setToastVisible(true);
+                // Si 'response' existe pero 'exito' es false, aquí veremos el error real
+                console.error("Error detallado del servidor:", response); 
+                alert(`Error al pagar: ${response.message || "Revisa la consola del servidor"}`);
             }
 
         } catch (error) {
-            console.error("Error al procesar el pago:", error);
+            console.error("Error fatal en el fetch:", error);
         } finally {
             setIsProcessing(false);
         }
