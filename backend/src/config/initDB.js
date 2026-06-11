@@ -40,6 +40,7 @@ export const inicializarBaseDeDatos = async () => {
     const queryFacturas = `CREATE TABLE IF NOT EXISTS facturas (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         usuario_id INTEGER,
+        mp_payment_id TEXT UNIQUE,
         total REAL NOT NULL,
         fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
         estado TEXT DEFAULT 'Pendiente',
