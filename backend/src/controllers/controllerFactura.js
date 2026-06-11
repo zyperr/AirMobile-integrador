@@ -11,18 +11,19 @@ import { filtrosFacturasSchema } from "../schemas/schemaFacturas.js";
 
 
 export const crearFactura = async (req, res) => {
+    
     try {
         const idUsuario = req?.user?.id;
 
         if (!idUsuario) {
-            return res.status(401).json({exito:false, message: "Credenciales invalidas" });
+            return res.status(401).json({ exito: false, message: "Credenciales invalidas" });
         }
 
         const carrito = await ModelCarrito.getCarrito(idUsuario);
 
         if (!carrito || carrito.length === 0
         ) {
-            return res.status(400).json({ exito:false,message: "El carrito está vacío, no se puede crear una factura." });
+            return res.status(400).json({ exito: false, message: "El carrito está vacío, no se puede crear una factura." });
         }
 
         let totalCalculado = 0;
@@ -55,11 +56,34 @@ export const crearFactura = async (req, res) => {
 
     } catch (err) {
         console.log(err);
-        return res.status(500).json({ exito:false,message: "Error al crear la factura" });
+        return res.status(500).json({ exito: false, message: "Error al crear la factura" });
     }
 
 }
 
+export const obtenerEstadisticasFacturas = async (req, res) => {
+    try {
+
+        const estadisticas = await ModelFactura.obtenerEstadisticas();
+
+        return res.status(200).json({
+            exito: true,
+            data: {
+                totalFacturado: estadisticas.totalFacturado,
+                totalPendiente: estadisticas.totalPendiente,
+                cantidadPendientes: estadisticas.cantidadPendientes,
+                facturasDelMes: estadisticas.facturasDelMes
+            }
+        });
+
+    } catch (err) {
+        console.error("Error al obtener estadísticas:", err);
+        return res.status(500).json({
+            exito: false,
+            message: "Error interno al calcular las estadísticas de facturación."
+        });
+    }
+};
 
 export const obtenerTodasLasFacturas = async (req, res) => {
     try {
@@ -67,7 +91,7 @@ export const obtenerTodasLasFacturas = async (req, res) => {
         // 1. VALIDACIÓN JOI: Validamos y extraemos todos los filtros, límite y página
         const { error, value: filtrosValidados } = filtrosFacturasSchema.validate(req.query, {
             abortEarly: false,
-            stripUnknown: true 
+            stripUnknown: true
         });
 
         if (error) {
@@ -79,7 +103,7 @@ export const obtenerTodasLasFacturas = async (req, res) => {
         }
 
 
-        const { page, limit, ...filtrosPuros } = filtrosValidados; 
+        const { page, limit, ...filtrosPuros } = filtrosValidados;
         const offset = (page - 1) * limit;
 
         // 3. CONSULTAS A LA DB EN PARALELO (Ambas reciben los filtros)
@@ -116,7 +140,7 @@ export const obtenerFacturasDeUsuario = async (req, res) => {
         const idUsuarioActual = req?.user?.id;
 
         if (!idUsuarioActual) {
-            return res.status(401).json({ exito:false, message: "Credenciales inválidas" });
+            return res.status(401).json({ exito: false, message: "Credenciales inválidas" });
         }
 
         const page = Math.max(1, parseInt(req.query.page) || 1);
@@ -137,7 +161,7 @@ export const obtenerFacturasDeUsuario = async (req, res) => {
         facturas = facturas.map(factura => {
             if (factura.fecha) {
                 const fechaObjeto = new Date(factura.fecha + 'Z');
-                
+
                 // Para el historial suele ser mejor una fecha más corta (Ej: "14 May 2026")
                 factura.fecha_formateada = fechaObjeto.toLocaleString("es-AR", {
                     timeZone: "America/Argentina/Buenos_Aires",
@@ -151,7 +175,7 @@ export const obtenerFacturasDeUsuario = async (req, res) => {
 
         return res.status(200).json({
             exito: true,
-            paginacion: { 
+            paginacion: {
                 paginaActual: page,
                 limitePorPagina: limit,
                 totalResultados: totalResultados,
@@ -164,7 +188,7 @@ export const obtenerFacturasDeUsuario = async (req, res) => {
 
     } catch (err) {
         console.error("Error al obtener las facturas del usuario:", err);
-        return res.status(500).json({ exito:false, message: "Error interno al obtener las facturas del usuario" });
+        return res.status(500).json({ exito: false, message: "Error interno al obtener las facturas del usuario" });
     }
 };
 
@@ -175,17 +199,17 @@ export const obtenerFactura = async (req, res) => {
         const idUsuarioActual = req?.user?.id;
 
         if (!idUsuarioActual) {
-            return res.status(401).json({ exito:false,message: "Credenciales inválidas" });
+            return res.status(401).json({ exito: false, message: "Credenciales inválidas" });
         }
         const idFactura = req?.params?.id;
         if (!idFactura) {
-            return res.status(400).json({exito:false, message: "ID de factura no proporcionado" });
+            return res.status(400).json({ exito: false, message: "ID de factura no proporcionado" });
         }
 
         const factura = await ModelFactura.getFacturaById(idFactura);
 
         if (!factura) {
-            return res.status(404).json({exito:false, message: "No se ha encontrado la factura" });
+            return res.status(404).json({ exito: false, message: "No se ha encontrado la factura" });
         }
 
 
@@ -193,7 +217,7 @@ export const obtenerFactura = async (req, res) => {
 
         // Si el que pide la factura no es el dueño, y tampoco es Admin, lo rebotamos.
         if (factura.usuario_id !== idUsuarioActual && rolUsuario !== ROLES.ADMIN) {
-            return res.status(403).json({ exito:false,message: "No tienes permiso para ver esta factura" });
+            return res.status(403).json({ exito: false, message: "No tienes permiso para ver esta factura" });
         }
 
         return res.status(200).json({
@@ -204,7 +228,7 @@ export const obtenerFactura = async (req, res) => {
 
 
     } catch (err) {
-        console.log(err); return res.status(500).json({ exito:false,message: "Error al obtener la factura" });
+        console.log(err); return res.status(500).json({ exito: false, message: "Error al obtener la factura" });
     }
 }
 
@@ -243,9 +267,9 @@ export const actualizarEstadoFactura = async (req, res) => {
 
     } catch (err) {
         console.error("Error al actualizar el estado de la factura:", err);
-        return res.status(500).json({ 
-            exito: false, 
-            message: "Error interno al actualizar el estado de la factura" 
+        return res.status(500).json({
+            exito: false,
+            message: "Error interno al actualizar el estado de la factura"
         });
     }
 }
@@ -255,14 +279,14 @@ export const obtenerDetalleFactura = async (req, res) => {
         const idUsuarioActual = req?.user?.id;
 
         if (!idUsuarioActual) {
-            return res.status(401).json({ exito:false,message: "Credenciales inválidas" });
+            return res.status(401).json({ exito: false, message: "Credenciales inválidas" });
         }
 
         const idFactura = req.params.id;
         const factura = await ModelDetalleFactura.getDetallesFacturaByFacturaId(idFactura);
 
         if (!factura) {
-            return res.status(404).json({ exito:false,message: "No se ha encontrado el detalle de la factura" });
+            return res.status(404).json({ exito: false, message: "No se ha encontrado el detalle de la factura" });
         }
 
 
@@ -270,7 +294,7 @@ export const obtenerDetalleFactura = async (req, res) => {
 
         // Si el usuario no es el dueño de la factura y TAMPOCO es admin... ¡lo bloqueamos!
         if (factura.usuario_id !== idUsuarioActual && rolUsuario !== ROLES.ADMIN) {
-            return res.status(403).json({ exito:false,message: "No tienes permiso para ver esta factura" });
+            return res.status(403).json({ exito: false, message: "No tienes permiso para ver esta factura" });
         }
 
 
@@ -281,6 +305,6 @@ export const obtenerDetalleFactura = async (req, res) => {
         });
 
     } catch (err) {
-        console.log(err); return res.status(500).json({ exito:false,message: "Error al obtener el detalle de la factura" });
+        console.log(err); return res.status(500).json({ exito: false, message: "Error al obtener el detalle de la factura" });
     }
 }

@@ -42,7 +42,7 @@ export const inicializarBaseDeDatos = async () => {
         usuario_id INTEGER,
         total REAL NOT NULL,
         fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
-        estado TEXT DEFAULT 'Completado',
+        estado TEXT DEFAULT 'Pendiente',
         FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
         )`;
 
