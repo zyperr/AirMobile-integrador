@@ -6,6 +6,7 @@ import { SkeletonFilaProducto } from "./SkeletonFilaLoader";
 import { ProductosFila } from "./ProductoFila";
 import ModalConfirmarEliminar from "./forms/ModalConfirmarEliminar";
 import ModalEditarProducto from "./forms/ModalEditarProducto";
+import ModalConfirmarAccion from "./forms/ModalConfirmarAccion";
 
 const CONDICIONES = ["nuevo", "usado", "reacondicionado"];
 const CATEGORIAS = ["celulares", "tablets", "relojes", "auriculares", "cargadores", "cables", "powerbanks", "fundas", "protectores", "accesorios"];
@@ -87,7 +88,6 @@ const TablaProductos = () => {
   const confirmarEliminar = async () => {
     const result = await ejecutarPeticion(`productos/eliminar-producto/${productoAEliminar.id}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
     });
     if (result.exito) {
       setProductos((prev) => ({ ...prev, data: prev.data.filter((p) => p.id !== productoAEliminar.id) }));
@@ -352,7 +352,9 @@ const TablaProductos = () => {
 
       <ModalConfirmarEliminar
         isOpen={modalEliminar}
-        nombreProducto={productoAEliminar?.nombre}
+        titulo="¿Eliminar producto?"
+        nombreItem={productoAEliminar?.nombre}
+        mensajeExtra="Se borrará permanentemente del inventario y del catálogo."
         onConfirmar={confirmarEliminar}
         onCancelar={() => { setModalEliminar(false); setProductoAEliminar(null); }}
       />

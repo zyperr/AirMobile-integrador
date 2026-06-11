@@ -5,7 +5,9 @@ import { ListaAdministradores } from "./ListaAdministradores";
 import { TarjetaEstadistica } from "./TarjetaEstadistica";
 import ModalEditarAdmin from "./forms/ModalEditarAdmin";
 import ModalRegistrarAdmin from "./forms/ModalRegistrarAdmin";
+import ModalConfirmarEliminar from "./forms/ModalConfirmarEliminar";
 import Toast from "../common/Toast";
+import ModalConfirmarAccion from "./forms/ModalConfirmarAccion";
 
 export const Administracion = () => {
 
@@ -13,11 +15,11 @@ export const Administracion = () => {
     const [adminAEditar, setAdminAEditar] = useState(null);
     const [modalAbierto, setModalAbierto] = useState(false);
     const [toast, setToast] = useState({ visible: false, mensaje: "" });
-
+    const [adminAEliminar, setAdminAEliminar] = useState(null);
     // --- NUEVOS ESTADOS PARA FILTROS ---
     const [busqueda, setBusqueda] = useState("");
     const [estadoFiltro, setEstadoFiltro] = useState(""); // "" = todos, "1" = activos, "0" = inactivos
-
+    const [adminAResetear, setAdminAResetear] = useState(null);
     const { token } = useAuth();
     const { ejecutarPeticion, isLoading, error } = useApi();
 
@@ -29,40 +31,37 @@ export const Administracion = () => {
         roles: 0
     });
 
-    // --- EFECTO CON DEBOUNCE PARA LOS FILTROS ---
+
     useEffect(() => {
-        // Configuramos un temporizador. Solo llamará a la API si dejas de escribir por 300ms
         const timer = setTimeout(() => {
             cargarAdmins();
         }, 300);
 
-        // Si el usuario sigue escribiendo, limpiamos el temporizador anterior
+
         return () => clearTimeout(timer);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [busqueda, estadoFiltro]); // Se vuelve a ejecutar si cambia el texto o el botón de estado
+
+    }, [busqueda, estadoFiltro]);
 
     const mostrarToast = (mensaje) => {
         setToast({ visible: true, mensaje });
     };
 
     const cargarAdmins = async () => {
-        // 1. Armamos los parámetros de la URL dinámicamente según los estados
+
         const params = new URLSearchParams();
-        
+
         if (busqueda.trim() !== "") {
             params.append("buscar", busqueda.trim());
         }
-        
+
         if (estadoFiltro !== "") {
-            params.append("activo", estadoFiltro); // Tu Joi espera "1" o "0"
+            params.append("activo", estadoFiltro);
         }
 
         const url = `staff${params.toString() ? `?${params.toString()}` : ""}`;
 
-        // 2. Ejecutamos la petición con la URL filtrada
         const respuesta = await ejecutarPeticion(url, {
             method: "GET",
-            headers: { Authorization: `Bearer ${token}` }
         });
 
         if (respuesta.exito) {
@@ -72,8 +71,7 @@ export const Administracion = () => {
 
             setAdmins(lista);
 
-            // Nota: Estas estadísticas ahora reflejarán los datos de la vista actual filtrada.
-            // Si buscas "Maxi", te dirá cuántos "Maxi" hay en total, cuántos activos, etc.
+
             const activos = lista.filter(a => a.activo === 1).length;
             const deshabilitados = lista.filter(a => a.activo === 0).length;
             const roles = [...new Set(lista.map(a => a.rol))].length;
@@ -82,7 +80,6 @@ export const Administracion = () => {
         }
     };
 
-    // ... (Mantén tus funciones actualizarAdminEnLista, deshabilitarAdmin, restaurarAdmin, resetearPassword exactamente igual) ...
     const actualizarAdminEnLista = (id, datosActualizados) => {
         setAdmins(prev => prev.map(a =>
             a.id === id ? { ...a, ...datosActualizados } : a
@@ -104,7 +101,6 @@ export const Administracion = () => {
     const restaurarAdmin = async (id) => {
         const result = await ejecutarPeticion(`staff/restaurar/${id}`, {
             method: "PUT",
-            headers: { Authorization: `Bearer ${token}` }
         });
 
         if (result.exito) {
@@ -113,16 +109,50 @@ export const Administracion = () => {
         } else alert("No se pudo restaurar el administrador.");
     };
 
-    const resetearPassword = async (id) => {
-        const result = await ejecutarPeticion(`staff/reset-password/${id}`, {
-            method: "PUT",
-            headers: { Authorization: `Bearer ${token}` }
-        });
-
-        if (result.exito) mostrarToast("Contraseña reseteada con éxito");
-        else alert("No se pudo resetear la contraseña.");
+    const abrirModalReset = (id) => {
+        const admin = admins.find(a => a.id === id);
+        setAdminAResetear(admin);
     };
 
+    const confirmarResetPassword = async () => {
+        if (!adminAResetear) return;
+
+        const result = await ejecutarPeticion(`staff/reset-password/${adminAResetear.id}`, {
+            method: "PUT",
+        });
+
+        if (result.exito) {
+            mostrarToast(result.data?.message || "Contraseña reseteada y enviada por correo con éxito.");
+        } else {
+            alert(result.error || "No se pudo resetear la contraseña.");
+        }
+
+        // Cerramos el modal
+        setAdminAResetear(null);
+    };
+    const abrirModalDeshabilitar = (id) => {
+        const admin = admins.find(a => a.id === id);
+        setAdminAEliminar(admin);
+    };
+
+    const confirmarDeshabilitarAdmin = async () => {
+        if (!adminAEliminar) return;
+
+        const result = await ejecutarPeticion(`staff/baja/${adminAEliminar.id}`, {
+            method: "DELETE",
+        });
+
+        if (result.exito) {
+            setAdmins(prev => prev.map(a => a.id === adminAEliminar.id ? { ...a, activo: 0 } : a));
+            setStats(prev => ({ ...prev, activos: prev.activos - 1, deshabilitados: prev.deshabilitados + 1 }));
+            mostrarToast("Administrador dado de baja exitosamente");
+        } else {
+            alert("No se pudo deshabilitar el administrador.");
+        }
+
+        // Cerramos el modal
+        setAdminAEliminar(null);
+    };
     return (
         <>
             {/* ENCABEZADO */}
@@ -166,7 +196,7 @@ export const Administracion = () => {
 
                 {/* --- BARRA DE FILTROS --- */}
                 <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 bg-white p-3 rounded-4 shadow-sm border-0">
-                    
+
                     {/* Buscador de texto */}
                     <div className="input-group" style={{ maxWidth: '400px' }}>
                         <span className="input-group-text bg-light border-end-0 text-muted">
@@ -232,9 +262,9 @@ export const Administracion = () => {
                 {!isLoading && !error && admins.length > 0 && (
                     <ListaAdministradores
                         administradores={admins}
-                        onDeshabilitar={deshabilitarAdmin}
+                        onDeshabilitar={abrirModalDeshabilitar}
                         onRestaurar={restaurarAdmin}
-                        onResetPassword={resetearPassword}
+                        onResetPassword={abrirModalReset}
                         onEditar={(id) => {
                             setAdminAEditar(admins.find(a => a.id === id));
                             setModalEditarAdmin(true);
@@ -244,7 +274,17 @@ export const Administracion = () => {
 
             </div>
 
-            {/* MODALES Y TOAST (Igual que antes) */}
+            {/* MODALES Y TOAST  */}
+
+            <ModalConfirmarEliminar
+                isOpen={!!adminAEliminar}
+                onCancelar={() => setAdminAEliminar(null)}
+                onConfirmar={confirmarDeshabilitarAdmin}
+                titulo="¿Dar de baja al Administrador?"
+                nombreItem={adminAEliminar?.nombre}
+                mensajeExtra="El usuario perderá acceso inmediato al panel de control de AirMobile."
+            />
+
             <ModalRegistrarAdmin
                 isOpen={modalAbierto}
                 onClose={() => setModalAbierto(false)}
@@ -262,6 +302,19 @@ export const Administracion = () => {
                     setAdminAEditar(null);
                 }}
                 onAdminActualizado={actualizarAdminEnLista}
+            />
+
+            <ModalConfirmarAccion
+                isOpen={!!adminAResetear}
+                onCancelar={() => setAdminAResetear(null)}
+                onConfirmar={confirmarResetPassword}
+                titulo="¿Blanquear contraseña?"
+                mensajePrincipal="Se generará una nueva contraseña temporal para"
+                nombreItem={adminAResetear?.nombre}
+                mensajeExtra="El usuario recibirá las nuevas credenciales en su correo y las anteriores dejarán de funcionar inmediatamente."
+                textoBoton="Resetear Contraseña"
+                colorBoton="btn-warning text-dark"
+                iconoBoton="bi-key-fill"
             />
 
             <Toast
