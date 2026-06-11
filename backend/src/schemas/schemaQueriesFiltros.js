@@ -53,7 +53,7 @@ export const schemaFiltrosProductos = Joi.object({
         'any.only': 'La capacidad para filtrar no es válida.'
     }).optional(),
 
-    limit: Joi.number().integer().empty('').min(1).max(100).default(10).optional().messages({
+    limit: Joi.number().integer().empty('').min(1).max(10000).default(10).optional().messages({
         'number.base': 'El límite debe ser un número.',
         'number.integer': 'El límite debe ser un número entero sin decimales.',
         'number.min': 'El límite debe ser al menos 1.',

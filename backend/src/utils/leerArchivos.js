@@ -22,7 +22,7 @@ const leerCsv = (buffer, separador = ',') => { // Por defecto usa coma, pero pod
     const a = new Promise((resolve, reject) => {
         const resultados = [];
 
-        const contenidoTexto = buffer.toString('utf-8');
+        const contenidoTexto = buffer.toString('utf-8').replace(/^\uFEFF/, ''); ;
         //console.log(`${contenidoTexto}`)
         // 1. Convertimos el Buffer de la RAM a un Stream de lectura
         const stream = Readable.from(contenidoTexto);

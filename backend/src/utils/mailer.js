@@ -163,3 +163,109 @@ export const enviarCorreoBlanqueo = async (emailDestino, nombre, passwordTempora
         throw new Error("No se pudo enviar el correo de recuperación al administrador.");
     }
 }
+
+
+export const enviarEmailCompra = async (emailDestino, datosCompra) => {
+    const { nombreUsuario, items, total, mp_payment_id, facturaId, fecha } = datosCompra;
+
+    const itemsHTML = items.map(item => {
+        // Parsear el string para obtener el array de URLs y tomar la primera
+        let imagenUrl = '';
+        try {
+            const imagenesArray = JSON.parse(item.imagen_url);
+            imagenUrl = Array.isArray(imagenesArray) ? imagenesArray[0] : item.imagen_url;
+        } catch {
+            imagenUrl = item.imagen_url; // Si falla el parse, usar tal cual
+        }
+
+        return `
+        <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #eee;">
+                <table cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                        <td style="padding-right: 10px; vertical-align: middle;">
+                            <img 
+                                src="${imagenUrl}" 
+                                alt="${item.nombre_producto}"
+                                width="60" 
+                                height="60"
+                                style="object-fit: cover; border-radius: 6px; border: 1px solid #eee; display: block;"
+                            />
+                        </td>
+                        <td style="vertical-align: middle;">
+                            ${item.nombre_producto}
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">${item.cantidad}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">$${Number(item.precio).toLocaleString('es-AR')}</td>
+        </tr>
+    `;
+    }).join('');
+
+    const mailOptions = {
+        from: `"AirMobile Tienda" <${process.env.MAILER_EMAIL}>`,
+        to: emailDestino,
+        subject: "¡Compra confirmada! | AirMobile 📱",
+        html: `
+            <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+                <h2 style="color: #2c3e50; text-align: center;">¡Tu compra fue exitosa! 🎉</h2>
+
+                <p>Hola, <strong>${nombreUsuario}</strong></p>
+                <p>Gracias por tu compra en <strong>AirMobile</strong>. A continuación encontrás el detalle de tu pedido:</p>
+
+                <!-- Detalle de productos -->
+                <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                    <thead>
+                        <tr style="background-color: #007bff; color: white;">
+                            <th style="padding: 10px; text-align: left;">Producto</th>
+                            <th style="padding: 10px; text-align: center;">Cantidad</th>
+                            <th style="padding: 10px; text-align: right;">Precio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${itemsHTML}
+                    </tbody>
+                </table>
+
+                <!-- Total -->
+                <div style="background-color: #f8f9fa; border: 2px solid #007bff; text-align: left; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                    <span style="font-size: 20px; font-weight: bold; color: #2c3e50;">
+                        Total pagado: <span style="color: #007bff;">$${Number(total).toLocaleString('es-AR')}</span>
+                    </span>
+                </div>
+
+                <!-- ID de pago -->
+                <div style="background-color: #f8f9fa; border: 2px dashed #28a745; text-align: center; padding: 15px; margin: 20px 0; border-radius: 8px;">
+                    <p style="margin: 0; font-size: 13px; color: #555;">Número de comprobante</p>
+                    <span style="font-size: 18px; font-weight: bold; color: #28a745; letter-spacing: 4px;">#${mp_payment_id}</span>
+                </div>
+
+                <!-- ID de factura -->
+                <div style="background-color: #f8f9fa; border: 2px dashed #17a2b8; text-align: center; padding: 15px; margin: 20px 0; border-radius: 8px;">
+                    <p style="margin: 0; font-size: 13px; color: #555;">Número de factura</p>
+                    <span style="font-size: 18px; font-weight: bold; color: #17a2b8; letter-spacing: 4px;">#${facturaId}</span>
+                </div>
+
+                <p style="font-size: 13px; color: #888; text-align: center;">
+                    Fecha de compra: ${new Date(fecha).toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                </p>
+
+                <p style="margin-top: 30px; font-size: 14px; color: #666; text-align: center;">
+                    Saludos,<br>
+                    <strong>El equipo de AirMobile 📱</strong>
+                </p>
+            </div>
+        `
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Correo de compra enviado a: ${emailDestino}`);
+        return true;
+    } catch (error) {
+        console.error("Error al enviar el email de compra:", error);
+        throw new Error("No se pudo enviar el correo de la compra.");
+    }
+}

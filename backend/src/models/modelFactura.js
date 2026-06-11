@@ -7,20 +7,29 @@ const db = await obtenerDb();
 
 class ModelFactura {
 
-    static async createFactura(usuarioId, total) {
+    static async createFactura({ usuario_id, total, mp_payment_id, estado = 'Completado' }) {
         try {
+            // 1. Agregamos mp_payment_id a la consulta SQL
             const query = `
-        INSERT INTO facturas (usuario_id, total)
-        VALUES (?, ?)
-        `;
+                INSERT INTO facturas (usuario_id, total, mp_payment_id, estado) 
+                VALUES (?, ?, ?, ?)
+            `;
+
             const result = await db.execute({
                 sql: query,
-                args: [usuarioId, total]
+                args: [usuario_id, total, mp_payment_id, estado]
             });
 
+            // 2. ¡LA MAGIA AQUÍ! Retornamos el ID de la fila recién insertada
             return Number(result.lastInsertRowid);
+
+            /* Nota por si acaso: Si en su backend llegaran a estar usando MySQL clásico 
+               en lugar de SQLite/Turso, cambiarías la línea de arriba por:
+               return result.insertId;
+            */
+
         } catch (error) {
-            console.error("Error al crear la factura:", error);
+            console.error("Error en el modelo al crear la factura:", error);
             throw error;
         }
     }
@@ -41,13 +50,25 @@ class ModelFactura {
 
 
     //Este metodo es para el admin, no se le pasa el usuario porque el admin puede ver todas las facturas
-    static async getFacturas(limit, offset) {
-        const query = `SELECT * FROM facturas ORDER BY fecha DESC 
-    LIMIT ? OFFSET ?`;
+    static async getFacturas(filtros, limit, offset) {
+        const { where, args } = this.buildWhereClause(filtros);
+        const query = `
+        SELECT 
+            f.id,
+            f.total,
+            f.estado,
+            f.fecha,
+            u.nombre AS nombre_cliente
+        FROM facturas f
+        LEFT JOIN usuarios u ON f.usuario_id = u.id
+        ${where} 
+        ORDER BY f.fecha DESC
+        LIMIT ? OFFSET ?
+    `;
         const { rows } = await db.execute({
             sql: query,
-            args: [limit, offset]
-        })
+            args: [...args, limit, offset]
+        });
         return rows;
     }
     static async obtenerEstadisticas() {
