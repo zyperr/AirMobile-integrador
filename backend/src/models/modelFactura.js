@@ -50,7 +50,25 @@ class ModelFactura {
         })
         return rows;
     }
+    static async obtenerEstadisticas() {
+        try {
+            const sql = `
+            SELECT 
+                COALESCE(SUM(total), 0) AS totalFacturado,
+                COALESCE(SUM(CASE WHEN estado = 'pendiente' THEN total ELSE 0 END), 0) AS totalPendiente,
+                COUNT(CASE WHEN estado = 'pendiente' THEN 1 END) AS cantidadPendientes,
+                COUNT(CASE WHEN strftime('%Y-%m', fecha) = strftime('%Y-%m', 'now') THEN 1 END) AS facturasDelMes
+            FROM facturas
+        `;
 
+            const { rows } = await db.execute({ sql });
+
+            return rows[0];
+        } catch (error) {
+            console.error("Error en ModelFactura.obtenerEstadisticas:", error);
+            throw error;
+        }
+    }
     static buildWhereClause(filtros) {
         let where = "WHERE 1=1"; // Truco clásico de SQL para ir concatenando 'AND' fácilmente
         const args = [];

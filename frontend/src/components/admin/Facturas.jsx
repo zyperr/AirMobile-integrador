@@ -1,21 +1,84 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useApi } from '../../hooks/useApi'; // Asegurate de que la ruta sea correcta
 import { TarjetaFactura } from './TarjetaFactura';
 import { FilaFactura } from './FilaFacturas';
+import Paginacion from '../common/Paginacion'; // Asumiendo que tenés este componente
 
 export const Facturas = () => {
+    // 1. ESTADOS DE LA INTERFAZ Y FILTROS
     const [filtroActivo, setFiltroActivo] = useState('Todas');
+    const [paginaActual, setPaginaActual] = useState(1);
+    
+    // 2. ESTADOS DE DATOS REALES
+    const [facturas, setFacturas] = useState([]);
+    const [paginacion, setPaginacion] = useState({});
+    const [stats, setStats] = useState({
+        totalFacturado: 0,
+        totalPendiente: 0,
+        cantidadPendientes: 0,
+        facturasDelMes: 0
+    });
 
-    // MOCK DATA
-    const mockFacturas = [
-        { id: 1, idFactura: "INV-2024-001", cliente: "Alice Martins", emision: "12 Oct 2024", monto: "$1,240.00", estado: "PAGADA" },
-        { id: 2, idFactura: "INV-2024-002", cliente: "Julio Dominguez", emision: "14 Oct 2024", monto: "$840.50", estado: "PENDIENTE" },
-        { id: 3, idFactura: "INV-2024-003", cliente: "Studio Re-Fresh", emision: "08 Oct 2024", monto: "$3,120.00", estado: "VENCIDA" },
-        { id: 4, idFactura: "INV-2024-004", cliente: "Lara Galarza", emision: "15 Oct 2024", monto: "$450.00", estado: "PAGADA" },
-        { id: 5, idFactura: "INV-2024-005", cliente: "Tech Knights Co.", emision: "16 Oct 2024", monto: "$9,800.00", estado: "PENDIENTE" },
-    ];
+    // 3. HOOKS DE LA API (Separamos en dos para manejar cargas independientes)
+    const { ejecutarPeticion: fetchStats, isLoading: loadingStats } = useApi();
+    const { ejecutarPeticion: fetchFacturas, isLoading: loadingFacturas } = useApi();
+
+    // 4. CARGA DE ESTADÍSTICAS (Solo al entrar a la página)
+    useEffect(() => {
+        const cargarEstadisticas = async () => {
+            const response = await fetchStats('facturas/estadisticas', { method: 'GET' });
+            if (response.exito) {
+                console.log("Estadísticas recibidas del backend:", response.data.data);
+                setStats(response.data.data);
+            }
+        };
+        cargarEstadisticas();
+    }, []);
+
+    // 5. CARGA DE LA TABLA (Se ejecuta al entrar, al cambiar de página o de filtro)
+    useEffect(() => {
+        const cargarListaFacturas = async () => {
+            // Adaptamos el filtro visual al formato que espera el backend
+            let estadoQuery = '';
+            if (filtroActivo === 'Pagadas') estadoQuery = 'pagada';
+            if (filtroActivo === 'Pendientes') estadoQuery = 'pendiente';
+            if (filtroActivo === 'Vencidas') estadoQuery = 'vencida';
+
+            // Armamos la URL dinámica con Joi en mente
+            const url = `facturas/todas?page=${paginaActual}&limit=5${estadoQuery ? `&estado=${estadoQuery}` : ''}`;
+            
+            const response = await fetchFacturas(url, { method: 'GET' });
+            
+            if (response.exito) {
+                setFacturas(response.data.facturas);
+                // Guardamos los datos de paginación que nos manda tu controlador
+                setPaginacion({
+                    paginaActual: response.data.paginaActual,
+                    totalPaginas: response.data.totalPaginas,
+                    tienePaginaSiguiente: response.data.tienePaginaSiguiente,
+                    tienePaginaAnterior: response.data.tienePaginaAnterior
+                });
+            }
+        };
+        cargarListaFacturas();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [filtroActivo, paginaActual]); 
+
+    // 6. FUNCIONES AUXILIARES
+    const formatearDinero = (monto) => {
+        return new Intl.NumberFormat('es-AR', { 
+            style: 'currency', 
+            currency: 'ARS' 
+        }).format(monto || 0);
+    };
+
+    const cambiarPagina = (nuevaPagina) => {
+        setPaginaActual(nuevaPagina);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     const filtros = ['Todas', 'Pagadas', 'Pendientes', 'Vencidas'];
-
+    console.log("Stats cargadas:", stats);
     return (
         <div className="container-fluid py-4 px-3 px-md-4" style={{ backgroundColor: '#f8f9fc', minHeight: '100vh' }}>
 
@@ -27,50 +90,51 @@ export const Facturas = () => {
                 </p>
             </div>
 
-            {/* TARJETAS KPI */}
+            {/* TARJETAS KPI ALIMENTADAS POR EL BACKEND */}
             <div className="row g-4 mb-4 mb-md-5">
                 <div className="col-12 col-lg-4">
                     <TarjetaFactura
                         titulo="Total Facturado"
-                        valor="$142,580"
-                        extraTag="~ 12%"
+                        valor={loadingStats ? "Cargando..." : formatearDinero(stats.totalFacturado)}
+                        extraTag="Global"
                         extraTagColor="text-success"
-                        iconoFooter="bi-calendar3"
-                        textoFooter="Últimos 12 meses"
+                        iconoFooter="bi-graph-up-arrow"
+                        textoFooter="Histórico del sistema"
                     />
                 </div>
                 <div className="col-12 col-md-6 col-lg-4">
                     <TarjetaFactura
                         titulo="Pendientes de Pago"
-                        valor="$24,310"
-                        extraTag="18 facturas"
+                        valor={loadingStats ? "Cargando..." : formatearDinero(stats.totalPendiente)}
+                        extraTag={`${stats.cantidadPendientes} facturas`}
                         extraTagColor="text-warning"
                         iconoFooter="bi-clock"
-                        textoFooter="Vencimiento promedio: 5 días"
+                        textoFooter="Requieren atención"
                     />
                 </div>
                 <div className="col-12 col-md-6 col-lg-4">
                     <TarjetaFactura
                         titulo="Facturas del Mes"
-                        valor="142"
-                        extraTag="+ 8%"
+                        valor={loadingStats ? "..." : stats?.facturasDelMes?.toString()}
+                        extraTag="Nuevas"
                         extraTagColor="text-primary"
-                        iconoFooter="bi-arrow-repeat"
-                        textoFooter="Actualizado hace 5m"
+                        iconoFooter="bi-calendar-check"
+                        textoFooter="Generadas este mes"
                     />
                 </div>
             </div>
 
             {/* BARRA DE FILTROS RESPONSIVE */}
             <div className="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center gap-3 mb-4">
-
-                {/* Píldoras de estado (Scrollable en móviles) */}
                 <div className="w-100 overflow-x-auto pb-2 pb-xl-0" style={{ whiteSpace: 'nowrap' }}>
                     <div className="d-inline-flex gap-2 bg-white p-1 rounded-pill shadow-sm border border-light">
                         {filtros.map(filtro => (
                             <button
                                 key={filtro}
-                                onClick={() => setFiltroActivo(filtro)}
+                                onClick={() => {
+                                    setFiltroActivo(filtro);
+                                    setPaginaActual(1); // Reseteamos la paginación al cambiar de filtro
+                                }}
                                 className={`btn rounded-pill px-3 px-md-4 py-2 fw-semibold border-0 ${filtroActivo === filtro ? 'btn-dark text-white' : 'btn-light text-muted bg-transparent'}`}
                                 style={{ fontSize: '0.85rem' }}
                             >
@@ -79,19 +143,16 @@ export const Facturas = () => {
                         ))}
                     </div>
                 </div>
-
-                {/* Filtros derechos (Ancho completo en móviles) */}
+                
+                {/* Botón de búsqueda extra si lo necesitas a futuro */}
                 <div className="d-flex flex-wrap flex-sm-nowrap gap-2 w-100 w-xl-auto">
                     <button className="btn bg-white border shadow-sm rounded-3 fw-medium text-secondary d-flex justify-content-center align-items-center gap-2 px-3 py-2 flex-grow-1 flex-xl-grow-0">
-                        <i className="bi bi-calendar-minus"></i> Este Mes <i className="bi bi-chevron-down ms-1"></i>
-                    </button>
-                    <button className="btn bg-white border shadow-sm rounded-3 fw-medium text-secondary d-flex justify-content-center align-items-center gap-2 px-3 py-2 flex-grow-1 flex-xl-grow-0">
-                        <i className="bi bi-sliders"></i> Filtros
+                        <i className="bi bi-sliders"></i> Filtros Avanzados
                     </button>
                 </div>
             </div>
 
-            {/* CONTENEDOR DE LA TABLA */}
+            {/* CONTENEDOR DE LA TABLA (REAL) */}
             <div className="bg-white rounded-4 shadow-sm border-0 overflow-hidden">
                 <div className="table-responsive">
                     <table className="table table-hover align-middle mb-0" style={{ minWidth: '800px' }}>
@@ -106,26 +167,39 @@ export const Facturas = () => {
                             </tr>
                         </thead>
                         <tbody className="border-top-0">
-                            {mockFacturas.map((factura) => (
-                                <FilaFactura key={factura.id} factura={factura} />
-                            ))}
+                            {loadingFacturas ? (
+                                <tr>
+                                    <td colSpan="6" className="text-center py-5">
+                                        <div className="spinner-border text-primary" role="status"></div>
+                                        <div className="text-muted mt-2">Cargando facturas...</div>
+                                    </td>
+                                </tr>
+                            ) : facturas.length === 0 ? (
+                                <tr>
+                                    <td colSpan="6" className="text-center py-5 text-muted">
+                                        <i className="bi bi-inbox fs-2 d-block mb-2"></i>
+                                        No se encontraron facturas para este filtro.
+                                    </td>
+                                </tr>
+                            ) : (
+                                facturas.map((factura) => (
+                                    <FilaFactura key={factura.id} factura={factura} />
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
 
-                {/* PAGINACIÓN INFERIOR */}
-                <div className="d-flex flex-column flex-md-row align-items-center justify-content-between gap-3 p-4 border-top text-muted" style={{ fontSize: '0.85rem' }}>
-                    <span className="text-center text-md-start">Mostrando 1-5 de 1,242 facturas</span>
-                    <div className="d-flex align-items-center justify-content-center flex-wrap gap-1">
-                        <button className="btn btn-sm btn-light text-muted border-0">&lt;</button>
-                        <button className="btn btn-sm btn-primary rounded-circle" style={{ width: '32px', height: '32px' }}>1</button>
-                        <button className="btn btn-sm btn-light text-muted border-0 rounded-circle" style={{ width: '32px', height: '32px' }}>2</button>
-                        <button className="btn btn-sm btn-light text-muted border-0 rounded-circle d-none d-sm-inline-block" style={{ width: '32px', height: '32px' }}>3</button>
-                        <span className="px-1 px-sm-2">...</span>
-                        <button className="btn btn-sm btn-light text-muted border-0 rounded-circle" style={{ width: '32px', height: '32px' }}>124</button>
-                        <button className="btn btn-sm btn-light text-muted border-0">&gt;</button>
+                {facturas.length > 0 && (
+                    <div className="p-4 border-top">
+                        <Paginacion
+                            paginaActual={paginacion.paginaActual || 1}
+                            tienePaginaAnterior={paginacion.tienePaginaAnterior}
+                            tienePaginaSiguiente={paginacion.tienePaginaSiguiente}
+                            cambiarPagina={cambiarPagina}
+                        />
                     </div>
-                </div>
+                )}
             </div>
 
         </div>
