@@ -20,6 +20,7 @@ import FacturacionPerfil from "./components/cuenta/tabs/FacturacionPerfil.jsx";
 import Seguridad from "./components/cuenta/tabs/Seguridad.jsx";
 import ListaDeseosPerfil from "./components/cuenta/tabs/ListaDeseosPerfil.jsx";
 import Error404 from "./components/common/Error404.jsx";
+import PagoExitoso from "./pages/PageExitoso.jsx";
 
 
 function Layout() {
@@ -57,7 +58,7 @@ function Layout() {
         {
           estaAutenticado && <Route path="/carrito" element={<Carrito />} />
         }
-
+        <Route path="/pago-exitoso" element={<PagoExitoso />} />
         <Route path="*" element={<Error404 />} />
       </Routes>
       <N8nChat />

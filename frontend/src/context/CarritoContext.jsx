@@ -12,6 +12,38 @@ export function CartProvider({ children }) {
     const [loadingId, setLoadingId] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [toastVisible, setToastVisible] = useState(false);
+
+
+
+    
+
+    const procesarPago = async () => {
+        setIsProcessing(true);
+
+        try {
+            
+            const response = await ejecutarPeticion('pagos/crear-preferencia', {
+                method: 'POST',
+                body: JSON.stringify({ items: cartItems })
+            });
+
+            
+            if (response.exito && response.data?.init_point) {
+                // Redirigimos al usuario a Mercado Pago
+                window.location.href = response.data.init_point;
+            } else {
+                console.error("Error al generar el pago", response.message || "Error desconocido");
+                // Mostrar notificación al usuario
+                // setToastVisible(true);
+            }
+
+        } catch (error) {
+            console.error("Error al procesar el pago:", error);
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
     // ─── 1. CARGAR CARRITO ────────────────────────────────────────────────────
     const cargarCarrito = async () => {
         if (!estaAutenticado) {
