@@ -5,6 +5,7 @@ import ModelFactura from "../models/modelFactura.js";
 import ModelDetalleFactura from "../models/modelDetalleFactura.js";
 import { MercadoPagoConfig, Preference, Payment } from 'mercadopago';
 import { enviarEmailCompra } from '../utils/mailer.js';
+import { ESTADOS } from '../utils/estados.js';
 
 
 console.log("Token cargado:", process.env.MP_ACCESS_TOKEN ? "SÍ" : "NO");
@@ -13,6 +14,18 @@ const client = new MercadoPagoConfig({
     accessToken: process.env.MP_ACCESS_TOKEN || 'APP_USR-TU_TOKEN_DE_PRUEBA'
 });
 
+
+const mapearEstadoMP = (estadoMP) => {
+    const mapa = {
+        'approved':   ESTADOS.COMPLETADO,
+        'pending':    ESTADOS.PENDIENTE,
+        'in_process': ESTADOS.PENDIENTE,
+        'rejected':   ESTADOS.CANCELADO,
+        'cancelled':  ESTADOS.CANCELADO,
+        'refunded':   ESTADOS.REEMBOLSADO,
+    };
+    return mapa[estadoMP] || ESTADOS.PENDIENTE; // fallback por si llega algo inesperado
+};
 export const crearPreferencia = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -51,7 +64,7 @@ export const crearPreferencia = async (req, res) => {
                     failure: "localhost:5173/pago-fallido",
                     pending: "localhost:5173/pago-pendiente"
                 },
-                auto_return: "approved"   // ← adentro de body
+                auto_return: "all"   // ← adentro de body
             }
         });
         // result.id también sirve, o init_point
@@ -82,7 +95,7 @@ export const recibirWebhook = async (req, res) => {
             const payment = new Payment(client);
             const pagoInfo = await payment.get({ id: paymentId });
 
-            if (pagoInfo.status === 'approved') {
+            if (pagoInfo.status === 'approved' || pagoInfo.status === 'pending' || pagoInfo.status === 'in_process') {
                 const userId = pagoInfo.external_reference;
                 const totalPagado = pagoInfo.transaction_amount;
 
@@ -96,7 +109,8 @@ export const recibirWebhook = async (req, res) => {
                     const nuevaFacturaId = await ModelFactura.createFactura({
                         usuario_id: userId,
                         total: totalPagado,
-                        mp_payment_id: paymentId
+                        mp_payment_id: paymentId,
+                        estado: mapearEstadoMP(pagoInfo.status)  // 👈 "approved", "pending", etc.
                     });
 
                     const usuario = await UsuarioModel.getbyId(userId);
