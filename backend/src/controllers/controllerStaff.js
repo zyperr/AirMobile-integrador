@@ -1,5 +1,5 @@
 import ModelStaff from '../models/ModelStaff.js';
-import { schemaRegistroStaff, schemaActaulizarStaff } from '../schemas/schemaStaff.js';
+import { schemaRegistroStaff, schemaActaulizarStaff, filtrosStaffSchema } from '../schemas/schemaStaff.js';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { ROLES } from '../utils/roles.js';
@@ -23,7 +23,6 @@ export const obtenerStaff = async (req, res) => {
 
         // Le pasamos el objeto con { buscar, activo }
         const staff = await ModelStaff.obtenerStaff(filtrosValidados);
-
         const parsedStaff = staff.map((empleado) => {
             return {
                 id: empleado.id,

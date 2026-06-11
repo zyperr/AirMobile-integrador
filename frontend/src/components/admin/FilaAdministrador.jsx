@@ -1,10 +1,10 @@
-import React from 'react';
-import { BtnAccion } from '../common/BtnAccion'; // Ajustar ruta
+import { BtnAccion } from '../common/BtnAccion';
 
-export const FilaAdministrador = ({ activo,nombre,email,rol}) => {
+export const FilaAdministrador = ({ id, activo, nombre, email, rol, onDeshabilitar, onRestaurar, onResetPassword, onEditar }) => {
+
     const isActive = activo === 1;
 
-    // Función para obtener las iniciales del nombre
+    // Iniciales del nombre para el avatar
     const getIniciales = (nombreCompleto) => {
         const partes = nombreCompleto?.trim().split(' ');
         if (partes?.length >= 2) {
@@ -13,21 +13,20 @@ export const FilaAdministrador = ({ activo,nombre,email,rol}) => {
         return partes[0]?.substring(0, 2)?.toUpperCase();
     };
 
-    // Color condicional del avatar basado en si está activo o no
     const colorAvatar = isActive ? 'bg-primary' : 'bg-secondary opacity-50';
-    // Efecto grisado en toda la fila
     const opacidadFila = isActive ? 'opacity-100' : 'opacity-50 bg-light';
 
     return (
         <tr className={opacidadFila}>
+
             {/* NOMBRE Y AVATAR */}
             <td className="px-4 py-3">
                 <div className="d-flex align-items-center gap-3">
-                    <div 
-                        className={`text-white rounded-circle d-flex align-items-center justify-content-center fw-bold ${colorAvatar}`} 
+                    <div
+                        className={`text-white rounded-circle d-flex align-items-center justify-content-center fw-bold ${colorAvatar}`}
                         style={{ width: '40px', height: '40px', fontSize: '0.9rem' }}
                     >
-                        {nombre ? getIniciales(nombre) : "AD" }
+                        {nombre ? getIniciales(nombre) : "AD"}
                     </div>
                     <span className="fw-semibold text-dark">{nombre}</span>
                 </div>
@@ -37,7 +36,8 @@ export const FilaAdministrador = ({ activo,nombre,email,rol}) => {
             <td className="px-4 py-3 text-muted">
                 {email}
             </td>
-            {/* ESTADO (Con el circulito de la imagen) */}
+
+            {/* ESTADO */}
             <td className="px-4 py-3">
                 {isActive ? (
                     <span className="text-success fw-medium d-flex align-items-center gap-2">
@@ -50,44 +50,55 @@ export const FilaAdministrador = ({ activo,nombre,email,rol}) => {
                 )}
             </td>
 
-            {/* ACCIONES (Usando tu componente BtnAccion) */}
+            {/* ACCIONES */}
             <td className="px-4 py-3 text-end">
                 <div className="d-flex gap-2 justify-content-end">
                     {isActive ? (
                         <>
-                            <BtnAccion 
-                                textoDefault="" 
-                                iconoDefault="bi-unlock" 
-                                colorDefault="btn-light text-warning border-0" 
+                            {/* Resetear contraseña */}
+                            <BtnAccion
+                                textoDefault=""
+                                iconoDefault="bi-unlock"
+                                colorDefault="btn-light text-warning border-0"
                                 isFullWidth={false}
                                 title="Resetear Contraseña"
+                                onClick={() => onResetPassword(id)}
                             />
-                            <BtnAccion 
-                                textoDefault="" 
-                                iconoDefault="bi-pencil" 
-                                colorDefault="btn-light text-primary border-0" 
+
+                            {/* Editar — por ahora sin modal, se puede agregar después */}
+                            <BtnAccion
+                                textoDefault=""
+                                iconoDefault="bi-pencil"
+                                colorDefault="btn-light text-primary border-0"
                                 isFullWidth={false}
                                 title="Editar"
+                                onClick={() => onEditar(id)}
                             />
-                            <BtnAccion 
-                                textoDefault="" 
-                                iconoDefault="bi-trash" 
-                                colorDefault="btn-light text-danger border-0" 
+
+                            {/* Deshabilitar */}
+                            <BtnAccion
+                                textoDefault=""
+                                iconoDefault="bi-trash"
+                                colorDefault="btn-light text-danger border-0"
                                 isFullWidth={false}
                                 title="Deshabilitar"
+                                onClick={() => onDeshabilitar(id)}
                             />
                         </>
                     ) : (
-                        <BtnAccion 
-                            textoDefault="Restaurar" 
-                            iconoDefault="bi-arrow-counterclockwise" 
-                            colorDefault="btn-outline-success" 
+                        /* Restaurar */
+                        <BtnAccion
+                            textoDefault="Restaurar"
+                            iconoDefault="bi-arrow-counterclockwise"
+                            colorDefault="btn-outline-success"
                             isFullWidth={false}
                             className="btn-sm px-3"
+                            onClick={() => onRestaurar(id)}
                         />
                     )}
                 </div>
             </td>
+
         </tr>
     );
 };
