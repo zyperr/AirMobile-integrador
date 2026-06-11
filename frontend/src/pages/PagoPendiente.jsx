@@ -37,7 +37,7 @@ const PagoPendiente = () => {
             )}
 
             <div className="d-flex gap-3">
-                <Link to="/catalogo" className="btn btn-outline-primary px-4 py-2 fw-semibold rounded-pill shadow-sm">
+                <Link to="/catalogo" onClick={() => window.scrollTo(0, 0)} className="btn btn-outline-primary px-4 py-2 fw-semibold rounded-pill shadow-sm">
                     <i className="bi bi-shop me-2"></i> Seguir Comprando
                 </Link>
             </div>

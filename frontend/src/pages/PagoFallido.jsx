@@ -18,7 +18,7 @@ const PagoFallido = () => {
             </p>
 
             <div className="d-flex gap-3">
-                <Link to="/carrito" className="btn btn-primary px-5 py-3 fw-bold rounded-pill shadow-sm d-inline-flex align-items-center transition-all">
+                <Link to="/carrito" onnClick={() => window.scrollTo(0, 0)} className="btn btn-primary px-5 py-3 fw-bold rounded-pill shadow-sm d-inline-flex align-items-center transition-all">
                     <i className="bi bi-cart-x me-2 fs-5"></i> 
                     Volver al Carrito
                 </Link>
