@@ -74,7 +74,9 @@ body {
   overflow-x: clip;
   width: 100%;
 }
-
+i{
+  font-family: "Inter", sans-serif;
+}
 #root {
 
   width: 100%;

@@ -44,4 +44,13 @@ export const schemaActualizarNombre = Joi.object({
         'any.required': 'El campo nombre es obligatorio.'
     })
 });
+
+export const schemaActualizarCorreo = Joi.object({
+    email: Joi.string().email().required().messages({
+        'string.base': 'El correo debe ser un texto.',
+        'string.empty': 'El correo no puede estar vacío.',
+        'string.email': 'Debes ingresar un correo electrónico válido.',
+        'any.required': 'El campo correo es obligatorio.'
+    })
+});
 export default schemaUpdateUsuario;

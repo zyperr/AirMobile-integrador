@@ -31,7 +31,7 @@ export const obtenerCarrito = async (req, res) => {
 }
 export const agregarAlCarrito = async (req, res) => {
     try {
-        const cantidad = req.body.cantidad || 1; // Si no se especifica cantidad, se asume 1
+        const cantidad = req.body?.cantidad || 1; // Si no se especifica cantidad, se asume 1
 
 
         //Obtenemos la cantidad del body (si no viene, asumimos que quiere 1)

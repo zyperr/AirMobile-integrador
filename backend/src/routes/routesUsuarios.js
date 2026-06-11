@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { obtenerUsuarios,registro,login,verificar, obtenerPerfil, actualizarNombreUsuario, cerrarSesion} from "../controllers/controlerUsuario.js";
+import { obtenerUsuarios,registro,login,verificar, obtenerPerfil, actualizarNombreUsuario, cerrarSesion, actualizarCorreoUsuario} from "../controllers/controlerUsuario.js";
 import { verificarToken } from "../middlewares/authMiddleware.js";
 import { actualizarContrasena } from "../controllers/controllerPassword.js";
 import { renovarSesion } from "../controllers/controlerUsuario.js";
@@ -23,6 +23,7 @@ router.put("/actualizar",verificarToken,actualizarContrasena);
 
 router.put("/actualizar-nombre",verificarToken,actualizarNombreUsuario);
 
+router.put("/actualizar-correo",verificarToken,actualizarCorreoUsuario);
 
 router.post('/logout', cerrarSesion);
 router.post('/refresh', renovarSesion);

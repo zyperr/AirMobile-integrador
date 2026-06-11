@@ -1,28 +1,21 @@
 import { useEffect, useState } from 'react';
 import { useApi } from '../../hooks/useApi';
 
-
-
-export default function BotonDeseados({ idProducto, onRemover = () => { } }) {
-
+export default function BotonDeseados({ idProducto, onRemover = () => { }, setToastDeseadosVisible }) {
 
     const [esFavorito, setEsFavorito] = useState(false);
 
+    // Solo necesitamos una instancia de ejecutarPeticion
     const { ejecutarPeticion } = useApi();
-
-    const { ejecutarPeticion: verificarProductoEnDeseos } = useApi();
-
 
     useEffect(() => {
         const verificarDeseado = async () => {
             const token = localStorage.getItem('token');
-            if (!token) return; // Si no hay token, ni siquiera intentamos verificar
+            if (!token) return; // Si no hay token, ni intentamos verificar
 
-            const response = await verificarProductoEnDeseos(`lista-deseados/verificar/${idProducto}`, {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
+            // Tu useApi ya pone los headers y el token por defecto
+            const response = await ejecutarPeticion(`lista-deseados/verificar/${idProducto}`, {
+                method: 'GET'
             });
 
             if (response.exito) {
@@ -31,7 +24,7 @@ export default function BotonDeseados({ idProducto, onRemover = () => { } }) {
         }
 
         verificarDeseado();
-    }, [idProducto])
+    }, [idProducto]);
 
     const toggleDeseo = async (e) => {
         e.preventDefault();
@@ -50,44 +43,35 @@ export default function BotonDeseados({ idProducto, onRemover = () => { } }) {
         // Optimistic UI: Lo cambiamos visualmente de inmediato
         setEsFavorito(!estadoAnterior);
 
-        try {
-            if (!estadoAnterior) {
-                // Si NO era favorito, lo agregamos
-                const response = await ejecutarPeticion(`lista-deseados/agregar/${idProducto}`, {
-                    method: 'POST',
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ productoId: idProducto })
-                });
+        if (!estadoAnterior) {
+            // Si NO era favorito, lo agregamos
+            // useApi detecta que hay un 'body' en formato JSON y arma los headers solo
+            const response = await ejecutarPeticion(`lista-deseados/agregar/${idProducto}`, {
+                method: 'POST',
+                body: JSON.stringify({ productoId: idProducto })
+            });
 
-                if (!response.exito) {
-                    setEsFavorito(estadoAnterior); // Revertimos al estado original
-                }
-            } else {
-                // Si YA ERA favorito, lo eliminamos
-                const response = await ejecutarPeticion(`lista-deseados/eliminar/${idProducto}`, {
-                    method: 'DELETE',
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ productoId: idProducto })
-                });
-
-                if (!response.exito) {
-                    setEsFavorito(estadoAnterior); // Revertimos al estado original
-                } else {
-                    // ¡AQUÍ ESTÁ LA MAGIA! Si se borró con éxito en el backend, 
-                    // ejecutamos la función para borrarlo de la pantalla
-                    onRemover(idProducto);
-                }
+            if (!response.exito) {
+                setEsFavorito(estadoAnterior); 
+            } else if (setToastDeseadosVisible) {
+                // Opcional: Si pasaste la función del toast, lo mostramos
+                setToastDeseadosVisible(true);
             }
-        } catch (error) {
-            console.error("Error de conexión al actualizar favoritos", error);
-            // Revertimos en caso de que se caiga el internet o el servidor
-            setEsFavorito(estadoAnterior);
+
+        } else {
+            // Si YA ERA favorito, lo eliminamos
+            const response = await ejecutarPeticion(`lista-deseados/eliminar/${idProducto}`, {
+                method: 'DELETE',
+                body: JSON.stringify({ productoId: idProducto })
+            });
+
+            if (!response.exito) {
+                setEsFavorito(estadoAnterior); 
+            } else {
+               
+
+                onRemover(idProducto);
+            }
         }
     };
 
@@ -101,13 +85,13 @@ export default function BotonDeseados({ idProducto, onRemover = () => { } }) {
                 width: "36px",
                 height: "36px",
                 backgroundColor: "rgba(255, 255, 255, 0.85)",
-                backdropFilter: "blur(4px)" // Efecto cristal
+                backdropFilter: "blur(4px)" 
             }}
             onClick={toggleDeseo}
             title={esFavorito ? "Quitar de favoritos" : "Añadir a favoritos"}
         >
             <i
-                // Aquí está la magia visual: alterna entre el corazón vacío y el lleno
+                // alterna entre el corazón vacío y el lleno
                 className={`bi ${esFavorito ? 'bi-heart-fill text-danger' : 'bi-heart text-secondary'}`}
                 style={{ fontSize: "1.1rem", marginTop: "2px" }}
             ></i>

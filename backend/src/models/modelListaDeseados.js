@@ -38,7 +38,7 @@ class ModelListaDeseados {
                     p.capacidad 
                 FROM lista_deseados ld
                 INNER JOIN productos p ON ld.producto_id = p.id
-                WHERE ld.usuario_id = ?
+                WHERE ld.usuario_id = ? AND p.activo = 1
             `;
 
             const { rows } = await db.execute({
@@ -73,7 +73,7 @@ class ModelListaDeseados {
     static async countWishListByUserId(usuarioId) {
 
         try{
-            const query = `SELECT COUNT(*) AS total from lista_deseados WHERE usuario_id = ?`;
+            const query = `SELECT COUNT(*) AS total from lista_deseados ld INNER JOIN productos p ON ld.producto_id = p.id WHERE ld.usuario_id = ? AND p.activo = 1`;
             const args = [usuarioId];
 
             const result = await db.execute({
