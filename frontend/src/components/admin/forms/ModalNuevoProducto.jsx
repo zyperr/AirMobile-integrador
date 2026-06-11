@@ -73,9 +73,8 @@ const ModalNuevoProducto = ({ isOpen, onClose }) => {
         if (data.descripcion) formData.append("descripcion", data.descripcion);
 
         if (data.capacidad && data.capacidad.length > 0) {
-            data.capacidad.forEach(cap => {
-                formData.append("capacidad[]", cap);
-            });
+            // Lo enviamos como un string JSON real ('["32GB", "64GB"]')
+            formData.append("capacidad", JSON.stringify(data.capacidad));
         }
 
         if (mostrarCamposTech && data.bateria) {
@@ -85,20 +84,27 @@ const ModalNuevoProducto = ({ isOpen, onClose }) => {
         if (data.imagenes) {
             Array.from(data.imagenes).forEach((imagen) => {
                 // CAMBIAMOS "imagenes" por "imagen_url" para que coincida con el backend
-                formData.append("imagen_url", imagen); 
+                formData.append("imagen_url", imagen);
             });
         }
-
+        console.log("Datos enviados al backend:", {
+            nombre_producto: data.nombre_producto,
+            precio: data.precio,
+            categoria: data.categoria,
+            condicion: data.condicion,
+            descripcion: data.descripcion,
+            capacidad: data.capacidad,
+            bateria: data.bateria,
+            imagen_url: data.imagen_url
+        });
         const respuesta = await ejecutarPeticion("productos/agregar-producto", {
             method: "POST",
-            body: formData,
-            headers: {
-                Authorization: `Bearer ${token}`
-            },
-        });
+            body: formData
 
+        });
+        console.log("Respuesta del servidor:", respuesta);
         if (respuesta.exito) {
-            reset(); 
+            reset();
             onClose();
             window.location.reload();
         }
@@ -119,7 +125,7 @@ const ModalNuevoProducto = ({ isOpen, onClose }) => {
                     <form onSubmit={handleSubmit(onSubmit, (err) => console.log("Errores de validación:", err))} id="formNuevoProducto">
 
                         <div className="modal-body px-4 py-3">
-                            
+
                             {/* --- ERROR AMIGABLE --- */}
                             {apiError && (
                                 <div className="alert alert-danger rounded-3 shadow-sm d-flex align-items-center mb-4" style={{ fontSize: '0.9rem' }}>
@@ -161,7 +167,7 @@ const ModalNuevoProducto = ({ isOpen, onClose }) => {
                                                 step="0.01"
                                                 min="0"
                                                 name="precio"
-                                                register={register}
+                                                register={Number(register)}
                                                 errors={errors.precio}
                                                 reglas={{ required: "El precio es obligatorio" }}
                                                 placeholder="0.00"
@@ -258,11 +264,11 @@ const ModalNuevoProducto = ({ isOpen, onClose }) => {
                                             className={`form-control ${errors.descripcion ? 'is-invalid' : ''}`}
                                             rows="3"
                                             placeholder="Escribe los detalles y características del producto..."
-                                            {...register("descripcion", { 
-                                                maxLength: { 
-                                                    value: 500, 
-                                                    message: "La descripción no puede tener más de 500 caracteres." 
-                                                } 
+                                            {...register("descripcion", {
+                                                maxLength: {
+                                                    value: 500,
+                                                    message: "La descripción no puede tener más de 500 caracteres."
+                                                }
                                             })}
                                         ></textarea>
                                         {errors.descripcion && (
@@ -275,7 +281,7 @@ const ModalNuevoProducto = ({ isOpen, onClose }) => {
                                             type="file"
                                             name="imagenes"
                                             accept="image/jpeg, image/png, image/webp"
-                                            multiple 
+                                            multiple
                                             register={register}
                                             errors={errors.imagenes}
                                             reglas={{
@@ -294,7 +300,7 @@ const ModalNuevoProducto = ({ isOpen, onClose }) => {
                                                     },
                                                     pesoMaximo: (files) => {
                                                         for (let i = 0; i < files.length; i++) {
-                                                            if (files[i].size > 5 * 1024 * 1024) { 
+                                                            if (files[i].size > 5 * 1024 * 1024) {
                                                                 return "Cada imagen debe pesar menos de 5MB.";
                                                             }
                                                         }
@@ -316,9 +322,9 @@ const ModalNuevoProducto = ({ isOpen, onClose }) => {
                                 type="button"
                                 onClick={() => { reset(); onClose(); }}
                                 textoDefault="Cancelar"
-                                iconoDefault="" 
+                                iconoDefault=""
                                 colorDefault="btn-light border"
-                                isFullWidth={false} 
+                                isFullWidth={false}
                                 className="px-4"
                             />
 

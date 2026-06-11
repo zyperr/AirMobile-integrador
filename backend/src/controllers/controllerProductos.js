@@ -133,6 +133,7 @@ export const crearProducto = async (req, res) => {
             }
         }
 
+  
 
         const datosAValidar = {
             ...req.body,
@@ -140,6 +141,7 @@ export const crearProducto = async (req, res) => {
             imagen_url: urlsImagenes.length > 0 ? urlsImagenes : []
         };
 
+        console.log("Datos a validar con JOI:", datosAValidar);
 
         const { error, value } = schemaProductos.validate(datosAValidar, { abortEarly: false });
         console.log(urlsImagenes)
@@ -151,7 +153,7 @@ export const crearProducto = async (req, res) => {
             const erroresLimpios = error.details.map(detalle => detalle.message);
             return res.status(400).json({
                 exito: false,
-                message: "Por favor, corrige los siguientes errores:",
+                message: `Por favor, corrige los siguientes errores: ${erroresLimpios.join(', ')}`,
                 errores: erroresLimpios
             });
         };
