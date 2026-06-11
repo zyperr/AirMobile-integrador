@@ -42,11 +42,11 @@ export default function Home() {
                 Equipos nuevos y reacondicionados con garantía de 12 meses.
               </p>
 
-              <div className="d-flex flex-column flex-sm-row justify-content-center justify-content-md-start gap-3 mt-4">
+              <div className="d-flex flex-column flex-sm-row justify-content-center  gap-3 mt-4">
                 {/* El Link ahora ES el botón */}
                 <Link
                   to="/catalogo"
-                  className="btn btn-primary px-4 py-3 fw-semibold rounded-3 d-flex align-items-center justify-content-center"
+                  className="btn btn-primary px-2 py-3 fw-semibold rounded-3 d-flex align-items-center justify-content-center w-100"
                   onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                   style={{ minWidth: "200px" }}
                 >
