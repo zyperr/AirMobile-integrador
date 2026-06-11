@@ -1,6 +1,6 @@
 # 📱 AirMobile — Tienda de Dispositivos Apple
 
-> E-commerce fullstack especializado en iPhones, iPads, Apple Watch, AirPods y accesorios. Incluye asistente virtual con IA integrado vía N8N.
+> E-commerce fullstack especializado en iPhones, iPads, Apple Watch, AirPods y accesorios. Incluye asistente virtual con IA integrado vía N8N y pagos con Mercado Pago.
 
 ---
 
@@ -13,6 +13,7 @@
 - [Instalación y Ejecución](#instalación-y-ejecución)
 - [API — Endpoints](#api--endpoints)
 - [Funcionalidades](#funcionalidades)
+- [Pagos con Mercado Pago + ngrok](#pagos-con-mercado-pago--ngrok)
 - [Asistente Virtual (N8N + Ollama)](#asistente-virtual-n8n--ollama)
   - [Instalación de Ollama](#1-instalación-de-ollama)
   - [Descargar el modelo Qwen3:8b](#2-descargar-el-modelo-qwen38b)
@@ -27,7 +28,8 @@
 
 - Catálogo con filtros avanzados de búsqueda
 - Gestión de carrito de compras y lista de deseados
-- Sistema de facturación con descarga de PDF
+- **Pagos reales con Mercado Pago** (Checkout Pro) con notificaciones webhook vía ngrok
+- Sistema de facturación automático con descarga de PDF
 - Panel de administración para gestión de productos y staff
 - Registro/login con verificación de cuenta por email
 - Recuperación de contraseña por correo
@@ -44,13 +46,15 @@
 | Node.js + Express 5 | Servidor HTTP y routing |
 | Turso (LibSQL) | Base de datos SQL en la nube |
 | Cloudinary | Almacenamiento de imágenes de productos |
-| Nodemailer | Envío de emails (verificación y recuperación de contraseña) |
+| Nodemailer | Envío de emails (verificación, recuperación de contraseña, confirmación de compra) |
 | JWT (jsonwebtoken) | Access tokens de corta duración (15 min) |
 | bcryptjs | Hash de contraseñas |
 | Joi | Validación de schemas de entrada |
 | Multer | Subida de archivos (imágenes y CSV) |
 | PDFKit | Generación de facturas en PDF |
 | ExcelJS + csv-parser | Carga masiva de productos |
+| **Mercado Pago SDK** | **Procesamiento de pagos (Checkout Pro + Webhooks)** |
+| **ngrok** | **Exposición del servidor local para recibir webhooks de Mercado Pago** |
 
 ### Frontend
 | Tecnología | Uso |
@@ -79,6 +83,7 @@ AirMobile-integrador/
 │       │   ├── controllerCarrito.js
 │       │   ├── controllerFactura.js
 │       │   ├── controllerListaDeseados.js
+│       │   ├── controllerPago.js    # Mercado Pago: preferencia + webhook
 │       │   ├── controllerPassword.js
 │       │   ├── controllerProductos.js
 │       │   └── controllerStaff.js
@@ -91,51 +96,33 @@ AirMobile-integrador/
 │       │   ├── modelUsuario.js
 │       │   ├── modelProductos.js
 │       │   ├── modelCarrito.js
-│       │   ├── modelFactura.js
-│       │   ├── modelDetalleFactura.js  # Separado de modelFactura
+│       │   ├── modelFactura.js      # Incluye columna mp_payment_id (UNIQUE)
+│       │   ├── modelDetalleFactura.js
 │       │   ├── modelListaDeseados.js
 │       │   ├── modelStaff.js
-│       │   └── modelToken.js           # Gestión de refresh tokens
-│       ├── routes/                  # Definición de rutas
+│       │   └── modelToken.js        # Gestión de refresh tokens
+│       ├── routes/
+│       │   ├── routesPagos.js       # POST /crear-preferencia, POST /webhook
+│       │   └── ...
 │       ├── schemas/                 # Validaciones Joi
-│       │   ├── schemaProductos.js
-│       │   ├── schemaUpdateProducto.js
-│       │   ├── schemaQueriesFiltros.js
-│       │   ├── schemaRegistroUsuario.js
-│       │   ├── schemaLoginUsuarios.js
-│       │   ├── schemaUpdateUsuario.js
-│       │   ├── schemaVerificacion.js
-│       │   ├── schemaResetPassword.js
-│       │   ├── schemaRefreshToken.js   # Validación de tokens
-│       │   └── schemaStaff.js
-│       ├── utils/
-│       │   ├── mailer.js
-│       │   ├── descargarFacturaPDF.js
-│       │   ├── manejarImagenes.js
-│       │   ├── leerArchivos.js
-│       │   ├── estados.js
-│       │   └── roles.js
-│       ├── seed.js
-│       └── index.js
+│       └── utils/
+│           ├── mailer.js            # Incluye email de confirmación de compra
+│           ├── estados.js           # Constantes de estado de factura
+│           └── ...
 ├── frontend/
 │   └── src/
 │       ├── components/
-│       │   ├── admin/
-│       │   ├── chat/
-│       │   ├── common/
-│       │   ├── layout/
-│       │   └── productos/
 │       ├── context/
 │       │   ├── AuthContext.jsx      # Maneja access + refresh token + usuario
 │       │   └── CarritoContext.jsx
 │       ├── hooks/
-│       │   ├── useApi.js            # Con interceptor automático de renovación
+│       │   ├── useApi.js            # Interceptor automático de renovación de sesión
 │       │   └── useN8nChat.js
 │       ├── pages/
-│       ├── style/
-│       ├── utils/
-│       ├── App.jsx
-│       └── main.jsx
+│       │   ├── PagoExitoso.jsx
+│       │   ├── PagoFallido.jsx
+│       │   └── PagoPendiente.jsx
+│       └── ...
 ├── package.json
 ├── vite.config.js
 └── .env
@@ -166,6 +153,9 @@ CLOUDINARY_API_SECRET=
 # Panel de administración
 ADMIN_PASSWORD =
 
+# Mercado Pago
+MP_ACCESS_TOKEN=
+
 # N8N — Asistente Virtual
 VITE_N8N_WEBHOOK_URL=
 VITE_TEST_N8N=
@@ -185,8 +175,11 @@ VITE_TEST_N8N=
 | `CLOUDINARY_API_KEY` | API Key de Cloudinary |
 | `CLOUDINARY_API_SECRET` | API Secret de Cloudinary |
 | `ADMIN_PASSWORD` | Contraseña inicial del administrador (usada en seed) |
+| `MP_ACCESS_TOKEN` | Access token de Mercado Pago (productivo o de prueba) |
 | `VITE_N8N_WEBHOOK_URL` | URL del webhook de N8N para el asistente virtual |
 | `VITE_TEST_N8N` | URL alternativa de N8N para entorno de pruebas |
+
+> 💡 **Nota sobre `MP_ACCESS_TOKEN`:** En desarrollo usá un token de prueba (`TEST-...`). En producción reemplazalo por el token productivo de tu aplicación en el [panel de Mercado Pago](https://www.mercadopago.com.ar/developers/panel).
 
 ---
 
@@ -198,6 +191,8 @@ VITE_TEST_N8N=
 - Cuenta en [Turso](https://turso.tech/)
 - Cuenta en [Cloudinary](https://cloudinary.com/)
 - Cuenta en Gmail con contraseña de aplicación habilitada
+- Cuenta en [Mercado Pago Developers](https://www.mercadopago.com.ar/developers) con una aplicación creada
+- [ngrok](https://ngrok.com/) instalado y autenticado (ver [sección de pagos](#pagos-con-mercado-pago--ngrok))
 - [Ollama](https://ollama.com/) instalado con el modelo `qwen3:8b` descargado (ver [sección del asistente](#asistente-virtual-n8n--ollama))
 - [N8N](https://n8n.io/) corriendo localmente con el workflow configurado (ver [sección del asistente](#asistente-virtual-n8n--ollama))
 
@@ -221,6 +216,9 @@ npm run dev:backend
 
 # 6. Ejecutar el frontend (en otra terminal)
 npm run dev:frontend
+
+# 7. Exponer el backend con ngrok para recibir webhooks de Mercado Pago (en otra terminal)
+ngrok http 3000
 ```
 
 El backend corre en `http://localhost:3000` y el frontend en `http://localhost:5173`.
@@ -304,6 +302,13 @@ Authorization: Bearer <accessToken>
 | `GET` | `/detalle-factura/:id/pdf` | ✅ Token | Descargar factura como PDF |
 | `GET` | `/obtener-facturas-usuario` | ✅ Token | Historial de facturas del usuario (con `fecha_formateada`) |
 
+### Pagos — `/api/pagos`
+
+| Método | Ruta | Autenticación | Descripción |
+|---|---|---|---|
+| `POST` | `/crear-preferencia` | ✅ Token | Crea preferencia de Checkout Pro en Mercado Pago → devuelve `init_point` |
+| `POST` | `/webhook` | No | Recibe notificaciones de pago de Mercado Pago (llamado por MP, no por el frontend) |
+
 ### Recuperación de Contraseña
 
 | Método | Ruta | Descripción |
@@ -335,6 +340,8 @@ Authorization: Bearer <accessToken>
 - **Detalle de producto** con galería de imágenes, selección de capacidad y productos relacionados
 - **Carrito de compras** persistente
 - **Lista de deseados** para guardar productos favoritos
+- **Pago con Mercado Pago** (Checkout Pro): el usuario es redirigido al portal de pago y vuelve a la app al finalizar
+- **Confirmación de compra por email** automática al aprobarse el pago
 - **Historial de facturas** con fechas formateadas y descarga en PDF
 - **Perfil de usuario** editable (nombre y contraseña)
 
@@ -345,6 +352,92 @@ Authorization: Bearer <accessToken>
 - **Gestión de facturas** con posibilidad de cambiar el estado
 - **Gestión de staff**: registrar, editar, dar de baja y restaurar administradores
 - **Blanqueo de contraseñas** de otros admins
+
+---
+
+## Pagos con Mercado Pago + ngrok
+
+El sistema de pagos usa **Mercado Pago Checkout Pro**. El flujo completo requiere que el backend sea accesible públicamente para recibir las notificaciones (webhooks) de Mercado Pago. En desarrollo local, esto se logra con **ngrok**.
+
+### ¿Cómo funciona?
+
+```
+Frontend                Backend (Express)              Mercado Pago
+    │                         │                               │
+    │ POST /crear-preferencia  │                               │
+    │─────────────────────────►│                               │
+    │                         │── Preference.create() ────────►│
+    │                         │◄──── { init_point } ───────────│
+    │◄── { init_point } ──────│                               │
+    │                         │                               │
+    │ Redirige al init_point   │                               │
+    │──────────────────────────────────────────────────────────►│
+    │                         │                               │
+    │ Usuario paga en MP       │                               │
+    │                         │◄── POST /webhook ─────────────│
+    │                         │    (ngrok lo recibe y reenvía) │
+    │                         │                               │
+    │                         │ Crea factura + detalles        │
+    │                         │ Vacía carrito                  │
+    │                         │ Envía email de confirmación    │
+    │                         │                               │
+    │◄── Redirige a /pago-exitoso ──────────────────────────────│
+```
+
+### Instalación de ngrok
+
+1. Descargá ngrok desde [https://ngrok.com/download](https://ngrok.com/download) o instalalo con npm:
+
+```bash
+npm install -g ngrok
+```
+
+2. Registrate en [https://dashboard.ngrok.com](https://dashboard.ngrok.com) y copiá tu authtoken.
+
+3. Autenticá ngrok con tu token:
+
+```bash
+ngrok config add-authtoken <TU_AUTHTOKEN>
+```
+
+### Uso en desarrollo
+
+Con el backend corriendo en el puerto 3000, en una terminal separada ejecutá:
+
+```bash
+ngrok http 3000
+```
+
+Ngrok te dará una URL pública del estilo:
+
+```
+https://xxxx-xxxx-xxxx.ngrok-free.app
+```
+
+### Configurar la URL del webhook
+
+Una vez que tenés la URL de ngrok, actualizá la `notification_url` en `controllerPago.js`:
+
+```js
+notification_url: "https://TU-URL.ngrok-free.app/api/pagos/webhook",
+```
+
+> ⚠️ **Importante:** La URL de ngrok cambia cada vez que reiniciás el proceso (en el plan gratuito). Recordá actualizarla en el controller cada vez que levantes ngrok de nuevo. En producción, reemplazá esta URL por la URL real del servidor desplegado.
+
+### Prevención de pagos duplicados
+
+El campo `mp_payment_id` en la tabla `facturas` tiene restricción `UNIQUE`. Si Mercado Pago envía el mismo webhook dos veces, la segunda inserción lanzará un error `SQLITE_CONSTRAINT` que se captura silenciosamente y se ignora, garantizando idempotencia.
+
+### Estados de pago mapeados
+
+| Estado Mercado Pago | Estado interno |
+|---|---|
+| `approved` | `Completado` |
+| `pending` | `Pendiente` |
+| `in_process` | `Pendiente` |
+| `rejected` | `Cancelado` |
+| `cancelled` | `Cancelado` |
+| `refunded` | `Reembolsado` |
 
 ---
 

@@ -23,11 +23,13 @@
 5. [Flujos Funcionales](#5-flujos-funcionales)
    - [Registro y Verificación de Cuenta](#registro-y-verificación-de-cuenta)
    - [Autenticación y Refresh Token](#autenticación-y-refresh-token)
-   - [Ciclo de Compra](#ciclo-de-compra)
+   - [Ciclo de Compra con Mercado Pago](#ciclo-de-compra-con-mercado-pago)
+   - [Webhook de Mercado Pago](#webhook-de-mercado-pago)
    - [Carga Masiva de Productos](#carga-masiva-de-productos)
    - [Recuperación de Contraseña](#recuperación-de-contraseña)
 6. [Seguridad](#6-seguridad)
 7. [Asistente Virtual](#7-asistente-virtual)
+8. [Infraestructura Local con ngrok](#8-infraestructura-local-con-ngrok)
 
 ---
 
@@ -42,15 +44,19 @@ Cliente (React + Vite)          Servidor (Express)           Servicios externos
         │ ─────────────────────────►   │──── Turso (LibSQL)      Base de datos
         │ ◄─────────────────────────   │──── Cloudinary          Imágenes
         │                               │──── Gmail (Nodemailer)  Emails
-        │  Webhook (N8N)                │
+        │  Webhook (N8N)                │──── Mercado Pago SDK    Pagos
         │ ─────────────────────────►  N8N ── Ollama (qwen3:8b)  IA del chatbot
+        │
+        │  ngrok (desarrollo)
+        │  Mercado Pago ────────────► ngrok ──► Express /api/pagos/webhook
 ```
 
 - **Frontend:** SPA construida con React 19 y Vite. Se comunica con el backend exclusivamente mediante `fetch` a través del hook `useApi`, que incluye un interceptor automático de renovación de sesión.
 - **Backend:** API REST construida con Express 5, organizada en capas (routes → middlewares → controllers → models).
 - **Base de datos:** Turso, una base de datos LibSQL (SQLite compatible) serverless alojada en la nube. La conexión se establece mediante `@libsql/client`.
 - **Imágenes:** Las imágenes de productos se almacenan en Cloudinary. Solo las URLs resultantes se guardan en la base de datos.
-- **Emails:** Nodemailer conectado a Gmail vía contraseña de aplicación para enviar códigos de verificación y recuperación de contraseña.
+- **Emails:** Nodemailer conectado a Gmail vía contraseña de aplicación para enviar códigos de verificación, recuperación de contraseña y confirmaciones de compra.
+- **Pagos:** Mercado Pago SDK (Checkout Pro). En desarrollo, ngrok expone el servidor local para que Mercado Pago pueda enviar webhooks.
 - **Chatbot:** Un webhook de N8N actúa de intermediario entre el frontend y el modelo Ollama (qwen3:8b) que corre localmente.
 
 ---
@@ -116,6 +122,9 @@ Cliente (React + Vite)          Servidor (Express)           Servicios externos
 | `total` | REAL | NOT NULL | Total de la compra |
 | `fecha` | DATETIME | DEFAULT CURRENT_TIMESTAMP | Fecha de emisión |
 | `estado` | TEXT | DEFAULT `'Completado'` | Ver [estados de factura](#estados-de-factura) |
+| **`mp_payment_id`** | **TEXT** | **UNIQUE** | **ID del pago en Mercado Pago. Garantiza idempotencia del webhook** |
+
+> `mp_payment_id` es la columna clave para la integración con Mercado Pago. Su restricción `UNIQUE` evita que el mismo pago genere dos facturas si Mercado Pago envía el webhook más de una vez.
 
 ---
 
@@ -144,7 +153,7 @@ Cliente (React + Vite)          Servidor (Express)           Servicios externos
 
 ---
 
-#### `refresh_tokens` *(nuevo)*
+#### `refresh_tokens`
 
 | Columna | Tipo | Restricción | Descripción |
 |---|---|---|---|
@@ -185,6 +194,7 @@ usuarios ──────────────────────┬�
 - **Eliminación en cascada:** Si se elimina un usuario, su carrito, lista de deseados y refresh tokens se eliminan automáticamente (`ON DELETE CASCADE`). Las facturas quedan con `usuario_id = NULL` (`ON DELETE SET NULL`).
 - **Paginación:** Los endpoints de listado aceptan `page` y `limit` como query params. El modelo ejecuta dos queries en paralelo con `Promise.all`: una con `LIMIT / OFFSET` y otra con `COUNT(*)`.
 - **Refresh token opaco:** A diferencia del access token (JWT firmado y auto-verificable), el refresh token es un string hexadecimal aleatorio que solo puede validarse consultando la base de datos. Esto permite revocarlo en cualquier momento.
+- **Idempotencia de pagos:** La columna `mp_payment_id` en `facturas` tiene restricción `UNIQUE`. Si el webhook de Mercado Pago llega duplicado, el segundo intento de INSERT falla con `SQLITE_CONSTRAINT`, que se captura y se ignora en el controller.
 
 ---
 
@@ -223,7 +233,7 @@ Request HTTP
 
 Intercepta todas las rutas protegidas. Extrae el token del header `Authorization: Bearer <token>`, lo verifica con `jwt.verify()` usando la `SECRET_KEY` del entorno y adjunta el payload decodificado en `req.user`.
 
-> **Cambio respecto a la versión anterior:** ahora responde `401` (en lugar de `403`) cuando el token es inválido o expiró, para que el interceptor del frontend pueda distinguirlo correctamente y activar el flujo de renovación.
+> Responde `401` cuando el token es inválido o expiró, para que el interceptor del frontend pueda distinguirlo correctamente y activar el flujo de renovación.
 
 Payload almacenado en `req.user`:
 ```json
@@ -235,7 +245,7 @@ Payload almacenado en `req.user`:
 }
 ```
 
-Los access tokens tienen una expiración de **15 minutos** (reducida desde 1 hora para mayor seguridad).
+Los access tokens tienen una expiración de **15 minutos**.
 
 ---
 
@@ -249,40 +259,38 @@ Debe ejecutarse siempre después de `verificarToken`. Comprueba que `req.user.ro
 
 #### `uploadImg` / `uploadMiddleware`
 
-Sin cambios respecto a la versión anterior. Ver documentación previa.
+Multer configurado en memoria. Filtra por MIME type (solo imágenes). Ver `multer.js` y `fileFilter.js`.
 
 ---
 
 ### Modelos
 
-#### `UsuarioModel` — sin cambios relevantes
+#### `ModelFactura` (actualizado)
 
-#### `ModelProductos` — sin cambios relevantes
-
-#### `ModelCarrito` — sin cambios relevantes
-
-#### `ModelFactura` — sin cambios relevantes
+| Método | Descripción |
+|---|---|
+| `createFactura({ usuario_id, total, mp_payment_id, estado })` | Inserta una factura con el ID de pago de Mercado Pago. `mp_payment_id` es obligatorio para la integración |
+| `getFacturaById(id)` | Obtiene una factura por ID |
+| `getAllFacturas()` | Obtiene todas las facturas (solo admin) |
+| `getFacturasByUsuario(usuarioId)` | Facturas del usuario con campo `fecha_formateada` (zona `America/Argentina/Buenos_Aires`) |
+| `updateEstadoFactura(id, estado)` | Actualiza el estado de una factura |
 
 ---
 
-#### `ModelDetalleFactura` *(nuevo)*
+#### `ModelDetalleFactura`
 
 **Archivo:** `backend/src/models/modelDetalleFactura.js`
-
-Separado del `ModelFactura` en su propio archivo para una mejor separación de responsabilidades.
 
 | Método | Descripción |
 |---|---|
 | `createDetalleFactura(facturaId, productoId, cantidad, precioUnitario)` | Inserta una línea de detalle en `detalles_factura` |
-| `getDetallesFacturaByFacturaId(facturaId)` | JOIN entre `detalles_factura`, `productos` y `facturas`. Devuelve cantidad, precio unitario, nombre y imagen del producto, fecha y usuario_id de la factura |
+| `getDetallesFacturaByFacturaId(facturaId)` | JOIN entre `detalles_factura`, `productos` y `facturas`. Devuelve cantidad, precio unitario, nombre e imagen del producto, fecha y usuario_id |
 
 ---
 
-#### `TokenModel` *(nuevo)*
+#### `TokenModel`
 
 **Archivo:** `backend/src/models/modelToken.js`
-
-Gestiona el ciclo de vida completo de los refresh tokens en la tabla `refresh_tokens`.
 
 | Método | Descripción |
 |---|---|
@@ -295,6 +303,67 @@ Gestiona el ciclo de vida completo de los refresh tokens en la tabla `refresh_to
 
 ### Controllers
 
+#### `controllerPago`
+
+**Archivo:** `backend/src/controllers/controllerPago.js`
+
+Gestiona todo el ciclo de pago con Mercado Pago.
+
+##### `crearPreferencia`
+
+Ruta: `POST /api/pagos/crear-preferencia` — requiere autenticación.
+
+```
+1. Obtiene el usuario autenticado (req.user.id)
+2. Lee el carrito del usuario → 400 si está vacío
+3. Mapea los items del carrito al formato de Mercado Pago:
+   { title, unit_price, quantity, currency_id: "ARS" }
+4. Llama a Preference.create() con:
+   - items: los productos del carrito
+   - external_reference: userId (para identificar al comprador en el webhook)
+   - notification_url: URL pública de ngrok + /api/pagos/webhook
+   - back_urls: rutas del frontend para éxito, fallo y pendiente
+   - auto_return: "all"
+5. Responde con { exito: true, init_point }
+```
+
+El frontend usa el `init_point` para redirigir al usuario al portal de pago de Mercado Pago.
+
+---
+
+##### `recibirWebhook`
+
+Ruta: `POST /api/pagos/webhook` — **sin autenticación** (la llama Mercado Pago directamente).
+
+```
+1. Extrae paymentId y topic del query string o body
+2. Si topic === 'payment':
+   a. Consulta Payment.get({ id: paymentId }) a la API de MP
+   b. Si el estado es 'approved', 'pending' o 'in_process':
+      - Lee external_reference (userId) y transaction_amount
+      - Intenta ModelFactura.createFactura({ usuario_id, total, mp_payment_id, estado })
+        → Si lanza SQLITE_CONSTRAINT (duplicado): ignora silenciosamente
+        → Si lanza otro error: lo propaga
+      - Por cada item del carrito: ModelDetalleFactura.createDetalleFactura()
+      - ModelCarrito.emptyCarrito(userId)
+      - Envía email de confirmación con enviarEmailCompra()
+3. Responde siempre 200 OK (Mercado Pago reintenta si no recibe 200)
+```
+
+> **Idempotencia:** Mercado Pago puede enviar el mismo webhook varias veces. La restricción `UNIQUE` en `mp_payment_id` garantiza que solo la primera llamada crea la factura. Las subsecuentes son ignoradas.
+
+> **Mapeo de estados:**
+> | MP | Interno |
+> |---|---|
+> | `approved` | `Completado` |
+> | `pending` | `Pendiente` |
+> | `in_process` | `Pendiente` |
+> | `rejected` | `Cancelado` |
+> | `cancelled` | `Cancelado` |
+> | `refunded` | `Reembolsado` |
+
+---
+
 #### `controlerUsuario` — cambios y nuevas funciones
 
 ##### `login` (actualizado)
@@ -306,11 +375,11 @@ Además de generar el JWT, ahora:
 4. Llama a `TokenModel.guardarRefreshToken()` para persistir el token.
 5. Devuelve `{ token, refreshToken, data }` en la respuesta.
 
-El access token ahora expira en **15 minutos** (antes era 1 hora).
+El access token expira en **15 minutos**.
 
 ---
 
-##### `renovarSesion` *(nuevo)*
+##### `renovarSesion`
 
 Endpoint: `POST /api/usuarios/refresh`
 
@@ -328,54 +397,42 @@ Implementa el flujo de **rotación de refresh tokens**:
 9. Responde con { token, refreshToken }
 ```
 
-El paso 7-8 garantiza que cada refresh token solo puede usarse **una vez**. Si un token ya usado es presentado de nuevo, se detecta como revocado y se rechaza, lo que indica un posible robo del token.
+El paso 7-8 garantiza que cada refresh token solo puede usarse **una vez**.
 
 ---
 
-##### `cerrarSesion` *(nuevo)*
+##### `cerrarSesion`
 
 Endpoint: `POST /api/usuarios/logout`
 
-No requiere autenticación JWT. Recibe el `refreshToken` en el body y llama a `TokenModel.revocarTokenEspecifico()` para marcarlo como revocado. Si el servidor no puede ser contactado, el frontend igualmente limpia el estado local.
+No requiere autenticación JWT. Recibe el `refreshToken` en el body y llama a `TokenModel.revocarTokenEspecifico()` para marcarlo como revocado.
 
 ---
 
 #### `controllerFactura` (actualizado)
 
-- `crearFactura`: ahora usa `ModelDetalleFactura.createDetalleFactura()` (modelo separado) en lugar de tener la lógica de inserción embebida.
-- `obtenerFacturasDeUsuario`: incorpora **formateo de fechas** antes de devolver la respuesta. Convierte `fecha` de UTC a zona horaria `America/Argentina/Buenos_Aires` con formato corto (`"14 may. 2026"`), añadiendo el campo `fecha_formateada` a cada factura.
-- `actualizarEstadoFactura`: nuevo endpoint para que los admins puedan cambiar el estado de una factura. Valida que el estado sea uno de los valores del objeto `ESTADOS`.
+- `crearFactura`: usa `ModelDetalleFactura.createDetalleFactura()` (modelo separado).
+- `obtenerFacturasDeUsuario`: incorpora **formateo de fechas** a zona horaria `America/Argentina/Buenos_Aires` con formato corto (`"14 may. 2026"`), añadiendo el campo `fecha_formateada` a cada factura.
+- `actualizarEstadoFactura`: permite a los admins cambiar el estado. Valida que el estado sea uno de los valores del objeto `ESTADOS`.
 
 ---
 
 ### Schemas de Validación
 
-#### Schemas nuevos
-
-##### `schemaRefreshToken.js`
-
-Dos schemas exportados con nombre:
+#### `schemaRefreshToken.js`
 
 | Schema | Uso | Campos |
 |---|---|---|
 | `insertarTokenSchema` | Valida datos antes de guardar en la BD | `idUsuario` (integer positivo), `refreshToken` (string min 20), `fechaExpiracionStr` (ISO 8601) |
 | `renovarTokenRequestSchema` | Valida el body del endpoint `POST /refresh` | `refreshToken` (string requerido) |
 
----
-
-##### `schemaVerificacion.js`
-
-Valida el body del endpoint `POST /verificar`:
+#### `schemaVerificacion.js`
 
 | Campo | Regla |
 |---|---|
 | `codigo` | string de exactamente 6 caracteres, requerido |
 
----
-
-##### `schemaResetPassword.js`
-
-Valida el body del endpoint `POST /reset-password`:
+#### `schemaResetPassword.js`
 
 | Campo | Regla |
 |---|---|
@@ -383,22 +440,14 @@ Valida el body del endpoint `POST /reset-password`:
 | `codigo` | string de exactamente 6 caracteres |
 | `nuevaPassword` | string 6-30 caracteres |
 
----
-
-##### `schemaStaff.js`
-
-Dos schemas exportados con nombre:
+#### `schemaStaff.js`
 
 | Schema | Uso |
 |---|---|
 | `schemaRegistroStaff` | Alta de nuevo admin: `nombre` (3-50), `email`, `password` (mín 8 caracteres) |
 | `schemaActualizarStaff` | Actualización parcial: `nombre` y `email` opcionales |
 
----
-
-##### `schemaUpdateUsuario.js`
-
-Tres schemas exportados:
+#### `schemaUpdateUsuario.js`
 
 | Schema | Uso |
 |---|---|
@@ -406,17 +455,11 @@ Tres schemas exportados:
 | `schemaActualizarPassword` | Cambio de contraseña: `password` de 8-30 caracteres |
 | `schemaActualizarNombre` | Cambio de nombre: `nombre` de 2-50 caracteres con `.trim()` |
 
----
-
-##### `schemaUpdateProducto.js`
+#### `schemaUpdateProducto.js`
 
 Schema para la actualización parcial de productos (`.min(1)` obliga a enviar al menos un campo). Todos los campos son opcionales. Reutiliza las constantes `CAPACIDADES_PERMITIDAS` y `CONDICIONES_PERMITIDAS` del schema principal de productos.
 
----
-
-##### `schemaQueriesFiltros.js`
-
-Valida los query params del endpoint `GET /productos`. Incluye todos los filtros del sistema:
+#### `schemaQueriesFiltros.js`
 
 | Param | Tipo | Descripción |
 |---|---|---|
@@ -435,7 +478,9 @@ Valida los query params del endpoint `GET /productos`. Incluye todos los filtros
 
 ### Utilidades
 
-Sin cambios respecto a la versión anterior.
+#### `mailer.js`
+
+Incluye `enviarEmailCompra()`, que se llama desde el webhook de Mercado Pago al procesar un pago exitoso. Recibe: `email`, `nombreUsuario`, `items`, `total`, `mp_payment_id`, `facturaId` y `fecha`. Envía un resumen de compra detallado al comprador.
 
 ---
 
@@ -459,13 +504,21 @@ Pendiente | Completado | Enviado | Cancelado | Reembolsado
 
 ### Páginas
 
-Sin cambios en las rutas disponibles respecto a la versión anterior.
+Incluye páginas de retorno de Mercado Pago:
+
+| Página | Ruta | Descripción |
+|---|---|---|
+| `PagoExitoso` | `/pago-exitoso` | Destino tras un pago aprobado |
+| `PagoFallido` | `/pago-fallido` | Destino tras un pago rechazado |
+| `PagoPendiente` | `/pago-pendiente` | Destino tras un pago pendiente |
+
+Estas rutas se configuran como `back_urls` en la preferencia de Mercado Pago.
 
 ---
 
 ### Componentes
 
-Sin cambios en los componentes respecto a la versión anterior.
+Sin cambios en los demás componentes respecto a la versión anterior.
 
 ---
 
@@ -474,8 +527,6 @@ Sin cambios en los componentes respecto a la versión anterior.
 #### `AuthContext` (actualizado)
 
 **Archivo:** `frontend/src/context/AuthContext.jsx`
-
-Maneja el estado de autenticación en toda la aplicación. Ahora gestiona también el refresh token y el objeto completo del usuario.
 
 | Valor expuesto | Tipo | Descripción |
 |---|---|---|
@@ -503,7 +554,7 @@ Incluye un **interceptor automático de renovación de sesión**. Cuando cualqui
 
 **Variable global `promesaRenovacion`:**
 
-Se declara fuera del hook (en el módulo), actúa como semáforo global. Si múltiples peticiones fallan con `401` al mismo tiempo, solo la primera llama a `/refresh`; las demás esperan a la misma promesa. Esto evita múltiples llamadas simultáneas de renovación con el mismo refresh token.
+Se declara fuera del hook (en el módulo), actúa como semáforo global. Si múltiples peticiones fallan con `401` al mismo tiempo, solo la primera llama a `/refresh`; las demás esperan a la misma promesa.
 
 **Flujo del interceptor:**
 
@@ -524,14 +575,6 @@ await promesaRenovacion → { token, refreshToken }
     │
     └─ Fallo: logout() → redirige al login
 ```
-
-**Parámetro `reintentando`:**
-
-El tercer parámetro de `ejecutarPeticion` evita loops infinitos: si una petición ya es un reintento y recibe otro `401`, no vuelve a intentar renovar, sino que lanza el error directamente.
-
-**Lectura del token:**
-
-El token se lee en cada petición desde `localStorage` (no solo desde el estado de React) para garantizar que siempre se usa el valor más reciente, incluso si el estado de React aún no se actualizó.
 
 ---
 
@@ -609,7 +652,7 @@ window.location = "/"
 
 ---
 
-### Ciclo de Compra
+### Ciclo de Compra con Mercado Pago
 
 ```
 1. Usuario agrega productos
@@ -618,23 +661,72 @@ window.location = "/"
 2. Usuario revisa el carrito
    GET /api/carrito/
 
-3. Confirma compra
-   POST /api/facturas/crear-factura
+3. Usuario inicia el pago
+   POST /api/pagos/crear-preferencia
        │  Lee carrito del usuario
-       │  Calcula total (.toFixed(2))
-       │  ModelFactura.createFactura() → INSERT facturas
-       │  Por cada item: ModelDetalleFactura.createDetalleFactura()
-       │  ModelCarrito.emptyCarrito()
+       │  Mapea items al formato de Mercado Pago
+       │  Preference.create({ items, external_reference: userId, notification_url, back_urls })
        ▼
-   { idFactura, total }
+   { exito: true, init_point }
+       │
+       ▼
+   Frontend redirige a init_point (portal de pago de Mercado Pago)
 
-4. Admin puede cambiar el estado
-   PATCH /api/facturas/:id/estado
-       │  Valida nuevo estado contra objeto ESTADOS
-       │  ModelFactura.updateEstadoFactura()
+4. Usuario completa el pago en Mercado Pago
 
-5. Usuario descarga PDF
-   GET /api/facturas/detalle-factura/:id/pdf
+5. Mercado Pago notifica al backend vía webhook
+   POST /api/pagos/webhook  (llamado por MP a la URL de ngrok)
+   → Ver flujo detallado en sección siguiente
+
+6. Mercado Pago redirige al usuario según el resultado
+   - Éxito  → /pago-exitoso
+   - Fallo  → /pago-fallido
+   - Pendiente → /pago-pendiente
+```
+
+---
+
+### Webhook de Mercado Pago
+
+```
+Mercado Pago envía POST a https://<ngrok-url>/api/pagos/webhook
+    │
+    ▼
+recibirWebhook extrae paymentId del query (?id=...) o body (data.id)
+    │
+    ├─ topic !== 'payment' → responde 200, termina
+    │
+    ▼
+Payment.get({ id: paymentId }) → consulta la API de MP
+    │
+    ├─ estado NOT IN ['approved', 'pending', 'in_process'] → responde 200, termina
+    │
+    ▼
+    ┌──────────────────────────────────────────────────────────┐
+    │ try {                                                     │
+    │   ModelFactura.createFactura({                            │
+    │     usuario_id: external_reference,                       │
+    │     total: transaction_amount,                            │
+    │     mp_payment_id: paymentId,        ← UNIQUE en BD      │
+    │     estado: mapearEstadoMP(status)                       │
+    │   })                                                     │
+    │                                                          │
+    │   Por cada item del carrito:                             │
+    │     ModelDetalleFactura.createDetalleFactura(...)        │
+    │                                                          │
+    │   ModelCarrito.emptyCarrito(userId)                      │
+    │   enviarEmailCompra(email, { items, total, ... })        │
+    │                                                          │
+    │ } catch (dbError) {                                      │
+    │   if (SQLITE_CONSTRAINT || UNIQUE)                       │
+    │     → pago duplicado, ignorar silenciosamente            │
+    │   else                                                   │
+    │     → log del error crítico                              │
+    │ }                                                        │
+    └──────────────────────────────────────────────────────────┘
+    │
+    ▼
+Responde 200 OK (siempre, para que MP no reintente)
 ```
 
 ---
@@ -656,20 +748,67 @@ Sin cambios respecto a la versión anterior.
 | Aspecto | Implementación |
 |---|---|
 | **Contraseñas** | Hash con `bcrypt`, salt 10 |
-| **Access token** | JWT firmado con `SECRET_KEY`, expiración **15 minutos** (reducida desde 1h) |
+| **Access token** | JWT firmado con `SECRET_KEY`, expiración **15 minutos** |
 | **Refresh token** | String opaco de 80 caracteres hex (`crypto.randomBytes(40)`), nunca un JWT |
 | **Rotación de tokens** | Cada uso del refresh token lo invalida y genera uno nuevo. Un token reutilizado es rechazado inmediatamente |
 | **Revocación explícita** | El logout revoca el refresh token en la BD. El token queda marcado como `revocado = 1` |
 | **Semáforo anti-race** | La variable global `promesaRenovacion` en `useApi` evita múltiples renovaciones simultáneas con el mismo token |
-| **Validación Joi previa a la BD** | El refresh token se valida con `insertarTokenSchema` antes de insertarse. El body de `/refresh` se valida con `renovarTokenRequestSchema` |
+| **Validación Joi previa a la BD** | El refresh token se valida con `insertarTokenSchema` antes de insertarse |
 | **Autorización** | Doble middleware: `verificarToken` + `verificarAdmin` |
 | **SQL Injection** | Todas las queries usan parámetros preparados (`args: [...]`) |
 | **CORS** | Solo acepta `localhost:5173` y el dominio de producción |
 | **Subida de archivos** | Multer filtra por MIME type, almacenamiento en memoria |
 | **Variables de entorno** | Todas las credenciales en `.env` vía `dotenv` |
+| **Idempotencia de pagos** | `mp_payment_id` UNIQUE en `facturas` previene facturas duplicadas por webhooks repetidos |
+| **Webhook sin autenticación** | El endpoint `/api/pagos/webhook` no requiere JWT (lo llama Mercado Pago), pero valida el payload consultando directamente la API de MP con el `paymentId` recibido |
 
 ---
 
 ## 7. Asistente Virtual
 
-Sin cambios respecto a la versión anterior. Ver documentación previa para el flujo completo de N8N + Ollama.
+Sin cambios respecto a la versión anterior. Ver README para el flujo completo de N8N + Ollama.
+
+---
+
+## 8. Infraestructura Local con ngrok
+
+### Propósito
+
+Mercado Pago necesita una URL **pública y accesible desde internet** para enviar las notificaciones webhook cuando un pago cambia de estado. En desarrollo, el servidor corre en `localhost:3000`, que no es accesible externamente. **ngrok** resuelve esto creando un túnel que expone el puerto local a una URL pública HTTPS.
+
+### Diagrama de flujo
+
+```
+Mercado Pago (servidores de MP)
+        │
+        │  POST https://xxxx.ngrok-free.app/api/pagos/webhook
+        │
+        ▼
+   ngrok (proceso local)
+        │
+        │  Reenvía la request a localhost:3000
+        │
+        ▼
+   Express /api/pagos/webhook
+        │
+        │  Procesa el pago
+```
+
+### Configuración
+
+1. Instalar ngrok: https://ngrok.com/download
+2. Autenticar: `ngrok config add-authtoken <token>`
+3. Levantar el túnel con el backend corriendo: `ngrok http 3000`
+4. Copiar la URL generada (ej: `https://abc123.ngrok-free.app`)
+5. Actualizar `notification_url` en `controllerPago.js`:
+
+```js
+notification_url: "https://abc123.ngrok-free.app/api/pagos/webhook",
+```
+
+### Consideraciones
+
+- En el **plan gratuito** de ngrok, la URL pública cambia cada vez que se reinicia ngrok. Hay que actualizarla en el controller con cada nueva sesión.
+- En el **plan pago** se puede reservar un subdominio fijo.
+- En **producción**, la `notification_url` debe apuntar al dominio real del servidor desplegado; ngrok ya no es necesario.
+- ngrok también ofrece un panel de inspección en `http://localhost:4040` donde se pueden ver todas las requests recibidas, incluyendo los webhooks de Mercado Pago, lo que es muy útil para depurar.
