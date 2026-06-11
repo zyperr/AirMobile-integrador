@@ -304,7 +304,6 @@ export const bulkUpload = async (req, res) => {
             }
         })
 
-        console.log(productosMapeados)
         const schemaMasivo = Joi.array().items(schemaProductos);
 
         const { error, value: productosValidados } = schemaMasivo.validate(productosMapeados);
