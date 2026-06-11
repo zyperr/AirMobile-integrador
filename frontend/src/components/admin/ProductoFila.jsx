@@ -25,7 +25,7 @@ export const ProductosFila = ({ id, imagen_url, nombre_producto, condicion, prec
 
                 {/* Precio */}
                 <div className="tabla-col-precio">
-                    <span className="tabla-precio">${precio.toFixed(2)}</span>
+                    <span className="tabla-precio">${Number(precio || 0).toFixed(2)}</span>
                 </div>
 
                 {/* Botones de Acciones */}
