@@ -11,63 +11,58 @@ export const Inventario = () => {
     const { ejecutarPeticion } = useApi();
 
     const exportarCSV = async () => {
-        setExportando(true);
-        try {
-            // Traemos todos los productos sin límite de paginación
-            const respuesta = await ejecutarPeticion("productos/productos?limit=9999&page=1", {
-                method: "GET",
-            });
+    setExportando(true);
+    try {
+        const respuesta = await ejecutarPeticion("productos/productos?limit=10000&page=1", {
+            method: "GET",
+        });
 
-            if (!respuesta.exito || !respuesta.data?.data?.length) {
-                alert("No se pudieron obtener los productos.");
-                return;
-            }
-
-            const productos = respuesta.data.data;
-
-            // Tomamos las columnas del primer producto dinámicamente
-            const columnas = Object.keys(productos[0]);
-
-            // Función para escapar valores con comas o comillas
-            const escaparValor = (valor) => {
-                if (valor === null || valor === undefined) return "";
-                const str = Array.isArray(valor) ? valor.join(" | ") : String(valor);
-                // Si tiene coma, comilla o salto de línea, lo envolvemos en comillas
-                if (str.includes(",") || str.includes('"') || str.includes("\n")) {
-                    return `"${str.replace(/"/g, '""')}"`;
-                }
-                return str;
-            };
-
-            // Armamos el CSV: encabezado + filas
-            const encabezado = columnas.join(",");
-            const filas = productos.map((producto) =>
-                columnas.map((col) => escaparValor(producto[col])).join(",")
-            );
-            const csvContenido = [encabezado, ...filas].join("\n");
-
-            // Creamos el blob y disparamos la descarga
-            const blob = new Blob(["\uFEFF" + csvContenido], {
-                type: "text/csv;charset=utf-8;",
-            });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            const fecha = new Date().toISOString().slice(0, 10); // ej: 2025-06-05
-            link.href = url;
-            link.setAttribute("download", `inventario_${fecha}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-
-        } catch (err) {
-            console.error("Error al exportar CSV:", err);
-            alert("Ocurrió un error al exportar. Revisá la consola.");
-        } finally {
-            setExportando(false);
+        if (!respuesta.exito || !respuesta.data?.data?.length) {
+            alert("No se pudieron obtener los productos.");
+            return;
         }
-    };
 
+        const productos = respuesta.data.data;
+
+        // Solo los campos que acepta el schema
+        const COLUMNAS = ["nombre_producto", "categoria", "precio", "condicion", "descripcion", "capacidad", "imagen_url", "bateria"];
+        const SEP = ";"; // separador de columnas
+
+        const escaparValor = (valor) => {
+            if (valor === null || valor === undefined) return "";
+            // Arrays los unimos con | sin espacios para que el backend los splitee limpio
+            if (Array.isArray(valor)) return valor.join("|");
+            const str = String(valor);
+            if (str.includes(SEP) || str.includes('"') || str.includes("\n")) {
+                return `"${str.replace(/"/g, '""')}"`;
+            }
+            return str;
+        };
+
+        const encabezado = COLUMNAS.join(SEP);
+        const filas = productos.map((p) =>
+            COLUMNAS.map((col) => escaparValor(p[col])).join(SEP)
+        );
+
+        // Sin BOM para evitar el problema del \uFEFF en el parser
+        const csvContenido = [encabezado, ...filas].join("\n");
+        const blob = new Blob([csvContenido], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", `inventario_${new Date().toISOString().slice(0, 10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+    } catch (err) {
+        console.error("Error al exportar CSV:", err);
+        alert("Ocurrió un error al exportar.");
+    } finally {
+        setExportando(false);
+    }
+};
 
     return (
         <>

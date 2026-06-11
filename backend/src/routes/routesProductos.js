@@ -13,15 +13,18 @@ const router = Router();
 
 router.get("/productos", obtenerProductos)
 
-router.get("/:id", obtenerProducto)
+router.post("/carga-masiva", verificarToken, verificarAdmin, uploadMiddleware, bulkUpload);
 
 router.post("/agregar-producto", verificarToken, verificarAdmin, uploadImg.array('imagen_url', 3), crearProducto);
+
+router.get("/:id", obtenerProducto);
+
 
 router.put("/actualizar-producto/:id", verificarToken, verificarAdmin,uploadImg.array('imagen_url', 3), actualizarProducto);
 
 router.delete("/eliminar-producto/:id", verificarToken, verificarAdmin, eliminarProducto);
 
-router.post("/carga-masiva", verificarToken, verificarAdmin, uploadMiddleware, bulkUpload);
+
 
 
 export default router
