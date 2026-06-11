@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useLocation,Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import Carrito from "./pages/Carrito";
 import Product from "./pages/Product";
@@ -21,6 +21,8 @@ import Seguridad from "./components/cuenta/tabs/Seguridad.jsx";
 import ListaDeseosPerfil from "./components/cuenta/tabs/ListaDeseosPerfil.jsx";
 import Error404 from "./components/common/Error404.jsx";
 import PagoExitoso from "./pages/PageExitoso.jsx";
+import PagoPendiente from "./pages/PagoPendiente.jsx";
+import PagoFallido from "./pages/PagoFallido.jsx";
 
 
 function Layout() {
@@ -59,6 +61,8 @@ function Layout() {
           estaAutenticado && <Route path="/carrito" element={<Carrito />} />
         }
         <Route path="/pago-exitoso" element={<PagoExitoso />} />
+        <Route path="/pago-fallido" element={<PagoFallido />} />
+        <Route path="/pago-pendiente" element={<PagoPendiente />} />
         <Route path="*" element={<Error404 />} />
       </Routes>
       <N8nChat />

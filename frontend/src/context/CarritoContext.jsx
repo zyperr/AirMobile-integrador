@@ -15,19 +15,19 @@ export function CartProvider({ children }) {
 
 
 
-    
+
 
     const procesarPago = async () => {
         setIsProcessing(true);
 
         try {
-            
+
             const response = await ejecutarPeticion('pagos/crear-preferencia', {
                 method: 'POST',
                 body: JSON.stringify({ items: cartItems })
             });
 
-            
+
             if (response.exito && response.data?.init_point) {
                 // Redirigimos al usuario a Mercado Pago
                 window.location.href = response.data.init_point;
@@ -237,12 +237,6 @@ export function CartProvider({ children }) {
         setLoadingId(null);
     };
 
-    // ─── 8. PROCESAR PAGO ────────────────────────────────────────────────────
-    const procesarPago = async () => {
-        setIsProcessing(true);
-        await new Promise((r) => setTimeout(r, 1500));
-        setIsProcessing(false);
-    };
 
     // ─── 9. CÁLCULOS DERIVADOS ───────────────────────────────────────────────
     // FIX 2: "cantidad" en lugar de "quantity"
