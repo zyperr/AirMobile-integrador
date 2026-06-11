@@ -26,7 +26,7 @@ export const Facturas = () => {
         };
         cargarEstadisticas();
     }, []);
-
+    console.log(stats);
     // Carga facturas cuando cambian filtros o página
     useEffect(() => {
         const cargarFacturas = async () => {

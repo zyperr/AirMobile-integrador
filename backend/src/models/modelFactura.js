@@ -73,11 +73,12 @@ class ModelFactura {
     }
     static async obtenerEstadisticas() {
         try {
+
             const sql = `
             SELECT 
                 COALESCE(SUM(total), 0) AS totalFacturado,
-                COALESCE(SUM(CASE WHEN estado = 'pendiente' THEN total ELSE 0 END), 0) AS totalPendiente,
-                COUNT(CASE WHEN estado = 'pendiente' THEN 1 END) AS cantidadPendientes,
+                COALESCE(SUM(CASE WHEN LOWER(estado) = 'pendiente' THEN total ELSE 0 END), 0) AS totalPendiente,
+                COUNT(CASE WHEN LOWER(estado) = 'pendiente' THEN 1 END) AS cantidadPendientes,
                 COUNT(CASE WHEN strftime('%Y-%m', fecha) = strftime('%Y-%m', 'now') THEN 1 END) AS facturasDelMes
             FROM facturas
         `;
@@ -91,11 +92,11 @@ class ModelFactura {
         }
     }
     static buildWhereClause(filtros) {
-        let where = "WHERE 1=1"; // Truco clásico de SQL para ir concatenando 'AND' fácilmente
+        let where = "WHERE 1=1"; 
         const args = [];
 
         if (filtros.buscar) {
-            // Ajustá 'nombre_cliente' al nombre real de tu columna en la DB
+            
             where += " AND nombre_cliente LIKE ?";
             args.push(`%${filtros.buscar}%`);
         }
@@ -111,7 +112,6 @@ class ModelFactura {
         }
 
         if (filtros.fecha) {
-            // SQLite/Turso maneja las fechas como texto, DATE() extrae solo la porción YYYY-MM-DD
             where += " AND DATE(fecha) = DATE(?)";
             args.push(filtros.fecha);
         }
