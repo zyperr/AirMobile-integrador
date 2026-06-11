@@ -89,7 +89,7 @@ export const Inventario = () => {
 
                     <button
                         className="admin-btn-nuevo"
-                        onClick={() => setModaleNuevoProducto(!modaleNuevoProducto)}
+                        onClick={() => setModaleNuevoProducto(true)}
                     >
                         <i className="bi bi-plus me-1" />Nuevo Producto
                     </button>
