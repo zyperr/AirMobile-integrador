@@ -41,13 +41,25 @@ class ModelFactura {
 
 
     //Este metodo es para el admin, no se le pasa el usuario porque el admin puede ver todas las facturas
-    static async getFacturas(limit, offset) {
-        const query = `SELECT * FROM facturas ORDER BY fecha DESC 
-    LIMIT ? OFFSET ?`;
+    static async getFacturas(filtros, limit, offset) {
+        const { where, args } = this.buildWhereClause(filtros);
+        const query = `
+        SELECT 
+            f.id,
+            f.total,
+            f.estado,
+            f.fecha,
+            u.nombre AS nombre_cliente
+        FROM facturas f
+        LEFT JOIN usuarios u ON f.usuario_id = u.id
+        ${where} 
+        ORDER BY f.fecha DESC
+        LIMIT ? OFFSET ?
+    `;
         const { rows } = await db.execute({
             sql: query,
-            args: [limit, offset]
-        })
+            args: [...args, limit, offset]
+        });
         return rows;
     }
     static async obtenerEstadisticas() {
