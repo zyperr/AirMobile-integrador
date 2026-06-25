@@ -73,31 +73,45 @@ const TablaProductos = () => {
       if (precioMin) params.set("precioMin", precioMin);
       if (precioMax) params.set("precioMax", precioMax);
 
-      const respuesta = await ejecutarPeticion(`productos/productos?${params.toString()}`, { method: "GET" });
+      const respuesta = await ejecutarPeticion(`productos/todos?${params.toString()}`, { method: "GET" });
       if (respuesta.exito) setProductos(respuesta.data);
     };
     cargarProductos();
   }, [paginaActual, condicionFiltro, categoriaFiltro, ordenFiltro, busqueda, precioMin, precioMax]);
+
+  const restaurarProducto = async (id) => {
+    const result = await ejecutarPeticion(`productos/restaurar-producto/${id}`, { method: "PUT" });
+    if (result.exito) {
+      setProductos((prev) => ({
+        ...prev,
+        data: prev.data.map((p) => (p.id === id ? { ...p, activo: 1 } : p)),
+      }));
+    } else {
+      alert("No se pudo restaurar el producto. Intentá de nuevo.");
+    }
+  };
 
   const abrirModalEliminar = (id, nombre) => {
     setProductoAEliminar({ id, nombre });
     setModalEliminar(true);
   };
 
-  const confirmarEliminar = async () => {
+const confirmarEliminar = async () => {
     const result = await ejecutarPeticion(`productos/eliminar-producto/${productoAEliminar.id}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
     });
     if (result.exito) {
-      setProductos((prev) => ({ ...prev, data: prev.data.filter((p) => p.id !== productoAEliminar.id) }));
+      setProductos((prev) => ({
+        ...prev,
+        data: prev.data.map((p) => (p.id === productoAEliminar.id ? { ...p, activo: 0 } : p)),
+      }));
     } else {
       alert("No se pudo eliminar el producto. Intentá de nuevo.");
     }
     setModalEliminar(false);
     setProductoAEliminar(null);
   };
-
+  
   const abrirModalEditar = (id) => {
     const producto = productos.data.find((p) => p.id === id);
     setProductoAEditar(producto);
@@ -335,8 +349,10 @@ const TablaProductos = () => {
             imagen_url={producto.imagen_url[0]}
             nombre_producto={producto.nombre_producto}
             precio={producto.precio}
+            activo={producto.activo}
             onEliminar={(id) => abrirModalEliminar(id, producto.nombre_producto)}
             onEditar={abrirModalEditar}
+            onRestaurar={restaurarProducto}
           />
         ))
       )}

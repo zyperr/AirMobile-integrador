@@ -517,6 +517,27 @@
     color: #1a3a6b;
     background-color: #e0e7ff;
 }
+
+.tabla-btn-restaurar {
+    background: transparent;
+    border: none;
+    color: #20a04f;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    transition: color 0.2s, background 0.2s;
+}
+
+.tabla-btn-restaurar:hover {
+    color: #47ee84;
+    background-color: #dcfce7;
+}
+
+.tabla-fila-inactiva {
+    opacity: 0.55;
+    background-color: #f9fafb;
+}
 /*---CARGA MASIVA DE PRODUCTOS---*/
 
 .carga-card {

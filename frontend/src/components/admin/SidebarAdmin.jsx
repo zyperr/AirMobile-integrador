@@ -22,15 +22,6 @@ const SidebarAdmin = ({ menuitems }) => {
                 </ul>
             </nav>
 
-            <div className="sidebar-footer">
-                <ul className="list-unstyled mt-3 m-0">
-                    <li>
-                        <button className="sidebar-link bg-transparent border-0">
-                            <i className="bi bi-question-circle me-2" />Centro de Ayuda
-                        </button>
-                    </li>
-                </ul>
-            </div>
 
         </aside>
     );

@@ -150,6 +150,114 @@ class ModelProductos {
         return result;
     }
 
+    static async getAllAdmin(filtros, limit, offset) {
+    try {
+        let sql = "SELECT * FROM productos WHERE 1=1"
+        let args = []
+        let sqlOrderBy = "ORDER BY fecha_creacion DESC";
+
+        if (filtros.orden === "asc") {
+            sqlOrderBy = "ORDER BY fecha_creacion asc";
+        }
+        if (filtros.bateriaMin) {
+            sql += " AND bateria >= ?";
+            args.push(Number(filtros.bateriaMin));
+        }
+        if (filtros.categoria) {
+            sql += " AND categoria LIKE ?"
+            args.push(`%${filtros.categoria}%`)
+        }
+        if (filtros.condicion) {
+            sql += " AND condicion LIKE ?"
+            args.push(`%${filtros.condicion}%`)
+        }
+        if (filtros.capacidad) {
+            sql += " AND capacidad LIKE ?";
+            args.push(`%"${filtros.capacidad}"%`);
+        }
+        if (filtros.precioMin) {
+            sql += " AND precio >= ?";
+            args.push(Number(filtros.precioMin));
+        }
+        if (filtros.precioMax) {
+            sql += " AND precio <= ?";
+            args.push(Number(filtros.precioMax));
+        }
+        if (filtros.busqueda) {
+            sql += " AND nombre_producto LIKE ?";
+            args.push(`%${filtros.busqueda}%`);
+        }
+
+        sql += ` ${sqlOrderBy} LIMIT ? OFFSET ?`;
+        args.push(limit, offset);
+
+        const result = await db.execute({ sql: sql, args: args });
+        return result.rows
+    } catch (err) {
+        console.error("Error en ProductoModel.getAllAdmin:", err);
+        throw err;
+    }
+}
+
+static async countAllAdmin(filtros) {
+    try {
+        let sql = "SELECT COUNT(*) as total FROM productos WHERE 1=1"
+        let args = []
+
+        if (filtros.categoria) {
+            sql += " AND categoria LIKE ?"
+            args.push(`%${filtros.categoria}%`)
+        }
+        if (filtros.capacidad) {
+            sql += " AND capacidad LIKE ?";
+            args.push(`%"${filtros.capacidad}"%`);
+        }
+        if (filtros.condicion) {
+            sql += " AND condicion LIKE ?"
+            args.push(`%${filtros.condicion}%`)
+        }
+        if (filtros.bateriaMin) {
+            sql += " AND bateria >= ?";
+            args.push(Number(filtros.bateriaMin));
+        }
+        if (filtros.precioMin) {
+            sql += " AND precio >= ?";
+            args.push(Number(filtros.precioMin));
+        }
+        if (filtros.precioMax) {
+            sql += " AND precio <= ?";
+            args.push(Number(filtros.precioMax));
+        }
+        if (filtros.busqueda) {
+            sql += " AND nombre_producto LIKE ?";
+            args.push(`%${filtros.busqueda}%`);
+        }
+
+        const result = await db.execute({ sql: sql, args: args });
+        return result.rows[0].total;
+    } catch (err) {
+        console.error("Error en ProductoModel.countAllAdmin:", err);
+        throw err;
+    }
+}
+
+static async restoreProduct(id) {
+    try {
+        const result = await db.execute({
+            sql: "UPDATE productos SET activo = 1 WHERE id = ? AND activo = 0",
+            args: [id]
+        })
+
+        if (result.rowsAffected === 0) {
+            return { success: false, message: "No se ha encontrado el producto o ya está activo" }
+        }
+        return { success: true, message: "Se ha restaurado correctamente" }
+    } catch (err) {
+        console.error("Error al restaurar producto:", err);
+        return { success: false, message: "Error interno del servidor" }
+    }
+}
+
     static async deleteProduct(id) {
         try {
 
