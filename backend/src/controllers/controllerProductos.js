@@ -336,7 +336,7 @@ export const bulkUpload = async (req, res) => {
 
         return res.status(200).json({
             exito: true,
-            message: `Se cargaron ${cantidadInsertada} productos a la base de datos.`,
+            message: `Carga completada: ${cantidadInsertada} productos procesados (nuevos + actualizados).`,
         });
 
     } catch (error) {
