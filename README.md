@@ -11,14 +11,15 @@
 - [Estructura del Proyecto](#estructura-del-proyecto)
 - [Variables de Entorno](#variables-de-entorno)
 - [Instalación y Ejecución](#instalación-y-ejecución)
+  - [Base de datos — desarrollo vs producción](#base-de-datos--desarrollo-vs-producción)
 - [API — Endpoints](#api--endpoints)
 - [Funcionalidades](#funcionalidades)
 - [Pagos con Mercado Pago + ngrok](#pagos-con-mercado-pago--ngrok)
 - [Asistente Virtual (N8N + Ollama)](#asistente-virtual-n8n--ollama)
   - [Instalación de Ollama](#1-instalación-de-ollama)
-  - [Descargar el modelo Qwen3:8b](#2-descargar-el-modelo-qwen38b)
+  - [Descargar el modelo qwen3:4b](#2-descargar-el-modelo-qwen34b)
   - [Correr N8N](#3-correr-n8n)
-  - [Configuración del workflow](#4-configuración-del-workflow)
+  - [Importar el workflow](#4-importar-el-workflow)
 
 ---
 
@@ -44,7 +45,8 @@
 | Tecnología | Uso |
 |---|---|
 | Node.js + Express 5 | Servidor HTTP y routing |
-| Turso (LibSQL) | Base de datos SQL en la nube |
+| Turso (LibSQL) | Base de datos SQL en la nube (producción) |
+| SQLite local (`@libsql/client`) | Base de datos local para desarrollo |
 | Cloudinary | Almacenamiento de imágenes de productos |
 | Nodemailer | Envío de emails (verificación, recuperación de contraseña, confirmación de compra) |
 | JWT (jsonwebtoken) | Access tokens de corta duración (15 min) |
@@ -73,9 +75,10 @@
 ```
 AirMobile-integrador/
 ├── backend/
+│   ├── dev.db                   # Base de datos SQLite local (desarrollo, ignorada por git)
 │   └── src/
 │       ├── config/
-│       │   ├── conexion.js          # Conexión a Turso (LibSQL)
+│       │   ├── conexion.js          # Conexión dinámica: Turso (prod) o SQLite local (dev)
 │       │   ├── cloudinarySetup.js   # Configuración de Cloudinary
 │       │   └── initDB.js            # Inicialización de tablas
 │       ├── controllers/             # Lógica de negocio
@@ -105,6 +108,7 @@ AirMobile-integrador/
 │       │   ├── routesPagos.js       # POST /crear-preferencia, POST /webhook
 │       │   └── ...
 │       ├── schemas/                 # Validaciones Joi
+│       ├── seed.js                  # Seed de desarrollo: crea tablas + admin + 8 productos
 │       └── utils/
 │           ├── mailer.js            # Incluye email de confirmación de compra
 │           ├── estados.js           # Constantes de estado de factura
@@ -123,6 +127,8 @@ AirMobile-integrador/
 │       │   ├── PagoFallido.jsx
 │       │   └── PagoPendiente.jsx
 │       └── ...
+├── ecommerce-chatbot-v4.json    # Workflow de N8N listo para importar
+├── system_prompt.txt            # System prompt del asistente virtual
 ├── package.json
 ├── vite.config.js
 └── .env
@@ -135,15 +141,21 @@ AirMobile-integrador/
 Crear un archivo `.env` en la **raíz del proyecto** con las siguientes variables:
 
 ```env
-# Base de datos — Turso
-TURSO_TOKEN =
+# Base de datos
+# — Producción (Turso)
+TURSO_URL=libsql://tu-db.aws-us-east-1.turso.io
+TURSO_TOKEN=
+
+# — Desarrollo local (SQLite) → comentá las de arriba y usá esta
+# TURSO_URL=file:./backend/dev.db
+# TURSO_TOKEN=
 
 # Autenticación JWT
-SECRET_KEY =
+SECRET_KEY=
 
 # Nodemailer — Gmail
-MAILER_PASS =
-MAILER_EMAIL =
+MAILER_PASS=
+MAILER_EMAIL=
 
 # Cloudinary — Imágenes
 CLOUDINARY_CLOUD_NAME=
@@ -151,7 +163,7 @@ CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
 
 # Panel de administración
-ADMIN_PASSWORD =
+ADMIN_PASSWORD=
 
 # Mercado Pago
 MP_ACCESS_TOKEN=
@@ -167,14 +179,15 @@ VITE_TEST_N8N=
 
 | Variable | Descripción |
 |---|---|
-| `TURSO_TOKEN` | Token de autenticación de la base de datos Turso |
+| `TURSO_URL` | URL de la base de datos. `libsql://...` para Turso, `file:./backend/dev.db` para local |
+| `TURSO_TOKEN` | Token de autenticación de Turso. Dejar vacío en desarrollo local |
 | `SECRET_KEY` | Clave secreta para firmar y verificar los access tokens JWT |
 | `MAILER_EMAIL` | Dirección Gmail desde la que se envían los correos |
 | `MAILER_PASS` | Contraseña de aplicación de Gmail |
 | `CLOUDINARY_CLOUD_NAME` | Nombre del cloud en Cloudinary |
 | `CLOUDINARY_API_KEY` | API Key de Cloudinary |
 | `CLOUDINARY_API_SECRET` | API Secret de Cloudinary |
-| `ADMIN_PASSWORD` | Contraseña inicial del administrador (usada en seed) |
+| `ADMIN_PASSWORD` | Contraseña del administrador creado por el seed |
 | `MP_ACCESS_TOKEN` | Access token de Mercado Pago (productivo o de prueba) |
 | `VITE_N8N_WEBHOOK_URL` | URL del webhook de N8N para el asistente virtual |
 | `VITE_TEST_N8N` | URL alternativa de N8N para entorno de pruebas |
@@ -188,13 +201,12 @@ VITE_TEST_N8N=
 ### Prerequisitos
 
 - Node.js 18+
-- Cuenta en [Turso](https://turso.tech/)
 - Cuenta en [Cloudinary](https://cloudinary.com/)
 - Cuenta en Gmail con contraseña de aplicación habilitada
 - Cuenta en [Mercado Pago Developers](https://www.mercadopago.com.ar/developers) con una aplicación creada
 - [ngrok](https://ngrok.com/) instalado y autenticado (ver [sección de pagos](#pagos-con-mercado-pago--ngrok))
-- [Ollama](https://ollama.com/) instalado con el modelo `qwen3:8b` descargado (ver [sección del asistente](#asistente-virtual-n8n--ollama))
-- [N8N](https://n8n.io/) corriendo localmente con el workflow configurado (ver [sección del asistente](#asistente-virtual-n8n--ollama))
+- [Ollama](https://ollama.com/) instalado con el modelo `qwen3:4b` descargado (ver [sección del asistente](#asistente-virtual-n8n--ollama))
+- [N8N](https://n8n.io/) corriendo localmente con el workflow importado (ver [sección del asistente](#asistente-virtual-n8n--ollama))
 
 ### Pasos
 
@@ -208,7 +220,7 @@ npm install
 
 # 3. Crear el archivo .env en la raíz con las variables indicadas arriba
 
-# 4. Inicializar la base de datos y cargar datos de prueba
+# 4. Correr el seed (crea las tablas + admin + 8 productos de prueba)
 npm run dev:seed
 
 # 5. Ejecutar el backend (en una terminal)
@@ -223,13 +235,43 @@ ngrok http 3000
 
 El backend corre en `http://localhost:3000` y el frontend en `http://localhost:5173`.
 
+---
+
+### Base de datos — desarrollo vs producción
+
+El proyecto usa `@libsql/client` tanto para Turso en la nube como para SQLite local. El switch se hace únicamente desde el `.env`, sin tocar ningún archivo de código:
+
+**Desarrollo local (recomendado):**
+```env
+TURSO_URL=file:./backend/dev.db
+TURSO_TOKEN=
+```
+Se crea el archivo `backend/dev.db` automáticamente al correr el seed o el backend. No requiere cuenta en Turso.
+
+**Producción (Turso):**
+```env
+TURSO_URL=libsql://tu-db.aws-us-east-1.turso.io
+TURSO_TOKEN=tu_token_de_turso
+```
+
+> 💡 Turso permite exportar la base de datos completa desde su panel. Podés descargarla y usarla directamente como `dev.db` para tener los datos reales en local sin correr el seed.
+
+Asegurate de que el `.gitignore` incluya:
+```
+backend/dev.db
+backend/dev.db-shm
+backend/dev.db-wal
+```
+
+---
+
 ### Scripts disponibles
 
 | Comando | Descripción |
 |---|---|
 | `npm run dev:backend` | Inicia el servidor Express con hot-reload |
 | `npm run dev:frontend` | Inicia el servidor de desarrollo Vite |
-| `npm run dev:seed` | Carga datos iniciales en la base de datos |
+| `npm run dev:seed` | Crea las tablas e inserta admin + 8 productos de prueba |
 | `npm run build` | Genera el build de producción del frontend |
 | `npm run preview` | Previsualiza el build de producción |
 | `npm run lint` | Ejecuta ESLint |
@@ -443,16 +485,27 @@ El campo `mp_payment_id` en la tabla `facturas` tiene restricción `UNIQUE`. Si 
 
 ## Asistente Virtual (N8N + Ollama)
 
-El proyecto incluye un chatbot flotante en toda la aplicación que conecta con un workflow de **N8N** orquestado localmente. El modelo de lenguaje que alimenta el asistente es **Qwen3:8b**, servido a través de **Ollama**.
+El proyecto incluye un chatbot flotante en toda la aplicación que conecta con un workflow de **N8N** orquestado localmente. El modelo de lenguaje que alimenta el asistente es **qwen3:4b**, servido a través de **Ollama**.
 
 El asistente está configurado como vendedor especializado de AirMobile con dos herramientas conectadas a la base de datos real:
 
-- **Buscar Producto** — Se activa cuando el usuario menciona una categoría o modelo específico. Busca por nombre, modelo o categoría y devuelve precios e IDs.
-- **Consultar Catálogo General** — Se activa ante consultas genéricas. Trae hasta 50 productos agrupados por categoría.
+- **Buscar Producto** — Se activa cuando el usuario menciona una categoría, modelo específico, o hace una consulta con perfil o presupuesto definido.
+- **Consultar Catálogo General** — Se activa ante consultas genéricas sin categoría ni perfil. Trae hasta 12 productos agrupados por categoría.
+
+### Configuración del modelo
+
+El workflow usa `qwen3:4b` con las siguientes opciones:
+
+| Parámetro | Valor | Motivo |
+|---|---|---|
+| `temperature` | `0.3` | Respuestas más deterministas y precisas |
+| `numCtx` | `4096` | Contexto suficiente para procesar el JSON de productos sin truncar |
+
+El system prompt incluye `/no_think` como primera línea para desactivar el modo de razonamiento interno de qwen3 y reducir la latencia de respuesta.
 
 Las variables de entorno necesarias para el chat son:
-- `VITE_N8N_WEBHOOK_URL` — URL del webhook de producción
-- `VITE_TEST_N8N` — URL del webhook para pruebas/desarrollo
+- `VITE_N8N_WEBHOOK_URL` — URL del webhook activo de N8N
+- `VITE_TEST_N8N` — URL del webhook de prueba de N8N
 
 ---
 
@@ -474,17 +527,22 @@ ollama --version
 
 ---
 
-### 2. Descargar el modelo Qwen3:8b
+### 2. Descargar el modelo qwen3:4b
 
 ```bash
-ollama pull qwen3:8b
+ollama pull qwen3:4b
 ```
 
-> La descarga pesa aproximadamente **5 GB**.
+> La descarga pesa aproximadamente **2.6 GB**.
 
 Para verificar que el modelo está disponible:
 ```bash
 ollama list
+```
+
+Para verificar que está corriendo en GPU:
+```bash
+ollama ps
 ```
 
 Para iniciar Ollama manualmente si no corre como servicio:
@@ -510,18 +568,16 @@ n8n
 
 ---
 
-### 4. Configuración del workflow
+### 4. Importar el workflow
 
-Una vez dentro del editor de N8N (`http://localhost:5678`):
+El archivo `ecommerce-chatbot-v4.json` en la raíz del proyecto contiene el workflow listo para usar.
 
-1. Importá el workflow del proyecto.
-2. Configurá el nodo de **Ollama** apuntando a `http://localhost:11434` y seleccionando el modelo `qwen3:8b`.
-3. Configurá el nodo de **Webhook** como trigger y pegá la URL resultante en las variables de entorno:
+1. Abrí N8N en `http://localhost:5678`
+2. Ir a **Settings → Import workflow** y seleccioná el archivo `ecommerce-chatbot-v4.json`
+3. Configurá las credenciales del nodo **Ollama Chat Model** apuntando a `http://localhost:11434`
+4. Copiá las URLs del webhook y pegálas en el `.env`:
    ```env
    VITE_N8N_WEBHOOK_URL=http://localhost:5678/webhook/tu-id-de-webhook
    VITE_TEST_N8N=http://localhost:5678/webhook-test/tu-id-de-webhook
    ```
-4. Conectá los tools a los endpoints del backend:
-   - `GET http://localhost:3000/api/productos/productos`
-   - `GET http://localhost:3000/api/productos/:id`
-5. Activá el workflow con el switch **Active** en la esquina superior derecha.
+5. Activá el workflow con el switch **Active** en la esquina superior derecha
