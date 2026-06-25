@@ -36,16 +36,6 @@ const SidebarAdmin = ({ menuitems, isCollapsed, toggleSidebar }) => {
                 </ul>
             </nav>
 
-            <div className="sidebar-footer p-2">
-                <button 
-                    className="sidebar-item text-decoration-none d-flex align-items-center btn btn-sm btn-light border-0 text-muted shadow-sm"
-                    title={isCollapsed ? "Centro de Ayuda" : ""}
-                >
-                    <i className={`bi bi-question-circle fs-5 ${isCollapsed ? "mx-auto m-0" : "me-2"}`} />
-                    {!isCollapsed && <span>Centro de Ayuda</span>}
-                </button>
-            </div>
-
         </aside>
     );
 }
