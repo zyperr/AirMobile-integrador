@@ -175,7 +175,7 @@ const CargaMasivaAdmin = () => {
                 </div>
 
                 <p className="carga-info mt-3">
-                    TAMAÑO MÁXIMO: 25 MB • FORMATOS: .CSV
+                    TAMAÑO MÁXIMO: 25 MB • FORMATOS: .CSV - Separado por comas
                 </p>
             </div>
         </div>
