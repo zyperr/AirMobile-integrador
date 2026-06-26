@@ -6,8 +6,9 @@ dotenv.config();
 
 export async function obtenerDb() {
     const turso = createClient({
-        url : "libsql://usuarios-zyperr.aws-us-east-1.turso.io",
-        authToken: process.env.TURSO_TOKEN,
+        url : process.env.TURSO_URL_DEV,
+        authToken: process.env.TURSO_TOKEN_DEV,
     })
     return turso
 } 
+

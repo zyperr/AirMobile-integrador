@@ -191,7 +191,8 @@
 .header-admin {
     position: fixed;
     top: 0;
-    left: 240px;    /* mismo ancho que el sidebar,si se cambio el ancho del sidebar,se cambia este */
+    left: 240px;
+    /* mismo ancho que el sidebar,si se cambio el ancho del sidebar,se cambia este */
     right: 0;
     height: 64px;
     background-color: #ffffff;
@@ -226,6 +227,7 @@
 .header-input::placeholder {
     color: #9ca3af;
 }
+
 /* Íconos de acción */
 .header-icono-btn {
     background: transparent;
@@ -251,6 +253,7 @@
     height: 32px;
     background-color: #e5e7eb;
 }
+
 /* Avatar del admin */
 .header-avatar {
     width: 38px;
@@ -263,6 +266,7 @@
     justify-content: center;
     font-size: 1.1rem;
 }
+
 /* Info del perfil */
 .header-perfil-info {
     line-height: 1.2;
@@ -280,6 +284,7 @@
     font-size: 0.75rem;
     color: #6b7280;
 }
+
 /*--ESTADOS DE LOS PRODUCTOS(nuevo,recondicionado,usado)--*/
 
 .badge-estado {
@@ -369,9 +374,17 @@
 }
 
 /* Proporciones de columnas — una sola vez */
-.tabla-col-nombre { flex: 2; }
-.tabla-col-estado { flex: 1; }
-.tabla-col-precio { flex: 1; }
+.tabla-col-nombre {
+    flex: 2;
+}
+
+.tabla-col-estado {
+    flex: 1;
+}
+
+.tabla-col-precio {
+    flex: 1;
+}
 
 .tabla-fila {
     padding: 16px 24px;
@@ -379,8 +392,13 @@
     transition: background 0.15s;
 }
 
-.tabla-fila:hover { background-color: #f9fafb; }
-.tabla-fila:last-of-type { border-bottom: none; }
+.tabla-fila:hover {
+    background-color: #f9fafb;
+}
+
+.tabla-fila:last-of-type {
+    border-bottom: none;
+}
 
 .tabla-imagen {
     width: 44px;
@@ -518,6 +536,7 @@
     background-color: #e0e7ff;
 }
 
+<<<<<<< HEAD
 .tabla-btn-restaurar {
     background: transparent;
     border: none;
@@ -538,6 +557,8 @@
     opacity: 0.55;
     background-color: #f9fafb;
 }
+=======
+>>>>>>> c3b879160c5f356158615e63aa867f39b457dd6c
 /*---CARGA MASIVA DE PRODUCTOS---*/
 
 .carga-card {
@@ -645,4 +666,79 @@
     color: #9ca3af;
     letter-spacing: 0.3px;
     margin: 0;
+}
+
+
+.admin-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar-admin {
+    width: 250px;
+    transition: width 0.3s ease-in-out;
+    background-color: white;
+    border-right: 1px solid #dee2e6;
+}
+
+.sidebar-admin.collapsed {
+    width: 80px;
+}
+
+.admin-contenido {
+    transition: all 0.3s ease-in-out;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+.sidebar-item {
+    padding: 10px 20px;
+    transition: padding 0.3s;
+}
+
+.sidebar-admin.collapsed .sidebar-item {
+    padding: 10px 0;
+    justify-content: center;
+}
+
+/* 1. Fijamos el Sidebar a la izquierda para que flote siempre */
+.sidebar-admin {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 240px;
+    z-index: 1050;
+    /* Z-index alto para que tape todo MENOS los modales */
+    background-color: white;
+    border-right: 1px solid #dee2e6;
+    transition: width 0.3s ease-in-out;
+}
+
+.sidebar-admin.collapsed {
+    width: 80px;
+    /* Ancho cuando está cerrado */
+}
+
+/* 2. MÁRGENES DINÁMICOS PARA EL HEADER Y FOOTER GLOBALES */
+/* Nota: Asegurate de cambiar "header" y "footer" por las clases reales que uses (.mi-header, etc) si es necesario */
+
+body.sidebar-abierto .navbar,
+body.sidebar-abierto footer,
+body.sidebar-abierto .admin-contenido {
+    margin-left: 240px !important;
+    transition: margin-left 0.3s ease-in-out;
+}
+
+body.sidebar-colapsado .navbar,
+body.sidebar-colapsado footer,
+body.sidebar-colapsado .admin-contenido {
+    margin-left: 80px !important;
+    transition: margin-left 0.3s ease-in-out;
+}
+
+/* 3. Aseguramos que el main content ocupe el resto de la pantalla */
+.admin-contenido {
+    width: auto;
+    min-height: 100vh;
 }

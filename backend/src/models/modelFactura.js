@@ -92,11 +92,11 @@ class ModelFactura {
         }
     }
     static buildWhereClause(filtros) {
-        let where = "WHERE 1=1"; 
+        let where = "WHERE 1=1";
         const args = [];
 
         if (filtros.buscar) {
-            
+
             where += " AND nombre_cliente LIKE ?";
             args.push(`%${filtros.buscar}%`);
         }
@@ -112,8 +112,8 @@ class ModelFactura {
         }
 
         if (filtros.fecha) {
-            where += " AND DATE(fecha) = DATE(?)";
-            args.push(filtros.fecha);
+            where += " AND fecha LIKE ?";
+            args.push(`${filtros.fecha}%`);
         }
 
         return { where, args };

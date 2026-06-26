@@ -3,13 +3,18 @@ import { useApi } from '../../hooks/useApi';
 import { TarjetaFactura } from './TarjetaFactura';
 import { FilaFactura } from './FilaFacturas';
 import Paginacion from '../common/Paginacion';
+import { DatePickerPersonalizado } from '../common/DatePicker';
 
 const ESTADOS = ['Pendiente', 'Completado', 'Enviado', 'Cancelado', 'Reembolsado'];
 
 export const Facturas = () => {
     const [filtroEstado, setFiltroEstado] = useState('');
     const [busqueda, setBusqueda] = useState('');
-    const [inputBusqueda, setInputBusqueda] = useState(''); // valor del input antes de buscar
+    const [inputBusqueda, setInputBusqueda] = useState('');
+
+    // --- NUEVO ESTADO PARA LA FECHA ---
+    const [fechaFiltro, setFechaFiltro] = useState('');
+
     const [facturas, setFacturas] = useState([]);
     const [paginacion, setPaginacion] = useState({});
     const [paginaActual, setPaginaActual] = useState(1);
@@ -25,9 +30,10 @@ export const Facturas = () => {
             if (response.exito) setStats(response.data.data);
         };
         cargarEstadisticas();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-    console.log(stats);
-    // Carga facturas cuando cambian filtros o página
+
+    // Carga facturas cuando cambian filtros, página O LA FECHA
     useEffect(() => {
         const cargarFacturas = async () => {
             const params = new URLSearchParams();
@@ -35,6 +41,9 @@ export const Facturas = () => {
             params.set('limit', '10');
             if (filtroEstado) params.set('estado', filtroEstado);
             if (busqueda) params.set('buscar', busqueda);
+
+            // Si hay una fecha seleccionada, la agregamos a la URL (formato YYYY-MM-DD)
+            if (fechaFiltro) params.set('fecha', fechaFiltro);
 
             const respuesta = await fetchFacturas(`facturas/obtener-facturas?${params.toString()}`, {
                 method: 'GET',
@@ -46,11 +55,18 @@ export const Facturas = () => {
             }
         };
         cargarFacturas();
-    }, [paginaActual, filtroEstado, busqueda]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [paginaActual, filtroEstado, busqueda, fechaFiltro]); // dependencias 
 
     const cambiarFiltro = (estado) => {
         setFiltroEstado(prev => prev === estado ? '' : estado); // toggle
         setPaginaActual(1);
+    };
+
+    // Función para manejar el cambio de fecha
+    const cambiarFecha = (nuevaFecha) => {
+        setFechaFiltro(nuevaFecha);
+        setPaginaActual(1); // Siempre que filtramos, volvemos a la página 1
     };
 
     const cambiarPagina = (pagina) => {
@@ -58,8 +74,18 @@ export const Facturas = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    const onEstadoActualizado = (id, nuevoEstado) => {
+    const onEstadoActualizado = async (id, nuevoEstado) => {
+        // 1. Esto actualiza la pastilla de color en la tabla al instante
         setFacturas(prev => prev.map(f => f.id === id ? { ...f, estado: nuevoEstado } : f));
+
+        // 2. ¡AQUÍ ESTÁ LA MAGIA PARA LAS TARJETAS!
+        // Volvemos a pedir las estadísticas al backend de fondo
+        const response = await fetchStats('facturas/estadisticas', { method: 'GET' });
+
+        // 3. Al actualizar el estado 'stats', React empuja los nuevos valores a las Tarjetas
+        if (response.exito) {
+            setStats(response.data.data);
+        }
     };
 
     const handleBuscar = (e) => {
@@ -77,12 +103,19 @@ export const Facturas = () => {
     const formatearDinero = (monto) =>
         new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(monto || 0);
 
+    // Formatear fecha para el badge visual (de YYYY-MM-DD a DD/MM/YYYY)
+    const formatearFechaBadge = (fechaIso) => {
+        if (!fechaIso) return '';
+        const [year, month, day] = fechaIso.split('-');
+        return `${day}/${month}/${year}`;
+    };
+
     const estadoConfig = {
-        Pendiente:   { color: 'text-warning', icono: 'bi-clock' },
-        Completado:  { color: 'text-success', icono: 'bi-check-circle' },
-        Enviado:     { color: 'text-primary',  icono: 'bi-truck' },
-        Cancelado:   { color: 'text-danger',   icono: 'bi-x-circle' },
-        Reembolsado: { color: 'text-secondary',icono: 'bi-arrow-counterclockwise' },
+        Pendiente: { color: 'text-warning', icono: 'bi-clock' },
+        Completado: { color: 'text-success', icono: 'bi-check-circle' },
+        Enviado: { color: 'text-primary', icono: 'bi-truck' },
+        Cancelado: { color: 'text-danger', icono: 'bi-x-circle' },
+        Reembolsado: { color: 'text-secondary', icono: 'bi-arrow-counterclockwise' },
     };
 
     return (
@@ -133,27 +166,37 @@ export const Facturas = () => {
             {/* BARRA DE BÚSQUEDA + FILTROS */}
             <div className="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center gap-3 mb-4">
 
-                {/* Búsqueda por nombre de cliente */}
-                <form onSubmit={handleBuscar} className="d-flex gap-2" style={{ maxWidth: 360, width: '100%' }}>
-                    <div className="input-group shadow-sm">
-                        <span className="input-group-text bg-white border-end-0">
-                            <i className="bi bi-search text-muted" />
-                        </span>
-                        <input
-                            type="text"
-                            className="form-control border-start-0 border-end-0"
-                            placeholder="Buscar por cliente..."
-                            value={inputBusqueda}
-                            onChange={e => setInputBusqueda(e.target.value)}
-                        />
-                        {inputBusqueda && (
-                            <button type="button" className="input-group-text bg-white border-start-0" onClick={limpiarBusqueda}>
-                                <i className="bi bi-x text-muted" />
-                            </button>
-                        )}
-                    </div>
-                    <button type="submit" className="btn btn-dark px-3">Buscar</button>
-                </form>
+                {/* Agrupamos la Búsqueda y la Fecha juntos */}
+                <div className="d-flex flex-column flex-md-row gap-2" style={{ flexGrow: 1, maxWidth: '600px' }}>
+                    {/* Búsqueda por nombre de cliente */}
+                    <form onSubmit={handleBuscar} className="d-flex gap-2" style={{ flexGrow: 1 }}>
+                        <div className="input-group shadow-sm">
+                            <span className="input-group-text bg-white border-end-0">
+                                <i className="bi bi-search text-muted" />
+                            </span>
+                            <input
+                                type="text"
+                                className="form-control border-start-0 border-end-0"
+                                placeholder="Buscar por cliente..."
+                                value={inputBusqueda}
+                                onChange={e => setInputBusqueda(e.target.value)}
+                            />
+                            {inputBusqueda && (
+                                <button type="button" className="btn btn-white border border-start-0 bg-white" onClick={limpiarBusqueda}>
+                                    <i className="bi bi-x text-muted" />
+                                </button>
+                            )}
+                        </div>
+                        <button type="submit" className="btn btn-dark px-3">Buscar</button>
+                    </form>
+
+                    {/* Filtro de Fecha */}
+                    <DatePickerPersonalizado
+                        fecha={fechaFiltro}
+                        onChange={cambiarFecha}
+                        onClear={() => cambiarFecha('')}
+                    />
+                </div>
 
                 {/* Píldoras de estado */}
                 <div className="overflow-x-auto pb-1" style={{ whiteSpace: 'nowrap' }}>
@@ -221,9 +264,9 @@ export const Facturas = () => {
                             ) : facturas.length === 0 ? (
                                 <tr>
                                     <td colSpan={6} className="text-center text-muted py-5" style={{ fontSize: 14 }}>
-                                        {busqueda
-                                            ? `No se encontraron facturas para "${busqueda}"`
-                                            : 'No hay facturas que coincidan con el filtro seleccionado.'
+                                        {busqueda || fechaFiltro
+                                            ? 'No se encontraron facturas para los filtros aplicados.'
+                                            : 'No hay facturas que coincidan con el estado seleccionado.'
                                         }
                                     </td>
                                 </tr>
@@ -240,12 +283,17 @@ export const Facturas = () => {
                     </table>
                 </div>
 
-                {/* PAGINACIÓN */}
+                {/* PAGINACIÓN E INDICADORES DE FILTRO */}
                 <div className="d-flex flex-column flex-md-row align-items-center justify-content-between gap-3 p-4 border-top text-muted" style={{ fontSize: '0.85rem' }}>
-                    <span>
+                    <span className="d-flex flex-wrap align-items-center gap-2">
                         Mostrando {facturas.length} de {paginacion.totalResultados || 0} facturas
-                        {filtroEstado && <span className="ms-2 badge bg-dark">{filtroEstado}</span>}
-                        {busqueda && <span className="ms-2 badge bg-secondary">"{busqueda}"</span>}
+
+                        {/* Badges visuales para que el usuario sepa qué filtros tiene activos */}
+                        {filtroEstado && <span className="badge bg-dark fw-normal px-2 py-1">{filtroEstado}</span>}
+                        {busqueda && <span className="badge bg-secondary fw-normal px-2 py-1">"{busqueda}"</span>}
+                        {fechaFiltro && <span className="badge bg-info text-dark fw-normal px-2 py-1">
+                            <i className="bi bi-calendar me-1"></i> {formatearFechaBadge(fechaFiltro)}
+                        </span>}
                     </span>
                     <Paginacion
                         paginaActual={paginaActual}

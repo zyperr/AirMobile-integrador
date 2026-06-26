@@ -314,34 +314,73 @@ static async restoreProduct(id) {
         }
     }
 
-    static async insertMany(productosArray) {
+static async insertMany(productosArray) {
     try {
         if (!productosArray || productosArray.length === 0) return 0;
 
-        const sentenciasBatch = productosArray.map(producto => {
-            return {
-                sql: `INSERT INTO productos 
-                      (nombre_producto, categoria, precio, capacidad, descripcion, imagen_url, condicion, bateria) 
-                      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-                args: [
-                    producto.nombre_producto,
-                    producto.categoria,
-                    producto.precio,
-                    JSON.stringify(producto.capacidad ?? []),   // ✅ nunca undefined
-                    producto.descripcion ?? "",                  // ✅ nunca undefined
-                    JSON.stringify(producto.imagen_url ?? []),  // ✅ nunca undefined
-                    producto.condicion,
-                    producto.bateria ?? null                     // ✅ null si no aplica
-                ]
-            };
-        });
+        let insertados = 0;
+        let actualizados = 0;
 
-        const resultados = await db.batch(sentenciasBatch, "write");
-        return resultados.length;
+        for (const producto of productosArray) {
+            // 1. Buscamos si ya existe un producto con ese nombre (activo o no)
+            const { rows } = await db.execute({
+                sql: `SELECT id FROM productos WHERE LOWER(nombre_producto) = LOWER(?) LIMIT 1`,
+                args: [producto.nombre_producto]
+            });
+
+            if (rows.length > 0) {
+                // 2. Ya existe → actualizamos
+                const id = rows[0].id;
+                await db.execute({
+                    sql: `UPDATE productos SET
+                            categoria   = ?,
+                            precio      = ?,
+                            capacidad   = ?,
+                            descripcion = ?,
+                            imagen_url  = ?,
+                            condicion   = ?,
+                            bateria     = ?,
+                            activo      = 1
+                          WHERE id = ?`,
+                    args: [
+                        producto.categoria,
+                        producto.precio,
+                        JSON.stringify(producto.capacidad ?? []),
+                        producto.descripcion ?? '',
+                        JSON.stringify(producto.imagen_url ?? []),
+                        producto.condicion,
+                        producto.bateria ?? null,
+                        id
+                    ]
+                });
+                actualizados++;
+            } else {
+                // 3. No existe → insertamos
+                await db.execute({
+                    sql: `INSERT INTO productos 
+                            (nombre_producto, categoria, precio, capacidad, descripcion, imagen_url, condicion, bateria, activo)
+                          VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+                    args: [
+                        producto.nombre_producto,
+                        producto.categoria,
+                        producto.precio,
+                        JSON.stringify(producto.capacidad ?? []),
+                        producto.descripcion ?? '',
+                        JSON.stringify(producto.imagen_url ?? []),
+                        producto.condicion,
+                        producto.bateria ?? null,
+                    ]
+                });
+                insertados++;
+            }
+        }
+
+        console.log(`✅ Carga masiva: ${insertados} insertados, ${actualizados} actualizados`);
+        return insertados + actualizados;
 
     } catch (error) {
-        console.error("Error en ProductoModel.insertMany:", error);
-        throw new Error("Error al insertar los productos en la base de datos.");
+        console.error('Error en ProductoModel.insertMany:', error);
+        throw new Error('Error al insertar los productos en la base de datos.');
     }
 }
 }

@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL;
+const webhookUrl = "http://localhost:5678/webhook/dfff64e4-9189-477f-91c1-61a901a87dd6";
 
 
 const getSessionData = (usuarioPerfil) => {
