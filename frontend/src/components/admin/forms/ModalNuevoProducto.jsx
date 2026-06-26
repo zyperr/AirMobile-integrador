@@ -69,7 +69,7 @@ const ModalNuevoProducto = ({ isOpen, onClose }) => {
         formData.append("precio", data.precio);
         formData.append("categoria", data.categoria);
         formData.append("condicion", data.condicion);
-
+        
         if (data.descripcion) formData.append("descripcion", data.descripcion);
 
         if (data.capacidad && data.capacidad.length > 0) {
@@ -87,20 +87,9 @@ const ModalNuevoProducto = ({ isOpen, onClose }) => {
                 formData.append("imagen_url", imagen);
             });
         }
-        console.log("Datos enviados al backend:", {
-            nombre_producto: data.nombre_producto,
-            precio: data.precio,
-            categoria: data.categoria,
-            condicion: data.condicion,
-            descripcion: data.descripcion,
-            capacidad: data.capacidad,
-            bateria: data.bateria,
-            imagen_url: data.imagen_url
-        });
         const respuesta = await ejecutarPeticion("productos/agregar-producto", {
             method: "POST",
             body: formData
-
         });
         console.log("Respuesta del servidor:", respuesta);
         if (respuesta.exito) {
@@ -167,7 +156,7 @@ const ModalNuevoProducto = ({ isOpen, onClose }) => {
                                                 step="0.01"
                                                 min="0"
                                                 name="precio"
-                                                register={Number(register)}
+                                                register={register}
                                                 errors={errors.precio}
                                                 reglas={{ required: "El precio es obligatorio" }}
                                                 placeholder="0.00"

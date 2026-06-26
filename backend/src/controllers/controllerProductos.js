@@ -137,14 +137,15 @@ export const crearProducto = async (req, res) => {
 
         const datosAValidar = {
             ...req.body,
+            precio: Number(req.body.precio),
             capacidad: capacidadArreglo,
             imagen_url: urlsImagenes.length > 0 ? urlsImagenes : []
         };
 
-        console.log("Datos a validar con JOI:", datosAValidar);
+        
 
         const { error, value } = schemaProductos.validate(datosAValidar, { abortEarly: false });
-        console.log(urlsImagenes)
+        
         if (error) {
 
             if (urlsImagenes.length > 0) {
