@@ -268,10 +268,79 @@ export const eliminarProducto = async (req, res) => {
             return res.status(404).json({ exito: false, message: `No se ha encontrado el producto con el id: ${idProducto}` })
         }
 
-        return res.status(200).json({ productoAEliminar, exito: false, message: "Se elimino con exito el producto" });
+        return res.status(200).json({ productoAEliminar, exito: true, message: "Se elimino con exito el producto" });
     } catch (err) {
         console.error(err)
         return res.status(500).json({ exito: false, message: "Error al eliminar un producto" })
+    }
+}
+
+export const obtenerProductosAdmin = async (req, res) => {
+    const { error, value } = schemaFiltrosProductos.validate(req.query);
+
+    if (error) {
+        return res.status(400).json({ exito: false, error: error.details[0].message });
+    }
+    try {
+        const filtros = {
+            categoria: value.categoria,
+            condicion: value.condicion,
+            capacidad: value.capacidad,
+            precioMin: value.precioMin,
+            precioMax: value.precioMax,
+            busqueda: value.busqueda,
+            orden: value.orden,
+            bateriaMin: value.bateriaMin
+        };
+
+        const page = Math.max(1, parseInt(req.query.page) || 1);
+        const limit = Math.max(1, parseInt(req.query.limit) || 10);
+        const offset = (page - 1) * limit;
+
+        const [productos, totalResultados] = await Promise.all([
+            ModelProductos.getAllAdmin(filtros, limit, offset),
+            ModelProductos.countAllAdmin(filtros)
+        ]);
+
+        const totalPaginas = Math.ceil(totalResultados / limit);
+
+        const productosParseados = productos.map((producto) => ({
+            ...producto,
+            imagen_url: JSON.parse(producto.imagen_url),
+            capacidad: JSON.parse(producto.capacidad)
+        }))
+
+        return res.status(200).json({
+            exito: true,
+            paginacion: {
+                paginaActual: page,
+                limitePorPagina: limit,
+                totalResultados: totalResultados,
+                totalPaginas: totalPaginas,
+                tienePaginaSiguiente: page < totalPaginas,
+                tienePaginaAnterior: page > 1
+            },
+            data: productosParseados
+        });
+    } catch (err) {
+        console.error(err)
+        return res.status(500).json({ exito: false, message: "Error interno del servidor" });
+    }
+}
+
+export const restaurarProducto = async (req, res) => {
+    try {
+        const idProducto = req.params.id;
+        const resultado = await ModelProductos.restoreProduct(idProducto);
+
+        if (!resultado.success) {
+            return res.status(404).json({ exito: false, message: resultado.message });
+        }
+
+        return res.status(200).json({ exito: true, message: "Se restauró correctamente el producto" });
+    } catch (err) {
+        console.error(err)
+        return res.status(500).json({ exito: false, message: "Error al restaurar el producto" });
     }
 }
 
