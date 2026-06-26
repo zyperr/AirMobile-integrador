@@ -36,6 +36,7 @@ export const useN8nChat = (usuarioPerfil) => {
     const [isLoading, setIsLoading] = useState(false);
 
     const sendMessage = async (userMessage) => {
+        if (!userMessage.trim() || isLoading) return;
         // Armamos los datos dinámicos justo antes de enviar
         const sessionData = getSessionData(usuarioPerfil);
         const payload = {
@@ -45,7 +46,6 @@ export const useN8nChat = (usuarioPerfil) => {
         };
         
 
-        if (!userMessage.trim() || isLoading) return;
 
         setMessages((prev) => [...prev, { sender: 'user', text: userMessage }]);
         setIsLoading(true);
@@ -70,6 +70,7 @@ export const useN8nChat = (usuarioPerfil) => {
                 else if (data?.response) botResponseText = data.response;
                 else if (typeof data === 'string') botResponseText = data;
                 else botResponseText = JSON.stringify(data);
+                
             } else {
                 botResponseText = await response.text();
             }

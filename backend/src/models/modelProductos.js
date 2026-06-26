@@ -96,7 +96,7 @@ class ModelProductos {
                 sql += " AND bateria >= ?";
                 args.push(Number(filtros.bateriaMin));
             }
-            
+
             if (filtros.precioMin) {
                 sql += " AND precio >= ?";
                 args.push(Number(filtros.precioMin));
@@ -136,7 +136,67 @@ class ModelProductos {
 
         return rows[0]
     }
+    static async getBotCatalog(filtros, limit, offset) {
+        try {
+            // Solo traemos los campos que el bot necesita para responder.
+            // Excluimos: imagen_url, capacidad, fecha_creacion, activo, bateria
+            // Esto reduce el payload de ~4KB a ~300 bytes por página
+            let sql = `
+            SELECT
+                id,
+                nombre_producto,
+                precio,
+                categoria,
+                condicion,
+                descripcion
+            FROM productos
+            WHERE activo = 1
+        `;
+            let args = [];
 
+            if (filtros.categoria) {
+                sql += ' AND categoria LIKE ?';
+                args.push(`%${filtros.categoria}%`);
+            }
+
+            if (filtros.busqueda) {
+                sql += ' AND nombre_producto LIKE ?';
+                args.push(`%${filtros.busqueda}%`);
+            }
+
+            sql += ' ORDER BY fecha_creacion DESC LIMIT ? OFFSET ?';
+            args.push(limit, offset);
+
+            const result = await db.execute({ sql, args });
+            return result.rows;
+        } catch (err) {
+            console.error('Error en ModelProductos.getBotCatalog:', err);
+            throw err;
+        }
+    }
+
+    static async countBotCatalog(filtros) {
+        try {
+            let sql = 'SELECT COUNT(*) as total FROM productos WHERE activo = 1';
+            let args = [];
+
+            if (filtros.categoria) {
+                sql += ' AND categoria LIKE ?';
+                args.push(`%${filtros.categoria}%`);
+            }
+
+            if (filtros.busqueda) {
+                sql += ' AND nombre_producto LIKE ?';
+                args.push(`%${filtros.busqueda}%`);
+            }
+
+            const result = await db.execute({ sql, args });
+            return result.rows[0].total;
+        } catch (err) {
+            console.error('Error en ModelProductos.countBotCatalog:', err);
+            throw err;
+        }
+    }
     static async createProduct(data) {
         const { nombre_producto, precio, categoria, condicion, descripcion, } = data
         const capacidad = JSON.stringify(data.capacidad) || [];
@@ -151,112 +211,112 @@ class ModelProductos {
     }
 
     static async getAllAdmin(filtros, limit, offset) {
-    try {
-        let sql = "SELECT * FROM productos WHERE 1=1"
-        let args = []
-        let sqlOrderBy = "ORDER BY fecha_creacion DESC";
+        try {
+            let sql = "SELECT * FROM productos WHERE 1=1"
+            let args = []
+            let sqlOrderBy = "ORDER BY fecha_creacion DESC";
 
-        if (filtros.orden === "asc") {
-            sqlOrderBy = "ORDER BY fecha_creacion asc";
-        }
-        if (filtros.bateriaMin) {
-            sql += " AND bateria >= ?";
-            args.push(Number(filtros.bateriaMin));
-        }
-        if (filtros.categoria) {
-            sql += " AND categoria LIKE ?"
-            args.push(`%${filtros.categoria}%`)
-        }
-        if (filtros.condicion) {
-            sql += " AND condicion LIKE ?"
-            args.push(`%${filtros.condicion}%`)
-        }
-        if (filtros.capacidad) {
-            sql += " AND capacidad LIKE ?";
-            args.push(`%"${filtros.capacidad}"%`);
-        }
-        if (filtros.precioMin) {
-            sql += " AND precio >= ?";
-            args.push(Number(filtros.precioMin));
-        }
-        if (filtros.precioMax) {
-            sql += " AND precio <= ?";
-            args.push(Number(filtros.precioMax));
-        }
-        if (filtros.busqueda) {
-            sql += " AND nombre_producto LIKE ?";
-            args.push(`%${filtros.busqueda}%`);
-        }
+            if (filtros.orden === "asc") {
+                sqlOrderBy = "ORDER BY fecha_creacion asc";
+            }
+            if (filtros.bateriaMin) {
+                sql += " AND bateria >= ?";
+                args.push(Number(filtros.bateriaMin));
+            }
+            if (filtros.categoria) {
+                sql += " AND categoria LIKE ?"
+                args.push(`%${filtros.categoria}%`)
+            }
+            if (filtros.condicion) {
+                sql += " AND condicion LIKE ?"
+                args.push(`%${filtros.condicion}%`)
+            }
+            if (filtros.capacidad) {
+                sql += " AND capacidad LIKE ?";
+                args.push(`%"${filtros.capacidad}"%`);
+            }
+            if (filtros.precioMin) {
+                sql += " AND precio >= ?";
+                args.push(Number(filtros.precioMin));
+            }
+            if (filtros.precioMax) {
+                sql += " AND precio <= ?";
+                args.push(Number(filtros.precioMax));
+            }
+            if (filtros.busqueda) {
+                sql += " AND nombre_producto LIKE ?";
+                args.push(`%${filtros.busqueda}%`);
+            }
 
-        sql += ` ${sqlOrderBy} LIMIT ? OFFSET ?`;
-        args.push(limit, offset);
+            sql += ` ${sqlOrderBy} LIMIT ? OFFSET ?`;
+            args.push(limit, offset);
 
-        const result = await db.execute({ sql: sql, args: args });
-        return result.rows
-    } catch (err) {
-        console.error("Error en ProductoModel.getAllAdmin:", err);
-        throw err;
+            const result = await db.execute({ sql: sql, args: args });
+            return result.rows
+        } catch (err) {
+            console.error("Error en ProductoModel.getAllAdmin:", err);
+            throw err;
+        }
     }
-}
 
-static async countAllAdmin(filtros) {
-    try {
-        let sql = "SELECT COUNT(*) as total FROM productos WHERE 1=1"
-        let args = []
+    static async countAllAdmin(filtros) {
+        try {
+            let sql = "SELECT COUNT(*) as total FROM productos WHERE 1=1"
+            let args = []
 
-        if (filtros.categoria) {
-            sql += " AND categoria LIKE ?"
-            args.push(`%${filtros.categoria}%`)
-        }
-        if (filtros.capacidad) {
-            sql += " AND capacidad LIKE ?";
-            args.push(`%"${filtros.capacidad}"%`);
-        }
-        if (filtros.condicion) {
-            sql += " AND condicion LIKE ?"
-            args.push(`%${filtros.condicion}%`)
-        }
-        if (filtros.bateriaMin) {
-            sql += " AND bateria >= ?";
-            args.push(Number(filtros.bateriaMin));
-        }
-        if (filtros.precioMin) {
-            sql += " AND precio >= ?";
-            args.push(Number(filtros.precioMin));
-        }
-        if (filtros.precioMax) {
-            sql += " AND precio <= ?";
-            args.push(Number(filtros.precioMax));
-        }
-        if (filtros.busqueda) {
-            sql += " AND nombre_producto LIKE ?";
-            args.push(`%${filtros.busqueda}%`);
-        }
+            if (filtros.categoria) {
+                sql += " AND categoria LIKE ?"
+                args.push(`%${filtros.categoria}%`)
+            }
+            if (filtros.capacidad) {
+                sql += " AND capacidad LIKE ?";
+                args.push(`%"${filtros.capacidad}"%`);
+            }
+            if (filtros.condicion) {
+                sql += " AND condicion LIKE ?"
+                args.push(`%${filtros.condicion}%`)
+            }
+            if (filtros.bateriaMin) {
+                sql += " AND bateria >= ?";
+                args.push(Number(filtros.bateriaMin));
+            }
+            if (filtros.precioMin) {
+                sql += " AND precio >= ?";
+                args.push(Number(filtros.precioMin));
+            }
+            if (filtros.precioMax) {
+                sql += " AND precio <= ?";
+                args.push(Number(filtros.precioMax));
+            }
+            if (filtros.busqueda) {
+                sql += " AND nombre_producto LIKE ?";
+                args.push(`%${filtros.busqueda}%`);
+            }
 
-        const result = await db.execute({ sql: sql, args: args });
-        return result.rows[0].total;
-    } catch (err) {
-        console.error("Error en ProductoModel.countAllAdmin:", err);
-        throw err;
+            const result = await db.execute({ sql: sql, args: args });
+            return result.rows[0].total;
+        } catch (err) {
+            console.error("Error en ProductoModel.countAllAdmin:", err);
+            throw err;
+        }
     }
-}
 
-static async restoreProduct(id) {
-    try {
-        const result = await db.execute({
-            sql: "UPDATE productos SET activo = 1 WHERE id = ? AND activo = 0",
-            args: [id]
-        })
+    static async restoreProduct(id) {
+        try {
+            const result = await db.execute({
+                sql: "UPDATE productos SET activo = 1 WHERE id = ? AND activo = 0",
+                args: [id]
+            })
 
-        if (result.rowsAffected === 0) {
-            return { success: false, message: "No se ha encontrado el producto o ya está activo" }
+            if (result.rowsAffected === 0) {
+                return { success: false, message: "No se ha encontrado el producto o ya está activo" }
+            }
+            return { success: true, message: "Se ha restaurado correctamente" }
+        } catch (err) {
+            console.error("Error al restaurar producto:", err);
+            return { success: false, message: "Error interno del servidor" }
         }
-        return { success: true, message: "Se ha restaurado correctamente" }
-    } catch (err) {
-        console.error("Error al restaurar producto:", err);
-        return { success: false, message: "Error interno del servidor" }
     }
-}
 
     static async deleteProduct(id) {
         try {
@@ -314,25 +374,25 @@ static async restoreProduct(id) {
         }
     }
 
-static async insertMany(productosArray) {
-    try {
-        if (!productosArray || productosArray.length === 0) return 0;
+    static async insertMany(productosArray) {
+        try {
+            if (!productosArray || productosArray.length === 0) return 0;
 
-        let insertados = 0;
-        let actualizados = 0;
+            let insertados = 0;
+            let actualizados = 0;
 
-        for (const producto of productosArray) {
-            // 1. Buscamos si ya existe un producto con ese nombre (activo o no)
-            const { rows } = await db.execute({
-                sql: `SELECT id FROM productos WHERE LOWER(nombre_producto) = LOWER(?) LIMIT 1`,
-                args: [producto.nombre_producto]
-            });
+            for (const producto of productosArray) {
+                // 1. Buscamos si ya existe un producto con ese nombre (activo o no)
+                const { rows } = await db.execute({
+                    sql: `SELECT id FROM productos WHERE LOWER(nombre_producto) = LOWER(?) LIMIT 1`,
+                    args: [producto.nombre_producto]
+                });
 
-            if (rows.length > 0) {
-                // 2. Ya existe → actualizamos
-                const id = rows[0].id;
-                await db.execute({
-                    sql: `UPDATE productos SET
+                if (rows.length > 0) {
+                    // 2. Ya existe → actualizamos
+                    const id = rows[0].id;
+                    await db.execute({
+                        sql: `UPDATE productos SET
                             categoria   = ?,
                             precio      = ?,
                             capacidad   = ?,
@@ -342,47 +402,47 @@ static async insertMany(productosArray) {
                             bateria     = ?,
                             activo      = 1
                           WHERE id = ?`,
-                    args: [
-                        producto.categoria,
-                        producto.precio,
-                        JSON.stringify(producto.capacidad ?? []),
-                        producto.descripcion ?? '',
-                        JSON.stringify(producto.imagen_url ?? []),
-                        producto.condicion,
-                        producto.bateria ?? null,
-                        id
-                    ]
-                });
-                actualizados++;
-            } else {
-                // 3. No existe → insertamos
-                await db.execute({
-                    sql: `INSERT INTO productos 
+                        args: [
+                            producto.categoria,
+                            producto.precio,
+                            JSON.stringify(producto.capacidad ?? []),
+                            producto.descripcion ?? '',
+                            JSON.stringify(producto.imagen_url ?? []),
+                            producto.condicion,
+                            producto.bateria ?? null,
+                            id
+                        ]
+                    });
+                    actualizados++;
+                } else {
+                    // 3. No existe → insertamos
+                    await db.execute({
+                        sql: `INSERT INTO productos 
                             (nombre_producto, categoria, precio, capacidad, descripcion, imagen_url, condicion, bateria, activo)
                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`,
-                    args: [
-                        producto.nombre_producto,
-                        producto.categoria,
-                        producto.precio,
-                        JSON.stringify(producto.capacidad ?? []),
-                        producto.descripcion ?? '',
-                        JSON.stringify(producto.imagen_url ?? []),
-                        producto.condicion,
-                        producto.bateria ?? null,
-                    ]
-                });
-                insertados++;
+                        args: [
+                            producto.nombre_producto,
+                            producto.categoria,
+                            producto.precio,
+                            JSON.stringify(producto.capacidad ?? []),
+                            producto.descripcion ?? '',
+                            JSON.stringify(producto.imagen_url ?? []),
+                            producto.condicion,
+                            producto.bateria ?? null,
+                        ]
+                    });
+                    insertados++;
+                }
             }
+
+            console.log(`✅ Carga masiva: ${insertados} insertados, ${actualizados} actualizados`);
+            return insertados + actualizados;
+
+        } catch (error) {
+            console.error('Error en ProductoModel.insertMany:', error);
+            throw new Error('Error al insertar los productos en la base de datos.');
         }
-
-        console.log(`✅ Carga masiva: ${insertados} insertados, ${actualizados} actualizados`);
-        return insertados + actualizados;
-
-    } catch (error) {
-        console.error('Error en ProductoModel.insertMany:', error);
-        throw new Error('Error al insertar los productos en la base de datos.');
     }
-}
 }
 
 export default ModelProductos

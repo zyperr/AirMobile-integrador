@@ -14,6 +14,7 @@ import routeFacturas from "./routes/routesFacturas.js";
 import routesListaDeseados from "./routes/routesListaDeseados.js"
 import routeStaff from "./routes/routesAdmin.js"
 import routesPagos from "./routes/routesPagos.js"
+import routesBot from './routes/routesBot.js';
 
 import cors from "cors";
 
@@ -55,6 +56,8 @@ app.use(`${api}/lista-deseados`, routesListaDeseados);
 app.use(`${api}/staff`,routeStaff )
 
 app.use(`${api}/pagos`, routesPagos);
+
+app.use(`${api}/bot`, routesBot);
 
 app.get("", (req, res) => {
     res.send("hola");
