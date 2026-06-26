@@ -20,7 +20,6 @@ const SECRET_KEY = process.env.SECRET_KEY
 export const obtenerUsuarios = async (req, res) => {
     try {
         const usuarios = await UsuarioModel.getAll()
-        console.log("Mostrando usuarios")
         const mapUsers = usuarios.map((usuario) => {
             return {
                 id: usuario.id,
@@ -65,7 +64,6 @@ export const login = async (req, res) => {
             return res.status(401).json({ exito: false, message: "Credenciales incorrectas" });
         }
 
-        console.log("ID del usuario que intentamos guardar:", usuarioEncontrado.id);
         // --- INICIO LÓGICA REFRESH TOKEN ---
         // Generamos un string hexadecimal de 80 caracteres
         const refreshToken = crypto.randomBytes(40).toString('hex');
@@ -239,7 +237,6 @@ export const obtenerPerfil = async (req, res) => {
             return res.status(404).json({ exito: false, message: "Usuario no encontrado" });
         }
 
-        console.log("Usuario encontrado en obtenerPerfil:", usuario);
         const payload = {
             id: usuario.id,
             nombre: usuario.nombre,

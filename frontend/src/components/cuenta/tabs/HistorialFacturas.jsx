@@ -129,7 +129,7 @@ const HistorialFacturas = () => {
                                     <i className="bi bi-receipt"></i>
                                 </div>
                                 <div>
-                                    <p className="m-0 fw-bold text-dark" style={{ fontSize: "14px" }}>INV-{item.id}</p>
+                                    <p className="m-0 fw-bold text-dark" style={{ fontSize: "14px" }}>INV-{item.id}-{item.fecha_formateada || item.fecha}</p>
                                     <p className="m-0 text-secondary" style={{ fontSize: "12px" }}>
                                         {item.fecha_formateada || item.fecha} • <span className="text-capitalize">{item.estado || 'Completado'}</span>
                                     </p>

@@ -12,6 +12,38 @@ export function CartProvider({ children }) {
     const [loadingId, setLoadingId] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [toastVisible, setToastVisible] = useState(false);
+
+
+
+
+
+    const procesarPago = async () => {
+        setIsProcessing(true);
+
+        try {
+            const response = await ejecutarPeticion('pagos/crear-preferencia', {
+                method: 'POST',
+                body: JSON.stringify({ items: cartItems })
+            });
+
+            // --- AQUÍ ESTÁ EL CAMBIO ---
+            console.log("Respuesta de la API:", response); 
+            
+            if (response.exito && response.data?.init_point) {
+                window.location.href = response.data.init_point;
+            } else {
+                // Si 'response' existe pero 'exito' es false, aquí veremos el error real
+                console.error("Error detallado del servidor:", response); 
+                alert(`Error al pagar: ${response.message || "Revisa la consola del servidor"}`);
+            }
+
+        } catch (error) {
+            console.error("Error fatal en el fetch:", error);
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
     // ─── 1. CARGAR CARRITO ────────────────────────────────────────────────────
     const cargarCarrito = async () => {
         if (!estaAutenticado) {
@@ -205,12 +237,6 @@ export function CartProvider({ children }) {
         setLoadingId(null);
     };
 
-    // ─── 8. PROCESAR PAGO ────────────────────────────────────────────────────
-    const procesarPago = async () => {
-        setIsProcessing(true);
-        await new Promise((r) => setTimeout(r, 1500));
-        setIsProcessing(false);
-    };
 
     // ─── 9. CÁLCULOS DERIVADOS ───────────────────────────────────────────────
     // FIX 2: "cantidad" en lugar de "quantity"

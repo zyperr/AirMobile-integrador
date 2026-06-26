@@ -13,6 +13,7 @@ import routeRecuperarPassword from "./routes/routeRecuperarPassword.js"
 import routeFacturas from "./routes/routesFacturas.js";
 import routesListaDeseados from "./routes/routesListaDeseados.js"
 import routeStaff from "./routes/routesAdmin.js"
+import routesPagos from "./routes/routesPagos.js"
 
 import cors from "cors";
 
@@ -52,6 +53,8 @@ app.use(`${api}/facturas`, routeFacturas);
 app.use(`${api}/lista-deseados`, routesListaDeseados);
 
 app.use(`${api}/staff`,routeStaff )
+
+app.use(`${api}/pagos`, routesPagos);
 
 app.get("", (req, res) => {
     res.send("hola");

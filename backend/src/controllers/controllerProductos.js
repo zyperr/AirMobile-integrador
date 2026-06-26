@@ -348,34 +348,48 @@ export const bulkUpload = async (req, res) => {
             return res.status(400).json({ exito: false, message: "Por favor, subí un archivo." });
         }
 
-        const nombreArchivo = req.file.originalname;
-        const datosCrudos = req.file.buffer;
-        const extension = nombreArchivo.split('.').pop().toLowerCase(); // "json", "csv" o "xlsx"
-        const sepradorCSV = req.body.separator || ',';
+        const extension = req.file.originalname.split('.').pop().toLowerCase();
+        const separadorCSV = req.body.separator || ',';
 
-        console.log(`Extension del archivo ${extension}`)
-        console.log(sepradorCSV)
+        const productosArray = await procesarArchivo(req.file.buffer, extension, separadorCSV);
 
-        const productosArray = await procesarArchivo(req.file.buffer, extension, sepradorCSV);
+        // Convierte "128GB|256GB" o "128GB | 256GB" → ["128GB", "256GB"]
+        const parsearPipeList = (valor) => {
+            if (!valor) return [];
+            if (Array.isArray(valor)) return valor.map(s => s.trim()).filter(Boolean);
+            return String(valor).split("|").map(s => s.trim()).filter(Boolean);
+        };
+
+        const categoriasSinCapacidad = ["auriculares", "cargadores", "cables", "powerbanks", "fundas", "protectores", "accesorios", "relojes"];
 
         const productosMapeados = productosArray.map(prod => {
-            return {
-                nombre_producto: prod.nombre_producto || prod.nombre,
-                categoria: prod.categoria,
+            const categoria = prod.categoria?.trim();
+            const sinCapacidad = categoriasSinCapacidad.includes(categoria);
+
+            const producto = {
+                nombre_producto: prod.nombre_producto?.trim(),
+                categoria,
                 precio: Number(prod.precio),
-                capacidad: Array.isArray(prod.capacidad)
-                    ? prod.capacidad.map(String)
-                    : prod.capacidad ? [String(prod.capacidad)] : [],
-                descripcion: prod.descripcion,
-                imagen_url: prod.imagen || prod.imagen_url || [],
-                condicion: prod.condicion || prod.estado,
-                categoria: prod.categoria
-            }
-        })
+                condicion: prod.condicion?.trim(),
+                descripcion: prod.descripcion?.trim() || undefined,
+                imagen_url: parsearPipeList(prod.imagen_url),
+                // capacidad solo si aplica y tiene valor
+                ...(!sinCapacidad && prod.capacidad
+                    ? { capacidad: parsearPipeList(prod.capacidad) }
+                    : {}),
+                // bateria solo si aplica y tiene valor
+                ...(!sinCapacidad && prod.bateria
+                    ? { bateria: Number(prod.bateria) }
+                    : {}),
+            };
+
+            return producto;
+        });
+
+        console.log("Productos mapeados:", JSON.stringify(productosMapeados, null, 2));
 
         const schemaMasivo = Joi.array().items(schemaProductos);
-
-        const { error, value: productosValidados } = schemaMasivo.validate(productosMapeados);
+        const { error, value: productosValidados } = schemaMasivo.validate(productosMapeados, { abortEarly: true });
 
         if (error) {
             return res.status(400).json({
@@ -385,10 +399,7 @@ export const bulkUpload = async (req, res) => {
             });
         }
 
-
         const cantidadInsertada = await ModelProductos.insertMany(productosValidados);
-
-
 
         return res.status(200).json({
             exito: true,
@@ -399,5 +410,4 @@ export const bulkUpload = async (req, res) => {
         console.error("Error en la carga masiva:", error);
         return res.status(500).json({ exito: false, message: "Error procesando el archivo" });
     }
-
-}
+};

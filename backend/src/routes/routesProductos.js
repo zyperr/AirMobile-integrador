@@ -17,6 +17,8 @@ router.get("/todos", verificarToken, verificarAdmin, obtenerProductosAdmin);
 
 router.get("/:id", obtenerProducto)
 
+router.post("/carga-masiva", verificarToken, verificarAdmin, uploadMiddleware, bulkUpload);
+
 router.post("/agregar-producto", verificarToken, verificarAdmin, uploadImg.array('imagen_url', 3), crearProducto);
 
 router.put("/actualizar-producto/:id", verificarToken, verificarAdmin,uploadImg.array('imagen_url', 3), actualizarProducto);
@@ -24,8 +26,4 @@ router.put("/actualizar-producto/:id", verificarToken, verificarAdmin,uploadImg.
 router.delete("/eliminar-producto/:id", verificarToken, verificarAdmin, eliminarProducto);
 
 router.put("/restaurar-producto/:id", verificarToken, verificarAdmin, restaurarProducto);
-
-router.post("/carga-masiva", verificarToken, verificarAdmin, uploadMiddleware, bulkUpload);
-
-
 export default router
