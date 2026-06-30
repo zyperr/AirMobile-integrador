@@ -15,6 +15,7 @@ import routesListaDeseados from "./routes/routesListaDeseados.js"
 import routeStaff from "./routes/routesAdmin.js"
 import routesPagos from "./routes/routesPagos.js"
 import routesBot from './routes/routesBot.js';
+import routesContacto from './routes/routesContacto.js';
 
 import cors from "cors";
 
@@ -70,3 +71,5 @@ app.listen(PORT, async () => {
     console.log(`http://localhost:${PORT}`);
     
 })
+
+app.use('/api/contacto', routesContacto)

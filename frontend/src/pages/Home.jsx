@@ -4,6 +4,7 @@ import { useApi } from "../hooks/useApi.js"
 import { useEffect, useState } from "react";
 import CartaProducto from "../components/productos/CartaDeProductos.jsx";
 import { SkeletonLoader } from "../components/common/SkeletonLoader.jsx";
+import FormularioContacto from "../components/common/FormularioContacto.jsx";
 
 export default function Home() {
 
@@ -135,6 +136,10 @@ export default function Home() {
             </Link>
           </div>
         </div>
+      </section>
+
+      <section>
+        <FormularioContacto />
       </section>
 
     </div>

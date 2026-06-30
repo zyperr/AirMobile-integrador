@@ -269,3 +269,53 @@ export const enviarEmailCompra = async (emailDestino, datosCompra) => {
         throw new Error("No se pudo enviar el correo de la compra.");
     }
 }
+
+export const enviarEmailContacto = async (nombre, emailUsuario, asunto, descripcion) => {
+    const mailOptions = {
+        from: `${nombre} <${emailUsuario}>`,
+        to: process.env.CONTACT_EMAIL, // llega a tu propio Gmail
+        replyTo: emailUsuario,        // al responder le llega al usuario
+        subject: `${asunto}`,
+        html: `
+            <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; padding: 30px 20px; border-radius: 8px;">
+                <h2 style="color: #0d6efd; text-align: center; margin-bottom: 4px;">AirMobile</h2>
+                <p style="text-align: center; color: #888; font-size: 13px; margin-bottom: 30px;">Nuevo mensaje desde el formulario de contacto</p>
+
+                <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                    <table style="width: 100%; font-size: 14px;">
+                        <tr>
+                            <td style="color: #888; padding: 6px 0; width: 120px;">Nombre:</td>
+                            <td style="font-weight: bold; color: #222;">${nombre}</td>
+                        </tr>
+                        <tr>
+                            <td style="color: #888; padding: 6px 0;">Email:</td>
+                            <td><a href="mailto:${emailUsuario}" style="color: #0d6efd;">${emailUsuario}</a></td>
+                        </tr>
+                        <tr>
+                            <td style="color: #888; padding: 6px 0;">Asunto:</td>
+                            <td style="font-weight: bold; color: #222;">${asunto}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px;">
+                    <p style="color: #888; font-size: 12px; text-transform: uppercase; margin: 0 0 10px;">Mensaje:</p>
+                    <p style="font-size: 15px; line-height: 1.7; color: #333; margin: 0; white-space: pre-line;">${descripcion}</p>
+                </div>
+
+                <p style="margin-top: 24px; font-size: 12px; color: #aaa; text-align: center;">
+                    Podés responder directamente a este correo para contactar al usuario.
+                </p>
+            </div>
+        `
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Email de contacto recibido de: ${emailUsuario}`);
+        return true;
+    } catch (error) {
+        console.error('Error al enviar email de contacto:', error);
+        throw new Error('No se pudo enviar el mensaje de contacto.');
+    }
+};
