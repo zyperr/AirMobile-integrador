@@ -317,32 +317,19 @@ export const obtenerDetalleFactura = async (req, res) => {
 
 export const obtenerUltimaFacturaBot = async (req, res) => {
     try {
-        // El token viene en el header Authorization que n8n manda
-        const authHeader = req.headers.authorization;
+        // 1. El middleware verificarToken ya validó todo y nos dejó el ID aquí:
+        const usuarioId = req?.user?.id;
 
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({
-                exito: false,
-                message: "Para ver tu factura necesitás iniciar sesión en AirMobile."
+        if (!usuarioId) {
+            return res.status(401).json({ 
+                exito: false, 
+                message: "Credenciales inválidas" 
             });
         }
 
-        // Verificamos el token manualmente
-        const token = authHeader.split(' ')[1];
-        let decoded;
-        try {
-            decoded = jwt.verify(token, process.env.JWT_SECRET);
-        } catch (err) {
-            return res.status(401).json({
-                exito: false,
-                message: "Tu sesión expiró. Por favor iniciá sesión nuevamente."
-            });
-        }
-
-        const usuarioId = decoded.id;
-
-        // Traemos la última factura
+        // 2. Traemos la última factura directamente
         const facturas = await ModelFactura.getFacturasDeUsuario(usuarioId, 1, 0);
+        
         if (!facturas || facturas.length === 0) {
             return res.status(404).json({
                 exito: false,
@@ -353,6 +340,7 @@ export const obtenerUltimaFacturaBot = async (req, res) => {
         const ultimaFactura = facturas[0];
         const detalles = await ModelDetalleFactura.getDetallesFacturaByFacturaId(ultimaFactura.id);
 
+        // 3. Formateo de fecha
         const fechaFormateada = ultimaFactura.fecha
             ? new Date(ultimaFactura.fecha + 'Z').toLocaleDateString('es-AR', {
                 day: '2-digit', month: 'long', year: 'numeric',
@@ -360,6 +348,7 @@ export const obtenerUltimaFacturaBot = async (req, res) => {
             })
             : 'Sin fecha';
 
+        // 4. Respuesta estructurada para el bot
         return res.status(200).json({
             exito: true,
             factura: {

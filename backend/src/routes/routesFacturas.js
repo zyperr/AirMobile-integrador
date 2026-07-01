@@ -28,6 +28,6 @@ router.get("/obtener-facturas-usuario", verificarToken, obtenerFacturasDeUsuario
 
 router.get("/estadisticas", verificarToken, verificarAdmin, obtenerEstadisticasFacturas);
 
-router.get("/bot/ultima-factura", obtenerUltimaFacturaBot); // sin verificarToken, lo hace manualmente
+router.get("/bot/ultima-factura", verificarToken, obtenerUltimaFacturaBot);
 
 export default router
