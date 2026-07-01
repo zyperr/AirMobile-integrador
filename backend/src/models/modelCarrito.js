@@ -10,6 +10,7 @@ class ModelCarrito {
         SELECT 
             carrito.id AS carrito_id,
             carrito.cantidad,
+            carrito.capacidad,
             productos.id AS producto_id,
             productos.nombre_producto,
             productos.precio,
