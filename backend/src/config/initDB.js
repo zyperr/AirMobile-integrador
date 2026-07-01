@@ -28,11 +28,13 @@ export const inicializarBaseDeDatos = async () => {
         fecha_creacion DEFAULT CURRENT_TIMESTAMP,
         bateria INTEGER DEFAULT NULL
     )`;
+    
     const queryCarrito = `CREATE TABLE IF NOT EXISTS carrito(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         usuario_id INTEGER NOT NULL,
         producto_id INTEGER NOT NULL,
         cantidad INTEGER DEFAULT 1,
+        capacidad TEXT,
         FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
         FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE
     )`;
@@ -78,7 +80,8 @@ export const inicializarBaseDeDatos = async () => {
         FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
     );
     `;
-    
+
+
     const queryIndexRefreshToken = `
     CREATE INDEX IF NOT EXISTS idx_refresh_token ON refresh_tokens(refresh_token);
     `;

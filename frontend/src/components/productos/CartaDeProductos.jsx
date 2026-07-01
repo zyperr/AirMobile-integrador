@@ -18,28 +18,19 @@ const ProductCard = ({
 
   const { agregarProducto, loadingId, isLoading } = useCarrito();
 
-  const capacidadFormateada =
-    Array.isArray(capacidad)
-      ? capacidad.join(', ')
-      : capacidad;
+  // Aseguramos que capacidad siempre se trate como un arreglo para sacar el primero de forma segura
+  const arregloCapacidades = Array.isArray(capacidad) ? capacidad : (capacidad ? [capacidad] : []);
+  const capacidadFormateada = arregloCapacidades.join(', ');
 
   const { estaAutenticado } = useAuth();
 
   return (
-    // Agregamos 'position-relative' aquí para que el botón flote relativo a la tarjeta
     <div className="card border-0 h-100 custom-product-card shadow-sm d-flex flex-column position-relative">
-
-      {/* BOTÓN DE FAVORITOS
-        Debe ir FUERA del <Link> para evitar que el clic nos lleve a otra página.
-        Como nuestro BotonDeseos tiene position-absolute, se pondrá en la esquina sin empujar nada.
-      */}
-
 
       {estaAutenticado && (
         <BotonDeseados idProducto={id} onRemover={onRemover} setToastDeseadosVisible={setToastDeseadosVisible} />
       )}
 
-      {/* Todo lo demás envuelto en el Link, como lo tenías */}
       <Link className='text-decoration-none text-dark flex-grow-1 d-flex flex-column' to={`/producto/${id}`}>
 
         {/* Contenedor de imagen */}
@@ -76,7 +67,6 @@ const ProductCard = ({
 
           {/* Descripción */}
           <div className="text-secondary mb-3 text-start" style={{ fontSize: "14px" }}>
-            
             <span className="custom-bullet mx-1">•</span> {capacidadFormateada || "N/A"}
           </div>
 
@@ -89,18 +79,24 @@ const ProductCard = ({
               ${Number(precio).toFixed(2)}
             </span>
 
-            {/* Agregamos text-nowrap y ajustamos el padding (px-2 py-1) */}
             {estaAutenticado && (
               <button
                 className="btn btn-primary fw-semibold custom-view-btn btn-sm text-nowrap px-2 py-1"
                 onClick={async (e) => {
-
                   e.preventDefault();
                   
-                  await agregarProducto(id);
+                  // Tomamos la primera capacidad si existe, sino pasamos null
+                  const primeraCapacidad = arregloCapacidades.length > 0 ? arregloCapacidades[0] : null;
+                  
+                  // Le pasamos la capacidad al contexto del carrito
+                  await agregarProducto(id, primeraCapacidad);
                 }}
               >
-                {loadingId === id && isLoading ? (<i class="bi bi-cart-check"> añadido</i>): (<i class="bi bi-cart-plus"> Añadir</i>)}
+                {loadingId === id && isLoading ? (
+                  <i className="bi bi-cart-check"> añadido</i>
+                ) : (
+                  <i className="bi bi-cart-plus"> Añadir</i>
+                )}
               </button>
             )}
           </div >

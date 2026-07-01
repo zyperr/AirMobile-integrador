@@ -31,57 +31,59 @@ class ModelCarrito {
         }
     }
 
-    static async addCarrito(usuarioId, productoId, cantidad) {
+static async addCarrito(usuarioId, productoId, cantidad, capacidad = null) {
+    try {
+        // 1. Buscamos si ya existe el mismo producto CON LA MISMA CAPACIDAD en el carrito
+        const queryCheck = `
+            SELECT id, cantidad 
+            FROM carrito 
+            WHERE usuario_id = ? AND producto_id = ? AND capacidad IS ?
+        `;
 
-        try {
-            const queryCheck = `
-                SELECT id, cantidad 
-                FROM carrito 
-                WHERE usuario_id = ? AND producto_id = ?
+        const checkResult = await db.execute({
+            sql: queryCheck,
+            args: [usuarioId, productoId, capacidad]
+        });
+
+        // Si YA existe, actualizamos su cantidad
+        if (checkResult.rows.length > 0) {
+            const cantidadNueva = Number(checkResult.rows[0].cantidad);
+            const nuevaCantidad = cantidadNueva + Number(cantidad);
+
+            const queryUpdate = `
+                UPDATE carrito
+                SET cantidad = ?
+                WHERE usuario_id = ? AND producto_id = ? AND capacidad IS ?
             `;
-
-            const checkResult = await db.execute({
-                sql: queryCheck,
-                args: [usuarioId, productoId]
+            
+            const resultUpdate = await db.execute({
+                sql: queryUpdate,
+                args: [nuevaCantidad, usuarioId, productoId, capacidad]
             });
-            if (checkResult.rows.length > 0) {
-                //Calculamos la nueva cantidad
-                const cantidadNueva = Number(checkResult.rows[0].cantidad);
-                const nuevaCantidad = cantidadNueva + Number(cantidad);
+            
+            // Retornamos un objeto con la acción para que tu controlador reciba el .accion correctamente
+            return { accion: "actualizar", result: resultUpdate };
 
-
-                const queryUpdate = `
-                    UPDATE carrito
-                    SET cantidad = ?
-                    WHERE usuario_id = ? AND producto_id = ?
-                `;
-                const resultUpdate = await db.execute({
-                    sql: queryUpdate,
-                    args: [nuevaCantidad, usuarioId, productoId]
-                });
-                return resultUpdate;
-
-                //Si NO existe (el length es 0), lo insertamos por primera vez
-            } else {
-
-                const queryInsert = `
-                INSERT INTO carrito (usuario_id, producto_id, cantidad)
-                VALUES (?, ?, ?)
+        // Si NO existe, lo insertamos por primera vez incluyendo la capacidad seleccionada
+        } else {
+            const queryInsert = `
+                INSERT INTO carrito (usuario_id, producto_id, cantidad, capacidad)
+                VALUES (?, ?, ?, ?)
             `;
-                const resultInsert = await db.execute({
-
-                    sql: queryInsert,
-                    args: [usuarioId, productoId, cantidad]
-                });
-                return { accion: "insertar", query: queryInsert, result: resultInsert };
-
-            }
-
-        } catch (error) {
-            console.error("Error al agregar al carrito:", error);
-            throw error;
+            
+            const resultInsert = await db.execute({
+                sql: queryInsert,
+                args: [usuarioId, productoId, cantidad, capacidad]
+            });
+            
+            return { accion: "insertar", query: queryInsert, result: resultInsert };
         }
+
+    } catch (error) {
+        console.error("Error al agregar al carrito en el modelo:", error);
+        throw error;
     }
+}
 
 
     static async emptyCarrito(usuarioId) {
@@ -102,33 +104,34 @@ class ModelCarrito {
             throw error;        
         }
     }
-    static async deleteAWholeProductFromCarrito(usuarioId, productoId) {
-        try{
+    static async deleteAWholeProductFromCarrito(usuarioId, productoId, capacidad = null) {
+        try {
             const queryDelete = `
                 DELETE FROM carrito
-                WHERE usuario_id = ? AND producto_id = ?
+                WHERE usuario_id = ? AND producto_id = ? AND capacidad IS ?
             `;
             const resultDelete = await db.execute({
                 sql: queryDelete,
-                args: [usuarioId, productoId]
+                args: [usuarioId, productoId, capacidad]
             });
-            return {accion: "eliminar", message: "Se ha eliminado el producto del carrito.", result: resultDelete};
-        }catch(error){
+            return { accion: "eliminar", message: "Se ha eliminado el producto del carrito.", result: resultDelete };
+        } catch (error) {
             console.error(`Error al eliminar ${productoId} del carrito:`, error);
-            throw error;        
+            throw error;
         }
     }
-    static async deleteProductFromCarrito(usuarioId, productoId) {
+
+    static async deleteProductFromCarrito(usuarioId, productoId, capacidad = null) {
         try {
             const queryCheck = `
                 SELECT cantidad
                 FROM carrito
-                WHERE usuario_id = ? AND producto_id = ?
+                WHERE usuario_id = ? AND producto_id = ? AND capacidad IS ?
             `;
 
             const checkResult = await db.execute({
                 sql: queryCheck,
-                args: [usuarioId, productoId]
+                args: [usuarioId, productoId, capacidad]
             });
 
             if (checkResult.rows.length === 0) {
@@ -141,26 +144,25 @@ class ModelCarrito {
                 const queryUpdate = ` 
                     UPDATE carrito 
                     SET cantidad = ? 
-                    WHERE usuario_id = ? AND producto_id = ?
+                    WHERE usuario_id = ? AND producto_id = ? AND capacidad IS ?
                 `;
 
                 await db.execute({
                     sql: queryUpdate,
-                    args: [cantidadActual-1,usuarioId, productoId]
+                    args: [cantidadActual - 1, usuarioId, productoId, capacidad]
                 });
 
                 return { accion: "reducir", message: "Se redujo la cantidad del producto en el carrito." };
 
-
             } else {
                 const queryDelete = `
                  DELETE FROM carrito 
-                 WHERE usuario_id = ? AND producto_id = ?
+                 WHERE usuario_id = ? AND producto_id = ? AND capacidad IS ?
                 `;
 
                 await db.execute({
                     sql: queryDelete,
-                    args: [usuarioId, productoId]
+                    args: [usuarioId, productoId, capacidad]
                 });
 
                 return { accion: "eliminar", message: "Se ha eliminado el producto del carrito." };
@@ -169,7 +171,6 @@ class ModelCarrito {
             console.error("Error al eliminar del carrito:", error);
             throw error;
         }
-
     }
 }   
 
