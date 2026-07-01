@@ -91,71 +91,98 @@ export const recibirWebhook = async (req, res) => {
         const paymentId = req.query.id || req.body.data?.id;
         const topic = req.query.topic || req.body.type;
 
+        // Validamos que el webhook sea exclusivamente de un pago
         if (topic === 'payment') {
             const payment = new Payment(client);
             const pagoInfo = await payment.get({ id: paymentId });
 
-            if (pagoInfo.status === 'approved' || pagoInfo.status === 'pending' || pagoInfo.status === 'in_process') {
-                const userId = pagoInfo.external_reference;
-                const totalPagado = pagoInfo.transaction_amount;
+            // Forzamos el ID a Número para evitar fallos de coincidencia de tipos en las consultas SQL
+            const userId = Number(pagoInfo.external_reference);
+            const totalPagado = pagoInfo.transaction_amount;
+            const estadoReal = mapearEstadoMP(pagoInfo.status);
 
-                console.log(`¡Éxito! El usuario ${userId} pagó $${totalPagado}. ID de pago: ${paymentId}`);
+            console.log(`[Webhook] Procesando Pago ID: ${paymentId} | Usuario: ${userId} | Estado MP: ${pagoInfo.status}`);
 
-                // PREVENCIÓN DE DUPLICADOS: Verificar si esta factura ya existe.
-                // Como configuraste mp_payment_id como UNIQUE, esto podría fallar si MP manda dos avisos rápidos.
-                // Lo manejaremos dentro de un bloque try/catch específico para que no tire la aplicación.
+            // CASO 1: El pago fue rechazado o cancelado de entrada.
+            // Protegemos el carrito para que el usuario no pierda su selección y pueda reintentar.
+            if (pagoInfo.status === 'rejected' || pagoInfo.status === 'cancelled') {
+                console.log(`❌ Pago fallido o rechazado de origen. El carrito del usuario ${userId} permanece intacto.`);
+                return res.status(200).send("Notificación procesada: Pago rechazado");
+            }
+
+            // CASO 2: El pago está aprobado, pendiente o en proceso de revisión.
+            if (['approved', 'pending', 'in_process'].includes(pagoInfo.status)) {
                 try {
-                    // 1. Intentamos crear la factura
+                    // 1. Intentamos registrar la factura inicial en la base de datos
                     const nuevaFacturaId = await ModelFactura.createFactura({
                         usuario_id: userId,
                         total: totalPagado,
                         mp_payment_id: paymentId,
-                        estado: mapearEstadoMP(pagoInfo.status)  // 👈 "approved", "pending", etc.
+                        estado: estadoReal
                     });
 
+                    const idFacturaSeguro = Number(nuevaFacturaId);
                     const usuario = await UsuarioModel.getbyId(userId);
-                    console.log(`Factura creada en BD con el ID interno: ${nuevaFacturaId}`);
-
-                    // 2. SOLO SI LA FACTURA SE CREÓ (no hubo error de duplicado), procesamos los productos
                     const itemsComprados = await ModelCarrito.getCarrito(userId);
 
-                    for (const item of itemsComprados) {
-                        await ModelDetalleFactura.createDetalleFactura(
-                            nuevaFacturaId,
-                            item.producto_id,
-                            item.cantidad,
-                            item.precio
-                        );
+                    if (!itemsComprados || itemsComprados.length === 0) {
+                        console.warn(`⚠️ Alerta: El carrito del usuario ${userId} ya estaba vacío al procesar la factura.`);
+                    } else {
+                        // 2. Registramos los detalles de los productos comprados en el historial
+                        for (const item of itemsComprados) {
+                            await ModelDetalleFactura.createDetalleFactura(
+                                idFacturaSeguro,
+                                item.producto_id,
+                                item.cantidad,
+                                item.precio
+                            );
+                        }
+
+                        // 3. Vaciamos el carrito en la Base de Datos para asegurar la orden (aplica a aprobado y pendiente)
+                        await ModelCarrito.emptyCarrito(userId);
+                        console.log(`✅ Orden generada con éxito (${pagoInfo.status}). Carrito vaciado para el usuario ${userId}`);
+
+                        // 4. Despachamos el correo adaptado con el estado del pago
+                        await enviarEmailCompra(usuario.email, {
+                            nombreUsuario: usuario.nombre,
+                            items: itemsComprados,
+                            total: totalPagado,
+                            mp_payment_id: paymentId,
+                            facturaId: idFacturaSeguro,
+                            estadoDePago: estadoReal, // Envía si está COMPLETO o PENDIENTE para la plantilla
+                            fecha: new Date()
+                        });
                     }
 
-                    await ModelCarrito.emptyCarrito(userId);
-                    console.log(`Carrito vaciado para el usuario ${userId}`);
-
-
-                    await enviarEmailCompra(usuario.email, {
-                        nombreUsuario: usuario.nombre,
-                        items: itemsComprados,
-                        total: totalPagado,
-                        mp_payment_id: paymentId,
-                        facturaId: nuevaFacturaId,  // 👈 agregá esto
-                        fecha: new Date()
-                    });
                 } catch (dbError) {
-                    // Aquí es donde capturamos el error de duplicado (Unique Constraint)
-                    if (dbError.code === 'SQLITE_CONSTRAINT' || dbError.message.includes('UNIQUE')) {
-                        console.warn(`⚠️ Aviso: El pago ${paymentId} ya fue procesado anteriormente. Ignorando.`);
-                        // Aquí no hacemos nada, simplemente dejamos que el código termine y devuelva el 200 OK
+                    // CASO 3: Manejo de la Condición de Carrera / Actualizaciones posteriores (UNIQUE Constraint)
+                    // Si la factura ya existía (ej: pasó de 'pending' a 'approved' cuando el usuario fue al Rapipago)
+                    if (dbError.code === 'SQLITE_CONSTRAINT' || dbError.message?.includes('UNIQUE')) {
+                        console.log(`⚡ El registro del pago ${paymentId} ya existía. Evaluando actualización de estado...`);
+                        
+                        if (pagoInfo.status === 'approved') {
+                            // TODO: Si tienes un método en tu modelo para cambiar el estado, ejecútalo aquí
+                            // Ejemplo: await ModelFactura.updateEstadoByPaymentId(paymentId, ESTADOS.COMPLETADO);
+                            console.log(`🎉 ¡Confirmado! El usuario abonó el ticket pendiente. Factura actualizada a COMPLETADO.`);
+                        } 
+                        else if (pagoInfo.status === 'cancelled' || pagoInfo.status === 'rejected') {
+                            // El ticket en efectivo caducó o el pago en revisión fue denegado posteriormente
+                            // Ejemplo: await ModelFactura.updateEstadoByPaymentId(paymentId, ESTADOS.CANCELADO);
+                            console.log(`❌ El pago pendiente fue cancelado o expiró de forma definitiva.`);
+                        }
                     } else {
-                        console.error("Error crítico en base de datos:", dbError);
+                        // Si es otro error de base de datos totalmente diferente, lo lanzamos al catch general
+                        throw dbError;
                     }
                 }
             }
         }
 
-        return res.status(200).send("Notificación recibida");
+        // Importante: Siempre responder 200 a Mercado Pago para confirmar recepción de la alerta
+        return res.status(200).send("Notificación recibida e internalizada correctamente");
 
     } catch (error) {
-        console.error("Error al procesar el webhook:", error);
-        return res.status(500).send("Error interno del servidor");
+        console.error("❌ Error crítico al procesar el webhook de Mercado Pago:", error);
+        return res.status(500).send("Error interno del servidor al procesar la pasarela");
     }
 };
