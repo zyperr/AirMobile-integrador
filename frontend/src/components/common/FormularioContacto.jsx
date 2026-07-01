@@ -161,7 +161,7 @@ const FormularioContacto = () => {
                 <div className="d-flex justify-content-center gap-4 mt-4 flex-wrap">
                     {[
                         { icono: 'bi-envelope', texto: 'airmobileoficial@gmail.com' },
-                        { icono: 'bi-clock',    texto: 'Lun - Vie, 9am - 6pm' },
+                        { icono: 'bi-clock',    texto: 'Respuestas en 5 min' },
                     ].map(({ icono, texto }) => (
                         <div key={texto} style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#6b7280', fontSize: '0.85rem' }}>
                             <i className={`bi ${icono}`} style={{ color: '#1d4ed8' }} />

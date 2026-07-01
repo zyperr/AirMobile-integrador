@@ -2,7 +2,7 @@
 
 import { Router } from "express";
 import { verificarToken } from "../middlewares/authMiddleware.js";
-import { obtenerFactura, crearFactura, actualizarEstadoFactura, obtenerDetalleFactura, obtenerTodasLasFacturas, obtenerFacturasDeUsuario, obtenerEstadisticasFacturas } from "../controllers/controllerFactura.js";
+import { obtenerFactura, crearFactura, actualizarEstadoFactura, obtenerDetalleFactura, obtenerTodasLasFacturas, obtenerFacturasDeUsuario, obtenerEstadisticasFacturas, obtenerUltimaFacturaBot } from "../controllers/controllerFactura.js";
 import { descargarFacturaPDF } from "../utils/descargarFacturaPDF.js";
 import { verificarAdmin } from "../middlewares/verificarAdmin.js";
 
@@ -27,5 +27,7 @@ router.put("/actualizar-estado/:id", verificarToken, verificarAdmin, actualizarE
 router.get("/obtener-facturas-usuario", verificarToken, obtenerFacturasDeUsuario);
 
 router.get("/estadisticas", verificarToken, verificarAdmin, obtenerEstadisticasFacturas);
+
+router.get("/bot/ultima-factura", obtenerUltimaFacturaBot); // sin verificarToken, lo hace manualmente
 
 export default router

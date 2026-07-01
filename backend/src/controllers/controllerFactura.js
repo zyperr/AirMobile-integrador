@@ -8,6 +8,7 @@ import UsuarioModel from "../models/modelUsuario.js";
 import { ROLES } from "../utils/roles.js";
 import { ESTADOS } from "../utils/estados.js";
 import { filtrosFacturasSchema } from "../schemas/schemaFacturas.js";
+import jwt from 'jsonwebtoken';
 
 
 export const crearFactura = async (req, res) => {
@@ -308,3 +309,70 @@ export const obtenerDetalleFactura = async (req, res) => {
         console.log(err); return res.status(500).json({ exito: false, message: "Error al obtener el detalle de la factura" });
     }
 }
+
+export const obtenerUltimaFacturaBot = async (req, res) => {
+    try {
+        // El token viene en el header Authorization que n8n manda
+        const authHeader = req.headers.authorization;
+
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({
+                exito: false,
+                message: "Para ver tu factura necesitás iniciar sesión en AirMobile."
+            });
+        }
+
+        // Verificamos el token manualmente
+        const token = authHeader.split(' ')[1];
+        let decoded;
+        try {
+            decoded = jwt.verify(token, process.env.JWT_SECRET);
+        } catch (err) {
+            return res.status(401).json({
+                exito: false,
+                message: "Tu sesión expiró. Por favor iniciá sesión nuevamente."
+            });
+        }
+
+        const usuarioId = decoded.id;
+
+        // Traemos la última factura
+        const facturas = await ModelFactura.getFacturasDeUsuario(usuarioId, 1, 0);
+        if (!facturas || facturas.length === 0) {
+            return res.status(404).json({
+                exito: false,
+                message: "No tenés compras registradas todavía."
+            });
+        }
+
+        const ultimaFactura = facturas[0];
+        const detalles = await ModelDetalleFactura.getDetallesFacturaByFacturaId(ultimaFactura.id);
+
+        const fechaFormateada = ultimaFactura.fecha
+            ? new Date(ultimaFactura.fecha + 'Z').toLocaleDateString('es-AR', {
+                day: '2-digit', month: 'long', year: 'numeric',
+                timeZone: 'America/Argentina/Buenos_Aires'
+            })
+            : 'Sin fecha';
+
+        return res.status(200).json({
+            exito: true,
+            factura: {
+                id: ultimaFactura.id,
+                fecha: fechaFormateada,
+                estado: ultimaFactura.estado,
+                total: ultimaFactura.total,
+                productos: detalles.map(d => ({
+                    nombre: d.nombre_producto,
+                    cantidad: d.cantidad,
+                    precio_unitario: d.precio_unitario,
+                    subtotal: d.cantidad * d.precio_unitario
+                }))
+            }
+        });
+
+    } catch (err) {
+        console.error("Error en obtenerUltimaFacturaBot:", err);
+        return res.status(500).json({ exito: false, message: "Error interno" });
+    }
+};
