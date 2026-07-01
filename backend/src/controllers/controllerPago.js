@@ -16,12 +16,12 @@ const client = new MercadoPagoConfig({
 
 const mapearEstadoMP = (estadoMP) => {
     const mapa = {
-        'approved':   ESTADOS.COMPLETADO,
-        'pending':    ESTADOS.PENDIENTE,
+        'approved': ESTADOS.COMPLETADO,
+        'pending': ESTADOS.PENDIENTE,
         'in_process': ESTADOS.PENDIENTE,
-        'rejected':   ESTADOS.CANCELADO,
-        'cancelled':  ESTADOS.CANCELADO,
-        'refunded':   ESTADOS.REEMBOLSADO,
+        'rejected': ESTADOS.CANCELADO,
+        'cancelled': ESTADOS.CANCELADO,
+        'refunded': ESTADOS.REEMBOLSADO,
     };
     return mapa[estadoMP] || ESTADOS.PENDIENTE;
 };
@@ -45,7 +45,7 @@ export const crearPreferencia = async (req, res) => {
 
         for (const item of carritoItems) {
             const productoCompleto = await ModelProductos.getById(item.producto_id);
-            
+
             let listaCapacidades = [];
             if (productoCompleto && productoCompleto.capacidad) {
                 try {
@@ -60,7 +60,7 @@ export const crearPreferencia = async (req, res) => {
             // BLINDAJE: Limpiamos espacios y evitamos errores si viene undefined
             const capUsuario = item.capacidad ? String(item.capacidad).trim() : "";
             const index = listaCapacidades.findIndex(cap => String(cap).trim() === capUsuario);
-            
+
             let extra = 0;
             if (index === 1) extra = 100;
             if (index === 2) extra = 250;
@@ -74,7 +74,7 @@ export const crearPreferencia = async (req, res) => {
 
             itemsMercadoPago.push({
                 title: item.capacidad ? `${item.nombre_producto} (${item.capacidad})` : item.nombre_producto,
-                unit_price: precioFinal, 
+                unit_price: precioFinal,
                 quantity: Number(item.cantidad),
                 currency_id: "ARS",
             });
@@ -126,60 +126,74 @@ export const recibirWebhook = async (req, res) => {
 
             if (['approved', 'pending', 'in_process'].includes(pagoInfo.status)) {
                 try {
-                    const nuevaFacturaId = await ModelFactura.createFactura({
-                        usuario_id: userId,
-                        total: totalPagado,
-                        mp_payment_id: paymentId,
-                        estado: estadoReal
-                    });
+                    let idFacturaSeguro;
+                    // 1. Verificamos si la factura ya se creó en un webhook anterior
+                    const facturaExistente = await ModelFactura.getFacturaByPaymentId(paymentId);
 
-                    const idFacturaSeguro = Number(nuevaFacturaId);
-                    const usuario = await UsuarioModel.getbyId(userId);
-                    const itemsComprados = await ModelCarrito.getCarrito(userId);
-
-                    if (!itemsComprados || itemsComprados.length === 0) {
-                        console.warn(`⚠️ Alerta: El carrito del usuario ${userId} ya estaba vacío al procesar la factura.`);
+                    if (facturaExistente) {
+                        // 2A. Si ya existe, solo actualizamos el estado
+                        await ModelFactura.updateEstadoFactura(facturaExistente.id, estadoReal);
+                        idFacturaSeguro = facturaExistente.id;
                     } else {
-                        
-                        for (const item of itemsComprados) {
-                            const productoCompleto = await ModelProductos.getById(item.producto_id);
-                            
-                            let listaCapacidades = [];
-                            if (productoCompleto && productoCompleto.capacidad) {
-                                try {
-                                    listaCapacidades = typeof productoCompleto.capacidad === 'string'
-                                        ? JSON.parse(productoCompleto.capacidad)
-                                        : productoCompleto.capacidad;
-                                } catch (e) {
-                                    listaCapacidades = [];
+                        // 2B. Si NO existe, creamos la factura y sus detalles
+                        const nuevaFacturaId = await ModelFactura.createFactura({
+                            usuario_id: userId,
+                            total: totalPagado,
+                            mp_payment_id: paymentId,
+                            estado: estadoReal
+                        });
+                        idFacturaSeguro = Number(nuevaFacturaId);
+
+                        const itemsComprados = await ModelCarrito.getCarrito(userId);
+                        if (!itemsComprados || itemsComprados.length === 0) {
+                            console.warn(`⚠️ Alerta: El carrito del usuario ${userId} ya estaba vacío al procesar la factura.`);
+                        } else {
+                            // Tu lógica actual intacta para iterar el carrito y crear DetallesFactura
+                            for (const item of itemsComprados) {
+                                const productoCompleto = await ModelProductos.getById(item.producto_id);
+                                let listaCapacidades = [];
+                                if (productoCompleto && productoCompleto.capacidad) {
+                                    try {
+                                        listaCapacidades = typeof productoCompleto.capacidad === 'string'
+                                            ? JSON.parse(productoCompleto.capacidad)
+                                            : productoCompleto.capacidad;
+                                    } catch (e) {
+                                        listaCapacidades = [];
+                                    }
                                 }
+
+                                const capUsuario = item.capacidad ? String(item.capacidad).trim() : "";
+                                const index = listaCapacidades.findIndex(cap => String(cap).trim() === capUsuario);
+
+                                let extra = 0;
+                                if (index === 1) extra = 100;
+                                if (index === 2) extra = 250;
+                                if (index === 3) extra = 400;
+
+                                const precioFinalItem = Number(item.precio || 0) + extra;
+
+                                await ModelDetalleFactura.createDetalleFactura(
+                                    idFacturaSeguro,
+                                    item.producto_id,
+                                    item.cantidad,
+                                    precioFinalItem
+                                );
                             }
-
-                            // BLINDAJE idéntico para la factura
-                            const capUsuario = item.capacidad ? String(item.capacidad).trim() : "";
-                            const index = listaCapacidades.findIndex(cap => String(cap).trim() === capUsuario);
-                            
-                            let extra = 0;
-                            if (index === 1) extra = 100;
-                            if (index === 2) extra = 250;
-                            if (index === 3) extra = 400;
-
-                            const precioFinalItem = Number(item.precio || 0) + extra;
-
-                            await ModelDetalleFactura.createDetalleFactura(
-                                idFacturaSeguro,
-                                item.producto_id,
-                                item.cantidad,
-                                precioFinalItem
-                            );
                         }
+                    }
 
-                        if (pagoInfo.status === 'approved') {
-                            await ModelCarrito.emptyCarrito(userId);
+                    // 3. Si el estado es finalmente 'approved', ejecutamos los cierres
+                    if (pagoInfo.status === 'approved') {
+                        const usuario = await UsuarioModel.getbyId(userId);
+                        const itemsParaEmail = await ModelCarrito.getCarrito(userId); // Recuperamos antes de vaciar
+
+                        await ModelCarrito.emptyCarrito(userId);
+
+                        if (itemsParaEmail && itemsParaEmail.length > 0) {
                             await enviarEmailCompra(usuario.email, {
                                 nombreUsuario: usuario.nombre,
-                                items: itemsComprados,
-                                total: totalPagado, // MP ya cobró el total con el extra
+                                items: itemsParaEmail,
+                                total: totalPagado,
                                 mp_payment_id: paymentId,
                                 facturaId: idFacturaSeguro,
                                 estadoDePago: estadoReal,
@@ -189,11 +203,8 @@ export const recibirWebhook = async (req, res) => {
                     }
 
                 } catch (dbError) {
-                    if (dbError.code === 'SQLITE_CONSTRAINT' || dbError.message?.includes('UNIQUE')) {
-                        // Manejo silencioso de actualizaciones (como lo configuramos antes)
-                    } else {
-                        throw dbError;
-                    }
+                    console.error("Error en DB durante el Webhook:", dbError);
+                    throw dbError; // Ahora puedes quitar el manejo silencioso, porque ya controlas los duplicados.
                 }
             }
         }

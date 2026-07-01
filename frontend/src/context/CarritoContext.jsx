@@ -15,7 +15,9 @@ export function CartProvider({ children }) {
 
 
 
-
+    const limpiarCarritoPantalla = () => {
+        setCartItems([]);
+    };
 
     const procesarPago = async () => {
         setIsProcessing(true);
@@ -27,13 +29,13 @@ export function CartProvider({ children }) {
             });
 
             // --- AQUÍ ESTÁ EL CAMBIO ---
-            console.log("Respuesta de la API:", response); 
-            
+            console.log("Respuesta de la API:", response);
+
             if (response.exito && response.data?.init_point) {
                 window.location.href = response.data.init_point;
             } else {
                 // Si 'response' existe pero 'exito' es false, aquí veremos el error real
-                console.error("Error detallado del servidor:", response); 
+                console.error("Error detallado del servidor:", response);
                 alert(`Error al pagar: ${response.message || "Revisa la consola del servidor"}`);
             }
 
@@ -130,9 +132,9 @@ export function CartProvider({ children }) {
 
         const response = await ejecutarPeticion(`carrito/agregar-carrito/${idProducto}`, {
             method: "POST",
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 cantidad: 1,
-                capacidad: capacidadSeleccionada 
+                capacidad: capacidadSeleccionada
             }),
         });
 
@@ -159,7 +161,7 @@ export function CartProvider({ children }) {
                     } catch {
                         listaCaps = p.capacidad || [];
                     }
-                    
+
                     const idx = listaCaps.indexOf(capacidadSeleccionada);
                     let extra = 0;
                     if (idx === 1) extra = 100;
@@ -171,7 +173,7 @@ export function CartProvider({ children }) {
                         nombre_producto: p.nombre_producto,
                         cantidad: 1,
                         precio: Number(p.precio) + extra, // <-- ¡Guardamos el precio sumado!
-                        capacidad: capacidadSeleccionada, 
+                        capacidad: capacidadSeleccionada,
                         imagen,
                     }]);
                     setToastVisible(true);
@@ -285,6 +287,7 @@ export function CartProvider({ children }) {
                 decreaseQuantity,
                 removeFromCart,
                 vaciarCarrito,
+                limpiarCarritoPantalla
             }}
         >
             {children}

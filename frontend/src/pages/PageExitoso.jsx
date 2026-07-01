@@ -4,7 +4,7 @@ import { useCarrito } from "../context/CarritoContext";
 
 const PagoExitoso = () => {
     // Extraemos la función para limpiar el carrito de tu contexto
-    const { vaciarCarrito } = useCarrito();
+    const { limpiarCarritoPantalla } = useCarrito();
     
     // Mercado Pago enviará datos en la URL (ej: ?collection_id=123&status=approved)
     const [searchParams] = useSearchParams();
@@ -12,7 +12,7 @@ const PagoExitoso = () => {
 
     useEffect(() => {
         // Apenas carga la página de éxito, vaciamos el carrito del frontend
-        vaciarCarrito();
+        limpiarCarritoPantalla();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 

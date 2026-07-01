@@ -36,7 +36,12 @@ export const crearFactura = async (req, res) => {
         // .toFixed(2) corta a dos decimales pero lo vuelve texto ("150.50")
         // Number() lo vuelve a convertir en número para guardarlo en la DB
         totalCalculado = Number(totalCalculado.toFixed(2));
-        const idFacturaCreada = await ModelFactura.createFactura(idUsuario, totalCalculado);
+        const idFacturaCreada = await ModelFactura.createFactura({
+            usuario_id: idUsuario, 
+            total: totalCalculado, 
+            mp_payment_id: null, 
+            estado: ESTADOS.COMPLETADO 
+        });
 
         //creamos los detalles de la factura con cada producto del carrito
         for (const item of carrito) {

@@ -6,7 +6,19 @@ const db = await obtenerDb();
 
 
 class ModelFactura {
-
+    static async getFacturaByPaymentId(mpPaymentId) {
+        try {
+            const query = `SELECT * FROM facturas WHERE mp_payment_id = ?`;
+            const { rows } = await db.execute({
+                sql: query,
+                args: [mpPaymentId]
+            });
+            return rows[0]; // Devuelve la factura si existe, o undefined
+        } catch (error) {
+            console.error("Error al obtener la factura por payment ID:", error);
+            throw error;
+        }
+    }
     static async createFactura({ usuario_id, total, mp_payment_id, estado = 'Completado' }) {
         try {
             // 1. Agregamos mp_payment_id a la consulta SQL
