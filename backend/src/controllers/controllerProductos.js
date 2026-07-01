@@ -172,8 +172,7 @@ export const crearProducto = async (req, res) => {
 }
 
 export const actualizarProducto = async (req, res) => {
-    console.log("BODY RECIBIDO:", req.body);
-    console.log("FILES RECIBIDOS:", req.files);
+
     const { error, value } = schemaActualizarProducto.validate(req.body, { abortEarly: false });
 
     if (error) {
@@ -389,7 +388,6 @@ export const bulkUpload = async (req, res) => {
             return producto;
         });
 
-        console.log("Productos mapeados:", JSON.stringify(productosMapeados, null, 2));
 
         const schemaMasivo = Joi.array().items(schemaProductos);
         const { error, value: productosValidados } = schemaMasivo.validate(productosMapeados, { abortEarly: true });

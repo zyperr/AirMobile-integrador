@@ -42,7 +42,7 @@ export const enviarCorreoVerificacion = async (emailDestino, codigo) => {
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log(`Codigo de verificacion enviado a: ${emailDestino}`);
+        
         return true;
     } catch (error) {
         console.error("Error al enviar el email de verificacion:", error);
@@ -73,7 +73,7 @@ export const enviarEmailConfirmacionPassword = async (emailDestino, nombre) => {
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log(`Email de confirmación de cambio enviado a: ${emailDestino}`);
+        
         return true;
     } catch (error) {
         // En este caso solo hacemos un console.error. 
@@ -115,7 +115,7 @@ export const enviarEmailRecuperacion = async (emailDestino, codigoReseteo) => {
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log(`Email de recuperación enviado exitosamente a: ${emailDestino}`);
+        
         return true;
     } catch (error) {
         console.error("Error al enviar el email de recuperación:", error);
@@ -156,7 +156,7 @@ export const enviarCorreoBlanqueo = async (emailDestino, nombre, passwordTempora
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log(`Correo de blanqueo de emergencia enviado a: ${emailDestino}`);
+       
         return true;
     } catch (error) {
         console.error("Error al enviar el email de blanqueo de staff:", error);
@@ -262,7 +262,7 @@ export const enviarEmailCompra = async (emailDestino, datosCompra) => {
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log(`Correo de compra enviado a: ${emailDestino}`);
+        
         return true;
     } catch (error) {
         console.error("Error al enviar el email de compra:", error);
@@ -287,7 +287,7 @@ export const enviarEmailContacto = async (nombre, emailUsuario, asunto, descripc
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log(`Email de contacto recibido de: ${emailUsuario}`);
+        
         return true;
     } catch (error) {
         console.error('Error al enviar email de contacto:', error);

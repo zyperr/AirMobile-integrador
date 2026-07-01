@@ -131,7 +131,6 @@ export const solicitarRecuperacion = async (req, res) => {
 
         // 2. Generamos un código de 6 dígitos aleatorio
         const codigoReseteo = generarCodigo();
-        console.log(codigoReseteo)
         // 3. Guardamos este código en la base de datos (en tu columna codigo_verificacion)
         await UsuarioModel.guardarCodigoVerificacion(usuario.id, codigoReseteo);
 

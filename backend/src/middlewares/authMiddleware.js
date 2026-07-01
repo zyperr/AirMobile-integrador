@@ -9,9 +9,9 @@ dotenv.config();
 const SECRET_KEY = process.env.SECRET_KEY;
 
 export const verificarToken = (req, res, next) => {
-    console.log("ENTRO A verificarToken");
+    
     const authHeader = req.headers['authorization'];
-     console.log("AUTH HEADER:", authHeader);
+    
 
     // 1. Validamos que exista Y que tenga el formato correcto "Bearer <token>"
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -24,9 +24,7 @@ export const verificarToken = (req, res, next) => {
     // 3. Usamos try/catch en lugar del callback para un código más moderno y asíncrono
     try {
         const user = jwt.verify(token, SECRET_KEY);
-        console.log("TOKEN VALIDO:", user);
         req.user = user; // Guardamos el payload (id, email) en la request
-        console.log(user)
         next();
     } catch (error) {
         console.log("ERROR JWT:", error);

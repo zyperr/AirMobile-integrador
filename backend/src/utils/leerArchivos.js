@@ -11,7 +11,7 @@ const leerJson = (buffer) => {
         if (!Array.isArray(data)) {
             throw new Error("El archivo JSON debe contener un arreglo de productos.");
         }
-        console.log(data)
+
         return data;
     } catch (error) {
         // Lanzamos un error claro para que el controlador lo atrape
@@ -30,7 +30,7 @@ const leerCsv = (buffer, separador = ',') => { // Por defecto usa coma, pero pod
         stream
             .pipe(csv({ separator: separador })) // Acá le indicamos el separador
             .on('data', (fila) => {
-                console.log(fila)
+                
                 // Cada fila del Excel/CSV llega acá como un objeto
                 resultados.push(fila);
             })

@@ -108,6 +108,7 @@ export const crearPreferencia = async (req, res) => {
 }
 
 export const recibirWebhook = async (req, res) => {
+    console.log("📥 Petición recibida en Webhook. Query:", req.query, "Body:", req.body); // <-- AGREGAR ESTO
     try {
         const paymentId = req.query.id || req.body.data?.id;
         const topic = req.query.topic || req.body.type;
