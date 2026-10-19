@@ -375,6 +375,5 @@ Proyecto integrador desarrollado en equipo:
 - [Irumau](https://github.com/Irumau)
 - [matiasbusto935-source](https://github.com/matiasbusto935-source)
 - [YoelZ2203](https://github.com/YoelZ2203)
-- Maxi
 - Mati Giordanengo
 - Santino Garcia
