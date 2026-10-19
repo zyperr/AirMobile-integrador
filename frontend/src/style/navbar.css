@@ -1,0 +1,129 @@
+
+.aviso-demo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #fff4d6;
+  color: #6b4e00;
+  border-bottom: 1px solid #f0d78c;
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.aviso-demo i {
+  flex-shrink: 0;
+}
+
+.navbar-search {
+  padding: 10px 16px;
+  border-radius: 20px;
+  border: 1px solid #ddd;
+  font-size: 13px;
+  width: 180px;
+  outline: none;
+}
+
+.navbar-search:focus {
+  border-color: #1a6fe8;
+}
+.nav-icon {
+  font-size: 18px;
+  cursor: pointer;
+}
+.search-container {
+  position: relative;
+}
+
+.search-dropdown {
+  position: absolute;
+  top: 48px;
+  right: 0;
+
+  width: 320px;
+
+  background: white;
+  border: 1px solid #e5e5e5;
+  border-radius: 14px;
+
+  overflow: hidden;
+
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+
+  z-index: 999;
+}
+
+.search-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  padding: 12px;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.search-item:hover {
+  background: #f5f5f5;
+}
+
+.search-item img {
+  width: 55px;
+  height: 55px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.search-empty {
+  padding: 16px;
+  font-size: 14px;
+  color: #777;
+}
+
+/* --- EFECTO MENÚ LATERAL (ESTILO YOUTUBE) --- */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1040;
+}
+
+.sidebar-menu {
+    position: fixed;
+    top: 0;
+    left: -280px; /* Empieza escondido a la izq */
+    width: 280px;
+    height: 100vh;
+    background-color: white;
+    z-index: 1050;
+    transition: left 0.3s ease-in-out;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.15);
+    overflow-y: auto;
+}
+
+.sidebar-user {
+    position: fixed;
+    top: 0;
+    right: -300px; /* Empieza escondido a la derecha */
+    width: 300px;
+    height: 100vh;
+    background-color: white;
+    z-index: 1050;
+    transition: right 0.3s ease-in-out;
+    box-shadow: -2px 0 8px rgba(0,0,0,0.15);
+    overflow-y: auto;
+}
+
+.sidebar-user.open{
+  right: 0 !important; 
+}
+.sidebar-menu.open {
+   left: 0 ; /* Desliza hacia adentro */
+}

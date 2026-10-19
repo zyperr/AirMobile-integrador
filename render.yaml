@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: airmobile-api
+    runtime: node
+    plan: free
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: TURSO_URL
+        sync: false
+      - key: TURSO_TOKEN
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false
+      - key: BACKEND_URL
+        sync: false
+      - key: MP_ACCESS_TOKEN
+        sync: false
+      - key: MAILER_EMAIL
+        sync: false
+      - key: MAILER_PASS
+        sync: false
+      - key: CONTACT_EMAIL
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false

@@ -1,0 +1,9 @@
+Usá esta herramienta ÚNICAMENTE cuando el usuario haga una consulta general sobre el catálogo o stock sin especificar un producto o categoría.
+Ejemplos: 'qué productos tienen', 'qué venden', 'mostrame el catálogo'.
+
+Esta herramienta trae hasta 50 productos. Al procesar la respuesta:
+1. Agrupá los productos usando títulos de Markdown (### Categoría).
+2. Mostrá máximo 2 o 3 productos por categoría para no saturar.
+3. PRECIOS ESTRICTOS: Usá EXACTAMENTE el valor del campo "precio" que devuelve la base de datos. ESTÁ PROHIBIDO inventar precios distintos.
+4. ENLACES ESTRICTOS: Es OBLIGATORIO crear el link usando el número exacto del campo "id". Formato: [Ver detalles](/producto/VALOR_DEL_ID).
+5. CIERRE CONVERSACIONAL: Al final del mensaje, SIEMPRE debes incluir una pregunta amigable para invitar al usuario a seguir interactuando (ej: "¿Querés que te cuente más sobre alguno de estos en particular?").

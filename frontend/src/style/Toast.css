@@ -1,0 +1,31 @@
+/* Animación de Entrada (Ya la tenías) */
+.toast-animacion-entrada {
+    animation: slideUpToast 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideUpToast {
+    0% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* NUEVO: Animación de Salida */
+.toast-animacion-salida {
+    animation: slideDownToast 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideDownToast {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+}

@@ -1,0 +1,64 @@
+/* =========================================
+   CARTA DE PRODUCTOS (Complemento a Bootstrap)
+   ========================================= */
+
+/* Contenedor principal de la tarjeta */
+.custom-product-card {
+  background-color: #fcfafc !important; 
+  border-radius: 30px !important; 
+  padding: 16px; 
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Efecto opcional al pasar el mouse sobre la tarjeta */
+.custom-product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Contenedor de la imagen */
+.custom-img-container {
+  background-color: #f3eff2; 
+  border-radius: 20px; 
+  height: 250px; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 16px;
+  overflow: hidden; 
+}
+
+.custom-product-img {
+  max-width: 90%; 
+  max-height: 90%; 
+  object-fit: contain; 
+}
+
+/* Etiqueta azul oscuro */
+.custom-status-badge {
+  background-color: #005bb5 !important; 
+  font-size: 11px !important; 
+  font-weight: 800 !important; 
+  padding: 6px 12px !important; 
+  letter-spacing: 0.5px; 
+}
+
+/* Separador de punto medio */
+.custom-bullet {
+  color: #a0a6b5; 
+  margin: 0 4px; 
+}
+
+/* Botón de acción azul brillante */
+.custom-view-btn {
+  background-color: #0066cc !important; 
+  border: none !important; 
+  border-radius: 8px !important; 
+  padding: 10px 22px !important; 
+  font-size: 14px !important; 
+  transition: background-color 0.2s ease; 
+}
+
+.custom-view-btn:hover {
+  background-color: #0052a3 !important; 
+}

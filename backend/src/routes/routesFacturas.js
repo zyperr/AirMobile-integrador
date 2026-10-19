@@ -1,0 +1,33 @@
+
+
+import { Router } from "express";
+import { verificarToken } from "../middlewares/authMiddleware.js";
+import { obtenerFactura, crearFactura, actualizarEstadoFactura, obtenerDetalleFactura, obtenerTodasLasFacturas, obtenerFacturasDeUsuario, obtenerEstadisticasFacturas, obtenerUltimaFacturaBot } from "../controllers/controllerFactura.js";
+import { descargarFacturaPDF } from "../utils/descargarFacturaPDF.js";
+import { verificarAdmin } from "../middlewares/verificarAdmin.js";
+
+
+
+const router = Router();
+
+router.post("/crear-factura", verificarToken, crearFactura)
+
+//recibe el id de la factura por params 
+router.get("/obtener-factura/:id", verificarToken, obtenerFactura);
+
+
+//obtiene todas las facturas del sistema admin
+router.get("/obtener-facturas", verificarToken, verificarAdmin, obtenerTodasLasFacturas);
+
+//recibe el id de la factura por params y devuelve el detalle de la factura con los productos comprados, cantidades y precios
+router.get("/detalle-factura/:id", verificarToken, obtenerDetalleFactura);
+router.get("/detalle-factura/:id/pdf", verificarToken, descargarFacturaPDF);
+
+router.put("/actualizar-estado/:id", verificarToken, verificarAdmin, actualizarEstadoFactura);
+router.get("/obtener-facturas-usuario", verificarToken, obtenerFacturasDeUsuario);
+
+router.get("/estadisticas", verificarToken, verificarAdmin, obtenerEstadisticasFacturas);
+
+router.get("/bot/ultima-factura", verificarToken, obtenerUltimaFacturaBot);
+
+export default router

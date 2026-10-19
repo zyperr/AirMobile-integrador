@@ -1,0 +1,53 @@
+/* =========================================
+   CATÁLOGO DE PRODUCTOS (Complemento)
+   ========================================= */
+
+/*Altura mínima para que el footer no se suba si hay 0 o 1 producto */
+.custom-catalog-min-height {
+  min-height: calc(100vh - 200px);
+}
+
+/* Comportamiento del sidebar: 100% en celular, 240px fijo en PC */
+.sidebar-filters {
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .sidebar-filters {
+    width: 240px;
+  }
+}
+
+/*Personalizar el color de los checkboxes al azul estilo Apple/AirMobile */
+.custom-checkbox:checked {
+  background-color: var(--primary-color, #005ce6) !important;
+  border-color: var(--primary-color, #005ce6) !important;
+}
+
+/* Quita el borde azul feo por defecto al hacer click (focus) en el checkbox */
+.custom-checkbox:focus {
+  box-shadow: 0 0 0 0.25rem rgba(0, 92, 230, 0.25) !important;
+  border-color: var(--primary-color, #005ce6) !important;
+}
+
+
+/* Evita que el dropdown se cierre al interactuar con los checks internos */
+.dropdown-menu.p-3 {
+  min-width: 200px;
+}
+
+/* Opcional: un efecto de fondo suave al pasar el mouse por la fila del check */
+.custom-dropdown-check:hover {
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+/* Estilo para que el botón del dropdown se vea más acorde al estilo Apple */
+.dropdown-toggle::after {
+  margin-left: auto; /* Empuja la flechita a la derecha */
+}
+
+
+.cursor-pointer{
+  cursor: pointer;
+}

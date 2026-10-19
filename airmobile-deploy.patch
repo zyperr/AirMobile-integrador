@@ -1,0 +1,375 @@
+From 23cc60647c8554aeb2e0250f0396bb14140076e9 Mon Sep 17 00:00:00 2001
+From: zyperr <jgift26@outlook.com>
+Date: Fri, 16 Oct 2026 22:25:22 +0000
+Subject: [PATCH] Preparar proyecto para despliegue: URLs por variables de
+ entorno, Vercel y Render
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01PdtnYPEGfRSAc8kxTfhEWw
+---
+ .env.example                                  | 25 +++++++++++++
+ DEPLOY.md                                     | 36 ++++++++++++++++++
+ backend/src/config/conexion.js                |  5 ++-
+ backend/src/controllers/controllerPago.js     | 12 ++++--
+ backend/src/index.js                          | 15 ++++++--
+ .../src/components/admin/FilaFacturas.jsx     |  3 +-
+ .../cuenta/tabs/HistorialFacturas.jsx         |  3 +-
+ frontend/src/config.js                        |  7 ++++
+ frontend/src/context/AuthContext.jsx          |  5 ++-
+ frontend/src/hooks/useApi.js                  |  3 +-
+ frontend/src/hooks/useN8nChat.js              |  3 +-
+ package.json                                  |  5 ++-
+ render.yaml                                   | 37 +++++++++++++++++++
+ vercel.json                                   |  5 +++
+ 14 files changed, 146 insertions(+), 18 deletions(-)
+ create mode 100644 .env.example
+ create mode 100644 DEPLOY.md
+ create mode 100644 frontend/src/config.js
+ create mode 100644 render.yaml
+ create mode 100644 vercel.json
+
+diff --git a/.env.example b/.env.example
+new file mode 100644
+index 0000000..c286cdd
+--- /dev/null
++++ b/.env.example
+@@ -0,0 +1,25 @@
++# ===== Backend =====
++PORT=3000
++TURSO_URL=libsql://tu-db.aws-us-east-1.turso.io
++TURSO_TOKEN=
++# Local: TURSO_URL=file:./backend/dev.db
++
++SECRET_KEY=una_clave_larga_y_aleatoria
++ADMIN_PASSWORD=
++
++# URL(s) del frontend, separadas por coma (CORS + back_urls de Mercado Pago)
++FRONTEND_URL=http://localhost:5173
++# URL pública del backend (para el webhook de Mercado Pago). Vacía en local si no usás ngrok.
++BACKEND_URL=
++
++MP_ACCESS_TOKEN=TEST-xxxxxxxx
++MAILER_EMAIL=
++MAILER_PASS=
++CONTACT_EMAIL=
++CLOUDINARY_CLOUD_NAME=
++CLOUDINARY_API_KEY=
++CLOUDINARY_API_SECRET=
++
++# ===== Frontend (Vite) =====
++VITE_API_URL=http://localhost:3000/api
++VITE_N8N_WEBHOOK_URL=http://localhost:5678/webhook/dfff64e4-9189-477f-91c1-61a901a87dd6
+diff --git a/DEPLOY.md b/DEPLOY.md
+new file mode 100644
+index 0000000..81d5b9a
+--- /dev/null
++++ b/DEPLOY.md
+@@ -0,0 +1,36 @@
++# Despliegue de AirMobile (portafolio)
++
++Arquitectura: **Frontend → Vercel**, **API → Render**, **DB → Turso**, **Bot → n8n Cloud o n8n en Render**, **IA → Groq/Gemini (reemplaza Ollama local)**.
++
++## 1. Base de datos (Turso)
++1. `turso db create airmobile` y `turso db tokens create airmobile`.
++2. Guardá `TURSO_URL` (libsql://...) y `TURSO_TOKEN`.
++3. Cargá datos de ejemplo una vez desde tu PC: con esas variables en `.env`, `npm run dev:seed`.
++
++## 2. API (Render)
++1. New → Blueprint → elegí este repo (usa `render.yaml`), o Web Service con build `npm ci --omit=dev` y start `npm start`.
++2. Completá las variables (ver `.env.example`). Claves:
++   - `FRONTEND_URL` = URL de Vercel (ej. `https://airmobile.vercel.app`)
++   - `BACKEND_URL` = URL de Render (ej. `https://airmobile-api.onrender.com`)
++   - `MP_ACCESS_TOKEN` = token **de prueba** de Mercado Pago
++3. Probá `https://<tu-api>/health` → `{"ok":true}`.
++> El plan gratis se duerme tras 15 min sin uso; el primer request tarda ~50 s.
++
++## 3. Frontend (Vercel)
++1. Importá el repo. Root directory: raíz del repo (el `vercel.json` ya define build y salida `frontend/dist`).
++2. Variables: `VITE_API_URL=https://<tu-api>/api` y `VITE_N8N_WEBHOOK_URL=<webhook de producción de n8n>`.
++3. Deploy. Después volvé a Render y confirmá que `FRONTEND_URL` coincide exactamente.
++
++## 4. Mercado Pago
++- Usá credenciales de prueba y cuentas de test comprador. Con URLs https públicas, `auto_return` y el webhook (`BACKEND_URL/api/pagos/webhook`) funcionan sin ngrok.
++
++## 5. Bot n8n
++- Ollama + qwen3:4b no corre en hostings gratuitos. En el workflow, reemplazá el nodo de chat model de Ollama por **Groq** (gratis, ej. `llama-3.1-8b-instant`) o **Google Gemini**.
++- En los nodos HTTP Request de las tools, cambiá `http://localhost:3000` por la URL de Render.
++- En `system_promt_email_bot.txt`, cambiá `http://localhost:5173` por la URL de Vercel.
++- Activá el workflow y usá la **Production URL** del webhook (no la de test). Configurá CORS del webhook para permitir tu dominio de Vercel.
++- Opciones de hosting: n8n Cloud (trial) o n8n en Render con imagen Docker `n8nio/n8n` (el plan gratis pierde datos al reiniciar; exportá el workflow JSON al repo).
++
++## 6. Para el portafolio
++- Creá un usuario demo y poné credenciales en el README.
++- Grabá un video/GIF corto del flujo de compra y del chat (por si el bot o la API están dormidos).
+diff --git a/backend/src/config/conexion.js b/backend/src/config/conexion.js
+index 6e6bbca..2d5e210 100644
+--- a/backend/src/config/conexion.js
++++ b/backend/src/config/conexion.js
+@@ -6,8 +6,9 @@ dotenv.config();
+ 
+ export async function obtenerDb() {
+     const turso = createClient({
+-        url : process.env.TURSO_URL_DEV,
+-        authToken: process.env.TURSO_TOKEN_DEV,
++        // Acepta los nombres del README (TURSO_URL/TURSO_TOKEN) y los anteriores (*_DEV)
++        url : process.env.TURSO_URL || process.env.TURSO_URL_DEV,
++        authToken: process.env.TURSO_TOKEN || process.env.TURSO_TOKEN_DEV,
+     })
+     return turso
+ } 
+diff --git a/backend/src/controllers/controllerPago.js b/backend/src/controllers/controllerPago.js
+index 0ba23ef..6746119 100644
+--- a/backend/src/controllers/controllerPago.js
++++ b/backend/src/controllers/controllerPago.js
+@@ -8,6 +8,10 @@ import { MercadoPagoConfig, Preference, Payment } from 'mercadopago';
+ import { enviarEmailCompra } from '../utils/mailer.js';
+ import { ESTADOS } from '../utils/estados.js';
+ 
++// URL pública del frontend (primera de FRONTEND_URL) y del backend (para el webhook)
++const FRONTEND_URL = (process.env.FRONTEND_URL || "http://localhost:5173").split(",")[0].trim().replace(/\/$/, "");
++const BACKEND_URL = (process.env.BACKEND_URL || "").replace(/\/$/, "");
++
+ console.log("Token cargado:", process.env.MP_ACCESS_TOKEN ? "SÍ" : "NO");
+ 
+ const client = new MercadoPagoConfig({
+@@ -86,11 +90,11 @@ export const crearPreferencia = async (req, res) => {
+             body: {
+                 items: itemsMercadoPago,
+                 external_reference: userId.toString(),
+-                notification_url: "https://estrogen-spry-brunette.ngrok-free.dev/api/pagos/webhook",
++                ...(BACKEND_URL && { notification_url: `${BACKEND_URL}/api/pagos/webhook` }),
+                 back_urls: {
+-                    success: "localhost:5173/pago-exitoso",
+-                    failure: "localhost:5173/pago-fallido",
+-                    pending: "localhost:5173/pago-pendiente"
++                    success: `${FRONTEND_URL}/pago-exitoso`,
++                    failure: `${FRONTEND_URL}/pago-fallido`,
++                    pending: `${FRONTEND_URL}/pago-pendiente`
+                 },
+                 auto_return: "all"
+             }
+diff --git a/backend/src/index.js b/backend/src/index.js
+index 955287b..2b344b1 100644
+--- a/backend/src/index.js
++++ b/backend/src/index.js
+@@ -18,10 +18,15 @@ import routesBot from './routes/routesBot.js';
+ import routesContacto from './routes/routesContacto.js';
+ 
+ import cors from "cors";
++import 'dotenv/config';
++
++// FRONTEND_URL admite varias URLs separadas por coma (ej: https://airmobile.vercel.app,http://localhost:5173)
++const origenesPermitidos = (process.env.FRONTEND_URL || 'http://localhost:5173')
++  .split(',').map(u => u.trim().replace(/\/$/, ''));
+ 
+ const corsOptions = {
+   // Aquí pones la URL exacta donde corre tu React
+-  origin: ['http://localhost:5173', 'https://tu-dominio-final.com'], 
++  origin: origenesPermitidos,
+   methods: ['GET', 'POST', 'PUT', 'DELETE','PATCH'],
+   allowedHeaders: ['Content-Type', 'Authorization'], // Muy importante para que pasen tus JWT
+   credentials: true // Permite el envío de cookies si las llegas a usar
+@@ -30,7 +35,7 @@ const corsOptions = {
+ 
+ 
+ 
+-const PORT = 3000;
++const PORT = process.env.PORT || 3000;
+ const api = "/api";
+ 
+ 
+@@ -60,10 +65,12 @@ app.use(`${api}/pagos`, routesPagos);
+ 
+ app.use(`${api}/bot`, routesBot);
+ 
+-app.get("", (req, res) => {
+-    res.send("hola");
++app.get("/", (req, res) => {
++    res.send("API AirMobile funcionando");
+ })
+ 
++app.get("/health", (req, res) => res.json({ ok: true }));
++
+ 
+ app.listen(PORT, async () => {
+     await inicializarBaseDeDatos()
+diff --git a/frontend/src/components/admin/FilaFacturas.jsx b/frontend/src/components/admin/FilaFacturas.jsx
+index 7268bcc..c69b847 100644
+--- a/frontend/src/components/admin/FilaFacturas.jsx
++++ b/frontend/src/components/admin/FilaFacturas.jsx
+@@ -1,6 +1,7 @@
+ import { useState, useRef, useEffect } from 'react';
+ import { useApi } from '../../hooks/useApi';
+ import { useAuth } from '../../context/AuthContext';
++import { API_URL } from '../../config';
+ 
+ const ESTADOS = ['Pendiente', 'Completado', 'Enviado', 'Cancelado', 'Reembolsado'];
+ 
+@@ -78,7 +79,7 @@ export const FilaFactura = ({ factura, onEstadoActualizado }) => {
+         setDescargando(true);
+         try {
+             const response = await fetch(
+-                `http://localhost:3000/api/facturas/detalle-factura/${factura.id}/pdf`,
++                `${API_URL}/facturas/detalle-factura/${factura.id}/pdf`,
+                 { headers: { Authorization: `Bearer ${token}` } }
+             );
+ 
+diff --git a/frontend/src/components/cuenta/tabs/HistorialFacturas.jsx b/frontend/src/components/cuenta/tabs/HistorialFacturas.jsx
+index 1ec2bd9..5b64ee1 100644
+--- a/frontend/src/components/cuenta/tabs/HistorialFacturas.jsx
++++ b/frontend/src/components/cuenta/tabs/HistorialFacturas.jsx
+@@ -1,6 +1,7 @@
+ import { useEffect, useState } from "react";
+ import { useApi } from "../../../hooks/useApi";
+ import Paginacion from "../../common/Paginacion";
++import { API_URL } from '../../../config';
+ 
+ const HistorialFacturas = () => {
+     const endpointFetch = "facturas/obtener-facturas-usuario";
+@@ -51,7 +52,7 @@ const HistorialFacturas = () => {
+         const token = localStorage.getItem('token');
+ 
+         try {
+-            const URL_BACKEND = 'http://localhost:3000/api';
++            const URL_BACKEND = API_URL;
+             const response = await fetch(`${URL_BACKEND}/facturas/detalle-factura/${idFactura}/pdf`, {
+                 method: 'GET',
+                 headers: { Authorization: `Bearer ${token}` }
+diff --git a/frontend/src/config.js b/frontend/src/config.js
+new file mode 100644
+index 0000000..50880b8
+--- /dev/null
++++ b/frontend/src/config.js
+@@ -0,0 +1,7 @@
++// URLs configurables por entorno (Vite expone solo variables que empiezan con VITE_)
++// En local se usan los valores por defecto; en producción se definen en el panel del hosting.
++export const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:3000/api").replace(/\/$/, "");
++
++export const N8N_WEBHOOK_URL =
++    import.meta.env.VITE_N8N_WEBHOOK_URL ||
++    "http://localhost:5678/webhook/dfff64e4-9189-477f-91c1-61a901a87dd6";
+diff --git a/frontend/src/context/AuthContext.jsx b/frontend/src/context/AuthContext.jsx
+index c488f80..be67280 100644
+--- a/frontend/src/context/AuthContext.jsx
++++ b/frontend/src/context/AuthContext.jsx
+@@ -1,11 +1,12 @@
+ // src/context/AuthContext.jsx
+ import { createContext, useState, useContext, useEffect } from 'react';
+ import { useApi } from '../hooks/useApi';
++import { API_URL } from '../config';
+ 
+ // 1. Creamos el Contexto (el megáfono)
+ const AuthContext = createContext();
+-const URL_PERFIL = "http://localhost:3000/api/usuarios/mi-perfil";
+-const URL_LOGOUT = "http://localhost:3000/api/usuarios/logout";
++const URL_PERFIL = `${API_URL}/usuarios/mi-perfil`;
++const URL_LOGOUT = `${API_URL}/usuarios/logout`;
+ // 2. Creamos el Proveedor (el componente que guarda el estado)
+ export const AuthProvider = ({ children }) => {
+     // Inicializamos el estado leyendo una sola vez el localStorage
+diff --git a/frontend/src/hooks/useApi.js b/frontend/src/hooks/useApi.js
+index 7610e6f..d61efbc 100644
+--- a/frontend/src/hooks/useApi.js
++++ b/frontend/src/hooks/useApi.js
+@@ -1,5 +1,6 @@
+ import { useState } from "react";
+ import { useAuth } from "../context/AuthContext";
++import { API_URL } from "../config";
+ 
+ // 1. VARIABLE GLOBAL (Fuera del hook)
+ // Actúa como un semáforo para que todas las peticiones concurrentes lo vean
+@@ -8,7 +9,7 @@ let promesaRenovacion = null;
+ export const useApi = () => {
+     const [isLoading, setIsLoading] = useState(false);
+     const [error, setError] = useState(null);
+-    const urlBase = "http://localhost:3000/api/";
++    const urlBase = `${API_URL}/`;
+ 
+     const { refreshToken, login, logout,setUsuario } = useAuth();
+ 
+diff --git a/frontend/src/hooks/useN8nChat.js b/frontend/src/hooks/useN8nChat.js
+index 0473333..4515028 100644
+--- a/frontend/src/hooks/useN8nChat.js
++++ b/frontend/src/hooks/useN8nChat.js
+@@ -1,6 +1,7 @@
+ import { useState } from "react";
++import { N8N_WEBHOOK_URL } from "../config";
+ 
+-const webhookUrl = "http://localhost:5678/webhook/dfff64e4-9189-477f-91c1-61a901a87dd6";
++const webhookUrl = N8N_WEBHOOK_URL;
+ 
+ const getSessionData = (usuarioPerfil) => {
+     if (usuarioPerfil && usuarioPerfil.id) {
+diff --git a/package.json b/package.json
+index 1413ff8..3ceec64 100644
+--- a/package.json
++++ b/package.json
+@@ -5,8 +5,9 @@
+   "main": "index.js",
+   "scripts": {
+     "test": "echo \"Error: no test specified\" && exit 1",
+-    "dev:backend": "node --watch .\\backend\\src\\index.js",
+-    "dev:seed": "node --experimental-modules .\\backend\\src\\seed.js",
++    "dev:backend": "node --watch backend/src/index.js",
++    "start": "node backend/src/index.js",
++    "dev:seed": "node backend/src/seed.js",
+     "dev:frontend": "vite",
+     "build": "vite build",
+     "lint": "eslint .",
+diff --git a/render.yaml b/render.yaml
+new file mode 100644
+index 0000000..6ace0bb
+--- /dev/null
++++ b/render.yaml
+@@ -0,0 +1,37 @@
++services:
++  - type: web
++    name: airmobile-api
++    runtime: node
++    plan: free
++    buildCommand: npm ci --omit=dev
++    startCommand: npm start
++    healthCheckPath: /health
++    envVars:
++      - key: NODE_VERSION
++        value: "22"
++      - key: TURSO_URL
++        sync: false
++      - key: TURSO_TOKEN
++        sync: false
++      - key: SECRET_KEY
++        generateValue: true
++      - key: FRONTEND_URL
++        sync: false
++      - key: BACKEND_URL
++        sync: false
++      - key: MP_ACCESS_TOKEN
++        sync: false
++      - key: MAILER_EMAIL
++        sync: false
++      - key: MAILER_PASS
++        sync: false
++      - key: CONTACT_EMAIL
++        sync: false
++      - key: CLOUDINARY_CLOUD_NAME
++        sync: false
++      - key: CLOUDINARY_API_KEY
++        sync: false
++      - key: CLOUDINARY_API_SECRET
++        sync: false
++      - key: ADMIN_PASSWORD
++        sync: false
+diff --git a/vercel.json b/vercel.json
+new file mode 100644
+index 0000000..d1bcef1
+--- /dev/null
++++ b/vercel.json
+@@ -0,0 +1,5 @@
++{
++  "buildCommand": "npm run build",
++  "outputDirectory": "frontend/dist",
++  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
++}
+-- 
+2.43.0
+

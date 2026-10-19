@@ -1,0 +1,158 @@
+:root {
+  --primary-color: #005ce6;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  overflow-x: hidden;
+  background-color: #fbfbfd;
+}
+
+/* =========================================
+   NAVBAR (Complemento a Bootstrap)
+   ========================================= */
+
+.custom-navbar {
+  /* Efecto "Cristal" estilo Apple */
+  background: rgba(251, 251, 253, 0.85) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.custom-nav-logo {
+  color: var(--text-dark) !important;
+  transition: color 0.2s;
+}
+
+/* Estilos específicos para los textos de los enlaces */
+.custom-nav-link {
+  color: var(--text-dark) !important;
+  font-size: 14px;
+  font-weight: 500 !important;
+  transition: color 0.2s;
+}
+
+/* El enlace activo o sobre el que pasas el mouse se vuelve azul */
+.custom-nav-link:hover,
+.custom-nav-link.active {
+  color: var(--primary-color) !important;
+}
+/* Contenedor del menú móvil */
+.mobile-menu {
+  width: 100%;
+  max-height: 0; /* Cerrado por defecto */
+  overflow: hidden;
+  transition: max-height 0.3s ease-in-out; /* Animación suave */
+  background-color: rgba(251, 251, 253, 0.95);
+}
+
+/* Cuando el menú está activo */
+.mobile-menu.active {
+  max-height: 300px; /* Altura suficiente para los enlaces */
+}
+
+.mobile-menu ul {
+  list-style: none;
+  width: 100%;
+  text-align: center;
+}
+
+/* Estilo para el icono del botón cuando cambia */
+.btn-ham i {
+  transition: transform 0.2s ease;
+}
+
+.btn-ham:active i {
+  transform: scale(0.8);
+}
+
+
+
+/* Botón secundario personalizado */
+.custom-btn-secondary {
+  background-color: #e8e8ed;
+  color: #1d1d1f;
+  border: none !important;
+}
+
+.custom-btn-secondary:hover {
+  background-color: #d1d1d6;
+}
+
+/* Limita el tamaño de la imagen del hero en pantallas grandes */
+.hero-img-max {
+  max-width: 400px;
+  width: 100%;
+}
+
+/* Efecto hover elegante para las tarjetas */
+.custom-card-hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.custom-card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Caja de fondo gris para las fotos de los productos */
+.product-img-box {
+  height: 220px;
+}
+
+/* Colores específicos para las pastillas (badges) */
+
+
+/* ---------- SECTION PRODUCTOS -----------*/
+/* =========================================
+   FONDOS DE IMAGEN Y ETIQUETAS (Mejora de Contraste)
+   ========================================= */
+
+/* Caja de fondo para las fotos de los productos */
+.product-img-box {
+  height: 220px;
+  /* Usamos un gris un poco más oscuro y el !important para ganarle a Bootstrap */
+  background-color: #ebebec !important; 
+  border: 1px solid #e5e5ea; /* Un bordecito súper sutil ayuda a delimitar */
+}
+
+/* Colores sólidos y legibles para las pastillas (badges) */
+.badge-reacondicionado { 
+  background-color: var(--primary-color) !important; /* Azul de tu marca */
+  color: #ffffff !important; 
+  font-weight: 600;
+  padding: 6px 12px !important; /* Un poquito más gorditas para que resalten */
+}
+
+.badge-accesorio { 
+  background-color: #4b4b4f !important; /* Gris carbón elegante */
+  color: #ffffff !important; 
+  font-weight: 600;
+  padding: 6px 12px !important;
+}
+
+.badge-energia { 
+  background-color: #f59e0b !important; /* Naranja/Ámbar para dar idea de carga */
+  color: #ffffff !important; 
+  font-weight: 600;
+  padding: 6px 12px !important;
+}
+
+
+
+/* =========================================
+   FOOTER (Complemento a Bootstrap)
+   ========================================= */
+
+.custom-footer-link {
+  font-size: 12px;
+  transition: color 0.2s ease-in-out;
+}
+
+/* Efecto hover: los enlaces se pintan del azul primario al pasar el mouse */
+.custom-footer-link:hover {
+  color: var(--primary-color) !important;
+}
+
+

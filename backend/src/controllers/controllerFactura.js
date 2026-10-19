@@ -1,0 +1,372 @@
+
+
+import ModelFactura from "../models/modelFactura.js";
+
+import ModelCarrito from "../models/modelCarrito.js";
+import ModelDetalleFactura from "../models/modelDetalleFactura.js";
+import UsuarioModel from "../models/modelUsuario.js";
+import { ROLES } from "../utils/roles.js";
+import { ESTADOS } from "../utils/estados.js";
+import { filtrosFacturasSchema } from "../schemas/schemaFacturas.js";
+import jwt from 'jsonwebtoken';
+
+
+export const crearFactura = async (req, res) => {
+    
+    try {
+        const idUsuario = req?.user?.id;
+
+        if (!idUsuario) {
+            return res.status(401).json({ exito: false, message: "Credenciales invalidas" });
+        }
+
+        const carrito = await ModelCarrito.getCarrito(idUsuario);
+
+        if (!carrito || carrito.length === 0
+        ) {
+            return res.status(400).json({ exito: false, message: "El carrito está vacío, no se puede crear una factura." });
+        }
+
+        let totalCalculado = 0;
+        for (const item of carrito) {
+            totalCalculado += item.cantidad * item.precio;
+        }
+
+
+        // .toFixed(2) corta a dos decimales pero lo vuelve texto ("150.50")
+        // Number() lo vuelve a convertir en número para guardarlo en la DB
+        totalCalculado = Number(totalCalculado.toFixed(2));
+        const idFacturaCreada = await ModelFactura.createFactura({
+            usuario_id: idUsuario, 
+            total: totalCalculado, 
+            mp_payment_id: null, 
+            estado: ESTADOS.COMPLETADO 
+        });
+
+        //creamos los detalles de la factura con cada producto del carrito
+        for (const item of carrito) {
+            await ModelDetalleFactura.createDetalleFactura(idFacturaCreada, item.producto_id, item.cantidad, item.precio);
+        }
+
+
+        //vaciamos el carrito del usuario luego de realizar la compra
+        await ModelCarrito.emptyCarrito(idUsuario);
+
+        return res.status(201).json({
+            exito: true,
+            message: "Compra procesada con éxito",
+            idFactura: idFacturaCreada
+        });
+
+
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ exito: false, message: "Error al crear la factura" });
+    }
+
+}
+
+export const obtenerEstadisticasFacturas = async (req, res) => {
+    try {
+
+        const estadisticas = await ModelFactura.obtenerEstadisticas();
+
+        return res.status(200).json({
+            exito: true,
+            data: {
+                totalFacturado: estadisticas.totalFacturado,
+                totalPendiente: estadisticas.totalPendiente,
+                cantidadPendientes: estadisticas.cantidadPendientes,
+                facturasDelMes: estadisticas.facturasDelMes
+            }
+        });
+
+    } catch (err) {
+        console.error("Error al obtener estadísticas:", err);
+        return res.status(500).json({
+            exito: false,
+            message: "Error interno al calcular las estadísticas de facturación."
+        });
+    }
+};
+
+export const obtenerTodasLasFacturas = async (req, res) => {
+    try {
+
+        // 1. VALIDACIÓN JOI: Validamos y extraemos todos los filtros, límite y página
+        const { error, value: filtrosValidados } = filtrosFacturasSchema.validate(req.query, {
+            abortEarly: false,
+            stripUnknown: true
+        });
+
+        if (error) {
+            return res.status(400).json({
+                exito: false,
+                message: "Filtros de búsqueda inválidos.",
+                errores: error.details.map(err => err.message)
+            });
+        }
+
+
+        const { page, limit, ...filtrosPuros } = filtrosValidados;
+        const offset = (page - 1) * limit;
+
+        // 3. CONSULTAS A LA DB EN PARALELO (Ambas reciben los filtros)
+        const [facturas, totalResultados] = await Promise.all([
+            ModelFactura.getFacturas(filtrosPuros, limit, offset),
+            ModelFactura.countFacturas(filtrosPuros)
+        ]);
+
+        const totalPaginas = Math.ceil(totalResultados / limit);
+
+        return res.status(200).json({
+            exito: true,
+            paginaActual: page,
+            limitePorPagina: limit,
+            cantidadResultados: facturas.length,
+            totalResultados: totalResultados,
+            totalPaginas: totalPaginas,
+            tienePaginaSiguiente: page < totalPaginas,
+            tienePaginaAnterior: page > 1,
+            facturas: facturas
+        });
+
+    } catch (err) {
+        console.error("Error al obtener las facturas:", err);
+        return res.status(500).json({ exito: false, message: "Error interno al obtener las facturas" });
+    }
+};
+
+
+
+// OBTENER FACTURAS DE UN USUARIO
+export const obtenerFacturasDeUsuario = async (req, res) => {
+    try {
+        const idUsuarioActual = req?.user?.id;
+
+        if (!idUsuarioActual) {
+            return res.status(401).json({ exito: false, message: "Credenciales inválidas" });
+        }
+
+        const page = Math.max(1, parseInt(req.query.page) || 1);
+        const limit = Math.max(1, parseInt(req.query.limit) || 10);
+        const offset = (page - 1) * limit;
+
+        // EJECUCIÓN EN PARALELO
+        let [facturas, totalResultados] = await Promise.all([
+            ModelFactura.getFacturasDeUsuario(idUsuarioActual, limit, offset),
+            ModelFactura.countFacturasDeUsuario(idUsuarioActual)
+        ]);
+
+        const totalPaginas = Math.ceil(totalResultados / limit);
+
+        // ==========================================
+        // FORMATEO DE FECHAS PARA EL HISTORIAL
+        // ==========================================
+        facturas = facturas.map(factura => {
+            if (factura.fecha) {
+                const fechaObjeto = new Date(factura.fecha + 'Z');
+
+                // Para el historial suele ser mejor una fecha más corta (Ej: "14 May 2026")
+                factura.fecha_formateada = fechaObjeto.toLocaleString("es-AR", {
+                    timeZone: "America/Argentina/Buenos_Aires",
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric"
+                });
+            }
+            return factura;
+        });
+
+        return res.status(200).json({
+            exito: true,
+            paginacion: {
+                paginaActual: page,
+                limitePorPagina: limit,
+                totalResultados: totalResultados,
+                totalPaginas: totalPaginas,
+                tienePaginaSiguiente: page < totalPaginas,
+                tienePaginaAnterior: page > 1
+            },
+            facturas: facturas // Ahora todas vienen con su fecha_formateada
+        });
+
+    } catch (err) {
+        console.error("Error al obtener las facturas del usuario:", err);
+        return res.status(500).json({ exito: false, message: "Error interno al obtener las facturas del usuario" });
+    }
+};
+
+// OBTENER UNA FACTURA POR ID
+export const obtenerFactura = async (req, res) => {
+    try {
+
+        const idUsuarioActual = req?.user?.id;
+
+        if (!idUsuarioActual) {
+            return res.status(401).json({ exito: false, message: "Credenciales inválidas" });
+        }
+        const idFactura = req?.params?.id;
+        if (!idFactura) {
+            return res.status(400).json({ exito: false, message: "ID de factura no proporcionado" });
+        }
+
+        const factura = await ModelFactura.getFacturaById(idFactura);
+
+        if (!factura) {
+            return res.status(404).json({ exito: false, message: "No se ha encontrado la factura" });
+        }
+
+
+        const rolUsuario = await UsuarioModel.getRol(idUsuarioActual);
+
+        // Si el que pide la factura no es el dueño, y tampoco es Admin, lo rebotamos.
+        if (factura.usuario_id !== idUsuarioActual && rolUsuario !== ROLES.ADMIN) {
+            return res.status(403).json({ exito: false, message: "No tienes permiso para ver esta factura" });
+        }
+
+        return res.status(200).json({
+            exito: true,
+            factura: factura,
+            message: "Se obtuvo la factura"
+        });
+
+
+    } catch (err) {
+        console.log(err); return res.status(500).json({ exito: false, message: "Error al obtener la factura" });
+    }
+}
+
+
+export const actualizarEstadoFactura = async (req, res) => {
+    try {
+
+        const idFactura = req.params.id;
+        const { estado } = req.body;
+
+        // 1. Validamos que el estado exista y sea válido
+        if (!estado || !Object.values(ESTADOS).includes(estado)) {
+            return res.status(400).json({
+                exito: false,
+                message: `Estado no válido. Debe ser uno de: ${Object.values(ESTADOS).join(', ')}`
+            });
+        }
+
+        // 2. Verificamos que la factura realmente exista en la DB
+        const factura = await ModelFactura.getFacturaById(idFactura);
+        if (!factura) {
+            return res.status(404).json({ exito: false, message: "No se ha encontrado la factura" });
+        }
+
+        // 3. Ejecutamos la actualización
+        await ModelFactura.updateEstadoFactura(idFactura, estado);
+
+        return res.status(200).json({
+            exito: true,
+            message: "Se actualizó la factura con éxito",
+            factura: {
+                ...factura,
+                estado: estado
+            }
+        });
+
+    } catch (err) {
+        console.error("Error al actualizar el estado de la factura:", err);
+        return res.status(500).json({
+            exito: false,
+            message: "Error interno al actualizar el estado de la factura"
+        });
+    }
+}
+
+export const obtenerDetalleFactura = async (req, res) => {
+    try {
+        const idUsuarioActual = req?.user?.id;
+
+        if (!idUsuarioActual) {
+            return res.status(401).json({ exito: false, message: "Credenciales inválidas" });
+        }
+
+        const idFactura = req.params.id;
+        const factura = await ModelDetalleFactura.getDetallesFacturaByFacturaId(idFactura);
+
+        if (!factura) {
+            return res.status(404).json({ exito: false, message: "No se ha encontrado el detalle de la factura" });
+        }
+
+
+        const rolUsuario = await UsuarioModel.getRol(idUsuarioActual);
+
+        // Si el usuario no es el dueño de la factura y TAMPOCO es admin... ¡lo bloqueamos!
+        if (factura.usuario_id !== idUsuarioActual && rolUsuario !== ROLES.ADMIN) {
+            return res.status(403).json({ exito: false, message: "No tienes permiso para ver esta factura" });
+        }
+
+
+        return res.status(200).json({
+            exito: true,
+            detalleFactura: factura,
+            message: "Se obtuvo los detalles de la factura"
+        });
+
+    } catch (err) {
+        console.log(err); return res.status(500).json({ exito: false, message: "Error al obtener el detalle de la factura" });
+    }
+}
+
+export const obtenerUltimaFacturaBot = async (req, res) => {
+    try {
+        // 1. El middleware verificarToken ya validó todo y nos dejó el ID aquí:
+        const usuarioId = req?.user?.id;
+
+        if (!usuarioId) {
+            return res.status(401).json({ 
+                exito: false, 
+                message: "Credenciales inválidas" 
+            });
+        }
+
+        // 2. Traemos la última factura directamente
+        const facturas = await ModelFactura.getFacturasDeUsuario(usuarioId, 1, 0);
+        
+        if (!facturas || facturas.length === 0) {
+            return res.status(404).json({
+                exito: false,
+                message: "No tenés compras registradas todavía."
+            });
+        }
+
+        const ultimaFactura = facturas[0];
+        const detalles = await ModelDetalleFactura.getDetallesFacturaByFacturaId(ultimaFactura.id);
+
+        // 3. Formateo de fecha
+        const fechaFormateada = ultimaFactura.fecha
+            ? new Date(ultimaFactura.fecha + 'Z').toLocaleDateString('es-AR', {
+                day: '2-digit', month: 'long', year: 'numeric',
+                timeZone: 'America/Argentina/Buenos_Aires'
+            })
+            : 'Sin fecha';
+
+        // 4. Respuesta estructurada para el bot
+        return res.status(200).json({
+            exito: true,
+            factura: {
+                id: ultimaFactura.id,
+                fecha: fechaFormateada,
+                estado: ultimaFactura.estado,
+                total: ultimaFactura.total,
+                productos: detalles.map(d => ({
+                    nombre: d.nombre_producto,
+                    cantidad: d.cantidad,
+                    precio_unitario: d.precio_unitario,
+                    subtotal: d.cantidad * d.precio_unitario
+                }))
+            }
+        });
+
+    } catch (err) {
+        console.error("Error en obtenerUltimaFacturaBot:", err);
+        return res.status(500).json({ exito: false, message: "Error interno" });
+    }
+};
